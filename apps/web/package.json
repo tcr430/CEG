@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "eslint . --max-warnings=0",
+    "test": "node -e \"console.log('apps/web: no tests yet')\"",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ceg/auth": "workspace:*",
+    "@ceg/database": "workspace:*",
+    "@ceg/observability": "workspace:*",
+    "@ceg/research-engine": "workspace:*",
+    "@ceg/security": "workspace:*",
+    "@ceg/sequence-engine": "workspace:*",
+    "@ceg/validation": "workspace:*",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.49.8",
+    "next": "^15.2.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

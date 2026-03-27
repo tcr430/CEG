@@ -1,0 +1,28 @@
+{
+  "name": "ceg",
+  "private": true,
+  "packageManager": "pnpm@10.6.5",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "pnpm --filter web dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.23.0",
+    "@next/eslint-plugin-next": "^15.5.14",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "^15.2.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
+  }
+}
