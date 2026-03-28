@@ -19,4 +19,5 @@ export type CreateDraftReplyRecordInput = {
 export type DraftReplyRepository = {
   createDraftReply(input: CreateDraftReplyRecordInput): Promise<DraftReply>;
   listDraftRepliesByMessage(messageId: string): Promise<DraftReply[]>;
+  listDraftRepliesByThread(threadId: string): Promise<DraftReply[]>;
 };

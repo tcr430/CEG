@@ -260,6 +260,17 @@ function summarizeModelMetadata(compiled: CompiledSequenceOutput) {
   };
 }
 
+export async function getLatestStoredSequenceForProspect(
+  workspaceId: string,
+  campaignId: string,
+  prospectId: string,
+): Promise<Sequence | null> {
+  return getSequenceRepository().getLatestSequenceByProspect(
+    workspaceId,
+    campaignId,
+    prospectId,
+  );
+}
 export async function getLatestSequenceForProspect(
   workspaceId: string,
   campaignId: string,

@@ -60,5 +60,11 @@ export function createInMemoryReplyAnalysisRepository(
         null
       );
     },
+    async listReplyAnalysesByThread(threadId) {
+      const validatedThreadId = validateConversationThreadId(threadId);
+      return [...records.values()]
+        .filter((analysis) => analysis.threadId === validatedThreadId)
+        .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+    },
   };
 }

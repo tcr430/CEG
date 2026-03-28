@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,7 +12,9 @@ import { getServerAuthContext } from "../../../lib/server/auth";
 import { runProspectResearchForCampaign } from "../../../lib/server/prospect-research";
 import {
   analyzeLatestReplyForProspect,
+  appendLatestSequenceMessagesToProspectThread,
   createInboundReplyForProspect,
+  createManualOutboundMessageForProspect,
   generateDraftRepliesForProspect,
   regenerateDraftReplyForProspect,
 } from "../../../lib/server/replies";
@@ -224,6 +226,60 @@ export async function createInboundReplyAction(formData: FormData) {
     prospectId,
     subject: readOptionalText(formData, "subject") ?? null,
     bodyText,
+    userId: auth.user?.userId,
+  });
+
+  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+}
+
+export async function createManualOutboundMessageAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const bodyText = formData.get("bodyText");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof bodyText !== "string"
+  ) {
+    throw new Error("Workspace, campaign, prospect, and outbound body are required.");
+  }
+
+  const auth = await getServerAuthContext();
+
+  await createManualOutboundMessageForProspect({
+    workspaceId,
+    campaignId,
+    prospectId,
+    subject: readOptionalText(formData, "subject") ?? null,
+    bodyText,
+    userId: auth.user?.userId,
+  });
+
+  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+}
+
+export async function appendGeneratedSequenceMessagesAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string"
+  ) {
+    throw new Error("Workspace, campaign, and prospect are required.");
+  }
+
+  const auth = await getServerAuthContext();
+
+  await appendLatestSequenceMessagesToProspectThread({
+    workspaceId,
+    campaignId,
+    prospectId,
     userId: auth.user?.userId,
   });
 

@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 
 import {
   createInMemoryAuditEventRepository,
@@ -402,6 +402,40 @@ async function run(): Promise<void> {
       metadata: {},
     });
 
+    const generatedOutbound = await messageRepository.createMessage({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+      direction: "outbound",
+      messageKind: "email",
+      status: "draft",
+      subject: "Worth a look?",
+      bodyText: "I put together a short outbound draft.",
+      metadata: {
+        source: "generated",
+        generatedFrom: "sequence",
+        messageVersion: 1,
+        sequenceVersion: 2,
+      },
+    });
+
+    const manualOutbound = await messageRepository.createMessage({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+      direction: "outbound",
+      messageKind: "email",
+      status: "draft",
+      subject: "Manual follow-up",
+      bodyText: "Adding a manual note to the thread.",
+      metadata: {
+        source: "manual",
+        messageVersion: 2,
+      },
+    });
+
     const message = await messageRepository.createMessage({
       workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
       threadId: thread.id,
@@ -413,7 +447,9 @@ async function run(): Promise<void> {
       subject: "Re: outreach",
       bodyText: "Can you send more information?",
       metadata: {
-        messageVersion: 1,
+        source: "imported",
+        importedFrom: "manual-copy",
+        messageVersion: 3,
       },
     });
 
@@ -434,6 +470,23 @@ async function run(): Promise<void> {
       },
     });
 
+    const newerAnalysis = await analysisRepository.upsertReplyAnalysis({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      messageId: message.id,
+      classification: "neutral",
+      sentiment: "neutral",
+      urgency: "low",
+      intent: "needs_more_info",
+      confidence: 0.82,
+      structuredOutput: {
+        analysisVersion: 2,
+      },
+      modelMetadata: {
+        provider: "openai",
+      },
+    });
+
     const draftReply = await draftReplyRepository.createDraftReply({
       workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
       threadId: thread.id,
@@ -442,6 +495,22 @@ async function run(): Promise<void> {
       bodyText: "Happy to send a short summary.",
       structuredOutput: {
         draftVersion: 1,
+        bundleId: "bundle-1",
+      },
+      modelMetadata: {
+        provider: "openai",
+      },
+    });
+
+    const secondDraftReply = await draftReplyRepository.createDraftReply({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      messageId: message.id,
+      subject: "Short summary",
+      bodyText: "Here is the concise version.",
+      structuredOutput: {
+        draftVersion: 2,
+        bundleId: "bundle-2",
       },
       modelMetadata: {
         provider: "openai",
@@ -449,13 +518,22 @@ async function run(): Promise<void> {
     });
 
     const latestAnalysis = await analysisRepository.getReplyAnalysisByMessage(message.id);
+    const analyses = await analysisRepository.listReplyAnalysesByThread(thread.id);
     const draftReplies = await draftReplyRepository.listDraftRepliesByMessage(message.id);
+    const threadDraftReplies = await draftReplyRepository.listDraftRepliesByThread(thread.id);
+    const threadMessages = await messageRepository.listMessagesByThread(thread.id);
 
     assert.equal(thread.status, "open");
+    assert.equal(generatedOutbound.metadata.source, "generated");
+    assert.equal(manualOutbound.metadata.source, "manual");
+    assert.equal(message.metadata.source, "imported");
     assert.equal(message.direction, "inbound");
     assert.equal(analysis.intent, "needs_more_info");
-    assert.equal(latestAnalysis?.intent, "needs_more_info");
-    assert.equal(draftReplies[0]?.id, draftReply.id);
+    assert.equal(latestAnalysis?.confidence, newerAnalysis.confidence);
+    assert.equal(analyses.length, 1);
+    assert.equal(threadDraftReplies.length, 2);
+    assert.equal(threadMessages.length, 3);
+    assert.deepEqual(new Set(draftReplies.map((draft) => draft.id)), new Set([draftReply.id, secondDraftReply.id]));
   }
   console.log("@ceg/database repository contract tests passed");
 }

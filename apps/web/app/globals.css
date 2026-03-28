@@ -396,3 +396,71 @@ h2 {
 .evidenceList p {
   margin-bottom: 6px;
 }
+
+.threadComposerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.threadComposerCard {
+  width: 100%;
+}
+
+.threadTimeline {
+  display: grid;
+  gap: 18px;
+}
+
+.threadTimelineItem {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.threadTimelineRail {
+  width: 2px;
+  min-height: 100%;
+  margin: 10px auto 0;
+  background: var(--border);
+}
+
+.threadTimelineCard,
+.threadInsightCard,
+.threadDraftBundle {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.threadTimelineHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.threadTimelineHeader h3,
+.threadInsightCard h4 {
+  margin: 0;
+}
+
+.threadMessageBody {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .threadComposerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .threadTimelineHeader {
+    flex-direction: column;
+  }
+}

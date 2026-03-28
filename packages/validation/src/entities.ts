@@ -94,6 +94,7 @@ export const messageStatusSchema = z.enum([
   "failed",
   "archived",
 ]);
+export const messageSourceSchema = z.enum(["generated", "manual", "imported"]);
 export const objectionTypeSchema = z.enum([
   "price",
   "timing",
@@ -293,7 +294,20 @@ export const messageSchema = z.object({
   subject: optionalTextSchema,
   bodyText: optionalTextSchema,
   bodyHtml: optionalTextSchema,
-  metadata: metadataSchema,
+  metadata: z
+    .object({
+      source: messageSourceSchema.default("manual"),
+      generatedFrom: z.enum(["sequence", "reply_draft"]).nullable().optional(),
+      messageVersion: z.number().int().positive().optional(),
+      sequenceVersion: z.number().int().positive().optional(),
+      draftVersion: z.number().int().positive().optional(),
+      importedFrom: optionalTextSchema,
+      timelineLabel: optionalTextSchema,
+    })
+    .catchall(z.unknown())
+    .default({
+      source: "manual",
+    }),
   sentAt: timestampSchema.nullable().optional(),
   receivedAt: timestampSchema.nullable().optional(),
   createdAt: timestampSchema,
@@ -640,6 +654,7 @@ export type ResearchSnapshot = z.infer<typeof researchSnapshotSchema>;
 export type Sequence = z.infer<typeof sequenceSchema>;
 export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 export type Message = z.infer<typeof messageSchema>;
+export type MessageSource = z.infer<typeof messageSourceSchema>;
 export type ReplyAnalysis = z.infer<typeof replyAnalysisSchema>;
 export type DraftReply = z.infer<typeof draftReplySchema>;
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;

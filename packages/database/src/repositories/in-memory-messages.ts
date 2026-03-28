@@ -46,7 +46,7 @@ export function createInMemoryMessageRepository(
         subject: input.subject ?? null,
         bodyText: input.bodyText ?? null,
         bodyHtml: input.bodyHtml ?? null,
-        metadata: input.metadata ?? {},
+        metadata: input.metadata ?? { source: "manual" },
         sentAt: input.sentAt ?? null,
         receivedAt: input.receivedAt ?? (input.direction === "inbound" ? now : null),
         createdAt: now,

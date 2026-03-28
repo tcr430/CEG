@@ -1,7 +1,7 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { DraftReplyOutput, EvidenceFlag, EvidenceSnippet } from "@ceg/validation";
+import type { EvidenceFlag, EvidenceSnippet } from "@ceg/validation";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
@@ -10,7 +10,9 @@ import { getReplyThreadStateForProspect } from "../../../../../../lib/server/rep
 import { getLatestSequenceForProspect } from "../../../../../../lib/server/sequences";
 import {
   analyzeReplyAction,
+  appendGeneratedSequenceMessagesAction,
   createInboundReplyAction,
+  createManualOutboundMessageAction,
   generateProspectSequenceAction,
   generateReplyDraftsAction,
   regenerateReplyDraftAction,
@@ -37,6 +39,20 @@ function softLead(label: "low" | "medium" | "high") {
 
 function formatIntent(intent: string) {
   return intent.replaceAll("_", " ");
+}
+
+function readMessageMetaString(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() !== "" ? value : fallback;
+}
+
+function readMessageMetaNumber(value: unknown) {
+  return typeof value === "number" ? value : null;
+}
+
+function formatMessageBadge(direction: string, source: string) {
+  const directionLabel = direction === "inbound" ? "Inbound" : "Outbound";
+  const sourceLabel = source.charAt(0).toUpperCase() + source.slice(1);
+  return `${directionLabel} | ${sourceLabel}`;
 }
 
 export default async function ProspectDetailPage({
@@ -95,8 +111,6 @@ export default async function ProspectDetailPage({
         ...latestSequence.followUpSequence.qualityChecks,
       ]
     : [];
-  const latestReplyAnalysis = replyState.latestAnalysis;
-  const latestReplyDrafts = replyState.latestDrafts;
 
   return (
     <main className="shell">
@@ -104,9 +118,8 @@ export default async function ProspectDetailPage({
         <p className="eyebrow">Prospect Research</p>
         <h1>{prospect.companyName ?? prospect.contactName ?? "Prospect detail"}</h1>
         <p className="lede">
-          Trigger a safe public-website research pass, preserve evidence, and
-          generate sender-aware sequence drafts that stay grounded in the latest
-          supported context.
+          Run grounded prospect research, generate outreach sequences, and manage
+          the full prospect thread without mixing server logic into the UI.
         </p>
       </section>
 
@@ -135,9 +148,7 @@ export default async function ProspectDetailPage({
               {latestSequence ? (
                 <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
               ) : null}
-              {latestReplyDrafts ? (
-                <span className="pill">Reply drafts v{latestReplyDrafts.version}</span>
-              ) : null}
+              {replyState.thread ? <span className="pill">Thread active</span> : null}
             </div>
           </div>
 
@@ -188,138 +199,254 @@ export default async function ProspectDetailPage({
           </form>
 
           <div className="dashboardCard researchSnapshotCard">
-            <p className="cardLabel">Reply intelligence</p>
-            <h2>Prospect thread</h2>
+            <p className="cardLabel">Conversation thread</p>
+            <h2>Prospect thread timeline</h2>
             <p>
-              Capture an inbound reply, analyze intent and objections, and generate
-              schema-validated response drafts without sending anything yet.
+              Capture inbound replies, add manual outbound notes, and attach generated
+              sequence drafts so the thread stays auditable and easy to scan.
             </p>
 
-            <form action={createInboundReplyAction} className="panel prospectResearchForm">
-              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-              <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-              <input type="hidden" name="prospectId" value={prospect.id} />
+            <div className="threadComposerGrid">
+              <form action={createInboundReplyAction} className="panel threadComposerCard">
+                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                <input type="hidden" name="prospectId" value={prospect.id} />
 
-              <label className="field">
-                <span>Inbound subject</span>
-                <input
-                  name="subject"
-                  type="text"
-                  defaultValue={replyState.latestInboundMessage?.subject ?? ""}
-                  placeholder="Re: outbound"
-                />
-              </label>
+                <label className="field">
+                  <span>Inbound subject</span>
+                  <input name="subject" type="text" placeholder="Re: outbound" />
+                </label>
 
-              <label className="field">
-                <span>Inbound reply</span>
-                <textarea
-                  name="bodyText"
-                  required
-                  rows={6}
-                  defaultValue={replyState.latestInboundMessage?.bodyText ?? ""}
-                  placeholder="Paste the latest inbound prospect reply here."
-                />
-              </label>
+                <label className="field">
+                  <span>Inbound reply</span>
+                  <textarea
+                    name="bodyText"
+                    required
+                    rows={5}
+                    placeholder="Paste the latest inbound prospect reply here."
+                  />
+                </label>
 
-              <div className="inlineActions">
-                <button type="submit" className="buttonPrimary">
-                  Save inbound reply
-                </button>
-              </div>
-            </form>
-
-            {replyState.latestInboundMessage ? (
-              <div className="researchSection">
-                <h3>Latest inbound reply</h3>
-                <p><strong>{replyState.latestInboundMessage.subject ?? "No subject"}</strong></p>
-                <p>{replyState.latestInboundMessage.bodyText}</p>
-                <div className="pillRow">
-                  <span className="pill">Message v{String(replyState.latestInboundMessage.metadata.messageVersion ?? 1)}</span>
-                </div>
                 <div className="inlineActions">
-                  <form action={analyzeReplyAction}>
-                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                    <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-                    <input type="hidden" name="prospectId" value={prospect.id} />
-                    <button type="submit" className="buttonPrimary">Analyze reply</button>
-                  </form>
-                  <form action={generateReplyDraftsAction}>
-                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                    <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-                    <input type="hidden" name="prospectId" value={prospect.id} />
-                    <button type="submit" className="buttonSecondary">Generate reply drafts</button>
-                  </form>
+                  <button type="submit" className="buttonPrimary">
+                    Save inbound reply
+                  </button>
                 </div>
+              </form>
+
+              <form action={createManualOutboundMessageAction} className="panel threadComposerCard">
+                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                <input type="hidden" name="prospectId" value={prospect.id} />
+
+                <label className="field">
+                  <span>Outbound subject</span>
+                  <input name="subject" type="text" placeholder="Draft follow-up subject" />
+                </label>
+
+                <label className="field">
+                  <span>Manual outbound message</span>
+                  <textarea
+                    name="bodyText"
+                    required
+                    rows={5}
+                    placeholder="Add a manual outbound draft or note for this thread."
+                  />
+                </label>
+
+                <div className="inlineActions">
+                  <button type="submit" className="buttonSecondary">
+                    Add manual outbound
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="inlineActions">
+              {replyState.latestInboundMessage ? (
+                <form action={analyzeReplyAction}>
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <button type="submit" className="buttonPrimary">Analyze latest reply</button>
+                </form>
+              ) : null}
+
+              {replyState.latestAnalysis ? (
+                <form action={generateReplyDraftsAction}>
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <button type="submit" className="buttonSecondary">Generate reply drafts</button>
+                </form>
+              ) : null}
+
+              {latestSequence ? (
+                <form action={appendGeneratedSequenceMessagesAction}>
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <button type="submit" className="buttonSecondary">Add latest sequence to thread</button>
+                </form>
+              ) : null}
+            </div>
+
+            {replyState.timeline.length > 0 ? (
+              <div className="threadTimeline">
+                {replyState.timeline.map((entry) => {
+                  const messageSource = readMessageMetaString(
+                    entry.message.metadata.source,
+                    "manual",
+                  );
+                  const timelineLabel = readMessageMetaString(
+                    entry.message.metadata.timelineLabel,
+                    formatMessageBadge(entry.message.direction, messageSource),
+                  );
+                  const sequenceVersion = readMessageMetaNumber(
+                    entry.message.metadata.sequenceVersion,
+                  );
+
+                  return (
+                    <article key={entry.message.id} className="threadTimelineItem">
+                      <div className="threadTimelineRail" />
+                      <div className="threadTimelineCard">
+                        <div className="threadTimelineHeader">
+                          <div>
+                            <p className="cardLabel">{timelineLabel}</p>
+                            <h3>
+                              {entry.message.subject ??
+                                (entry.message.direction === "inbound"
+                                  ? "Inbound message"
+                                  : "Outbound message")}
+                            </h3>
+                          </div>
+                          <div className="pillRow compactPillRow">
+                            <span className="pill">
+                              {formatMessageBadge(entry.message.direction, messageSource)}
+                            </span>
+                            <span className="pill">
+                              Message v{String(entry.message.metadata.messageVersion ?? 1)}
+                            </span>
+                            {sequenceVersion ? (
+                              <span className="pill">Sequence v{sequenceVersion}</span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <p className="threadMessageBody">
+                          {entry.message.bodyText ?? "No text captured."}
+                        </p>
+
+                        {entry.analysis ? (
+                          <div className="threadInsightCard">
+                            <div className="pillRow">
+                              <span className="pill">
+                                Intent: {formatIntent(entry.analysis.analysisOutput.analysis.intent)}
+                              </span>
+                              <span className="pill">
+                                Action: {formatIntent(entry.analysis.strategyOutput.strategy.recommendedAction)}
+                              </span>
+                              <span className="pill">
+                                {renderConfidenceLabel(
+                                  entry.analysis.analysisOutput.analysis.confidence.score,
+                                  entry.analysis.analysisOutput.analysis.confidence.label,
+                                )}
+                              </span>
+                              <span className="pill">Analysis v{entry.analysis.analysisVersion}</span>
+                            </div>
+                            {entry.analysis.analysisOutput.analysis.objectionType ? (
+                              <p>
+                                <strong>Objection type:</strong>{" "}
+                                {formatIntent(entry.analysis.analysisOutput.analysis.objectionType)}
+                              </p>
+                            ) : null}
+                            <p>
+                              <strong>Rationale:</strong> {entry.analysis.analysisOutput.analysis.rationale}
+                            </p>
+                            <p>
+                              <strong>Drafting strategy:</strong>{" "}
+                              {entry.analysis.strategyOutput.strategy.draftingStrategy}
+                            </p>
+                            {entry.analysis.analysisOutput.analysis.intent === "hard_no" ? (
+                              <p className="statusMessage">
+                                This reply reads as a hard negative. Recommended action stays
+                                courteous and non-pushy.
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {entry.draftBundles.length > 0 ? (
+                          <div className="threadInsightCard">
+                            <h4>Draft reply versions</h4>
+                            <div className="stack">
+                              {entry.draftBundles.map((bundle, bundleIndex) => (
+                                <section key={`${bundle.version}-${bundle.bundleId}`} className="threadDraftBundle">
+                                  <div className="pillRow">
+                                    <span className="pill">Drafts v{bundle.version}</span>
+                                    <span className="pill">
+                                      Action: {formatIntent(bundle.output.recommendedAction)}
+                                    </span>
+                                    <span className="pill">
+                                      {renderConfidenceLabel(
+                                        bundle.output.confidence.score,
+                                        bundle.output.confidence.label,
+                                      )}
+                                    </span>
+                                  </div>
+                                  <p>
+                                    <strong>Strategy:</strong> {bundle.output.draftingStrategy}
+                                  </p>
+                                  <ul className="researchList">
+                                    {bundle.output.drafts.map((draft) => (
+                                      <li key={draft.slotId}>
+                                        <strong>{draft.label}</strong>
+                                        {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
+                                        <p>{draft.bodyText}</p>
+                                        <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
+                                        {bundleIndex === 0 ? (
+                                          <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
+                                            <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                            <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                            <input type="hidden" name="prospectId" value={prospect.id} />
+                                            <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                                            <label className="field">
+                                              <span>Regeneration feedback</span>
+                                              <textarea
+                                                name="feedback"
+                                                rows={3}
+                                                defaultValue="Make this a little shorter and softer."
+                                              />
+                                            </label>
+                                            <div className="inlineActions">
+                                              <button type="submit" className="buttonSecondary">
+                                                Regenerate this option
+                                              </button>
+                                            </div>
+                                          </form>
+                                        ) : null}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </section>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : (
               <div className="researchSection">
-                <h3>No inbound reply yet</h3>
-                <p>Paste a prospect reply above to begin reply analysis and drafting.</p>
+                <h3>No thread activity yet</h3>
+                <p>
+                  Save an inbound reply, add a manual outbound message, or attach the latest
+                  generated sequence to start building the thread timeline.
+                </p>
               </div>
             )}
-
-            {latestReplyAnalysis ? (
-              <div className="researchSection">
-                <h3>Latest analysis</h3>
-                <div className="pillRow">
-                  <span className="pill">Intent: {formatIntent(latestReplyAnalysis.analysisOutput.analysis.intent)}</span>
-                  <span className="pill">Action: {formatIntent(latestReplyAnalysis.strategyOutput.strategy.recommendedAction)}</span>
-                  <span className="pill">
-                    {renderConfidenceLabel(
-                      latestReplyAnalysis.analysisOutput.analysis.confidence.score,
-                      latestReplyAnalysis.analysisOutput.analysis.confidence.label,
-                    )}
-                  </span>
-                </div>
-                <p><strong>Rationale:</strong> {latestReplyAnalysis.analysisOutput.analysis.rationale}</p>
-                {latestReplyAnalysis.analysisOutput.analysis.objectionType ? (
-                  <p><strong>Objection type:</strong> {formatIntent(latestReplyAnalysis.analysisOutput.analysis.objectionType)}</p>
-                ) : null}
-                <p><strong>Recommended action:</strong> {formatIntent(latestReplyAnalysis.strategyOutput.strategy.recommendedAction)}</p>
-                <p><strong>Drafting strategy:</strong> {latestReplyAnalysis.strategyOutput.strategy.draftingStrategy}</p>
-                {latestReplyAnalysis.analysisOutput.analysis.intent === "hard_no" ? (
-                  <p className="statusMessage">
-                    This reply reads as a hard negative. The system will keep recommendations courteous and non-pushy.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-
-            {latestReplyDrafts ? (
-              <div className="researchSection">
-                <h3>Draft replies</h3>
-                <p>
-                  Version {latestReplyDrafts.version}. Recommended action: {formatIntent(latestReplyDrafts.output.recommendedAction)}.
-                </p>
-                <ul className="researchList">
-                  {latestReplyDrafts.output.drafts.map((draft: DraftReplyOutput["drafts"][number]) => (
-                    <li key={draft.slotId}>
-                      <strong>{draft.label}</strong>
-                      {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
-                      <p>{draft.bodyText}</p>
-                      <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
-                      <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
-                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                        <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-                        <input type="hidden" name="prospectId" value={prospect.id} />
-                        <input type="hidden" name="targetSlotId" value={draft.slotId} />
-                        <label className="field">
-                          <span>Regeneration feedback</span>
-                          <textarea
-                            name="feedback"
-                            rows={3}
-                            defaultValue="Make this a little shorter and softer."
-                          />
-                        </label>
-                        <div className="inlineActions">
-                          <button type="submit" className="buttonSecondary">Regenerate this option</button>
-                        </div>
-                      </form>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
           </div>
 
           {latestSnapshot ? (
@@ -480,13 +607,12 @@ export default async function ProspectDetailPage({
           <p className="cardLabel">Capture notes</p>
           <h2>What gets stored</h2>
           <p>
-            Each generation stores a versioned sequence bundle, rationale, quality checks,
-            and provider metadata so the workflow stays audit-friendly and ready for future
-            iteration or evaluation.
+            The thread now preserves manual outbound messages, generated outbound sequence
+            drafts, inbound prospect replies, reply analyses, and draft reply versions so
+            future inbox sync can attach to a clean server-side timeline.
           </p>
         </div>
       </section>
     </main>
   );
 }
-

@@ -56,5 +56,11 @@ export function createInMemoryDraftReplyRepository(
         .filter((draft) => draft.messageId === validatedMessageId)
         .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
     },
+    async listDraftRepliesByThread(threadId) {
+      const validatedThreadId = validateConversationThreadId(threadId);
+      return [...records.values()]
+        .filter((draft) => draft.threadId === validatedThreadId)
+        .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+    },
   };
 }

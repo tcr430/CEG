@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import {
   createInMemoryAuditEventRepository,
@@ -25,12 +25,14 @@ import {
   type ReplyEngineService,
   type ResponseStrategyRecommendationOutput,
 } from "@ceg/reply-engine";
+import { compiledSequenceOutputSchema } from "@ceg/sequence-engine";
 import { draftReplyOutputSchema, type ConversationThread, type DraftReply, type Message, type Prospect } from "@ceg/validation";
 
 import { getCampaignForWorkspace, getProspectForCampaign, updateProspectForCampaign } from "./campaigns";
 import { createOpenAiReplyModelAdapter } from "./openai-reply-provider";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
 import { getSenderProfileForWorkspace } from "./sender-profiles";
+import { getLatestStoredSequenceForProspect } from "./sequences";
 
 type PersistedReplyAnalysisRecord = {
   analysisVersion: number;
@@ -44,17 +46,49 @@ type PersistedDraftReplyRecord = {
   bundleOutput: DraftReplyGenerationOutput["output"];
 };
 
+type PersistedDraftReplyBundle = {
+  version: number;
+  bundleId: string;
+  output: DraftReplyGenerationOutput["output"];
+  records: DraftReply[];
+};
+
+export type ReplyTimelineEntry = {
+  message: Message;
+  analysis: PersistedReplyAnalysisRecord | null;
+  draftBundles: PersistedDraftReplyBundle[];
+};
+
 type ReplyThreadState = {
   thread: ConversationThread | null;
   messages: Message[];
+  timeline: ReplyTimelineEntry[];
   latestInboundMessage: Message | null;
   latestAnalysis: PersistedReplyAnalysisRecord | null;
-  latestDrafts: {
-    version: number;
-    bundleId: string;
-    output: DraftReplyGenerationOutput["output"];
-    records: DraftReply[];
-  } | null;
+  latestDrafts: PersistedDraftReplyBundle | null;
+};
+
+type AppendProspectThreadMessageInput = {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  direction: Message["direction"];
+  messageKind?: Message["messageKind"];
+  status?: Message["status"];
+  subject?: string | null;
+  bodyText: string;
+  bodyHtml?: string | null;
+  sequenceId?: string | null;
+  sequenceVersion?: number | null;
+  replyToMessageId?: string | null;
+  providerMessageId?: string | null;
+  source?: Message["metadata"]["source"];
+  generatedFrom?: NonNullable<Message["metadata"]["generatedFrom"]> | null;
+  importedFrom?: string | null;
+  timelineLabel?: string | null;
+  sentAt?: Date | null;
+  receivedAt?: Date | null;
+  userId?: string;
 };
 
 declare global {
@@ -186,6 +220,71 @@ function parsePersistedDraftReply(value: unknown): PersistedDraftReplyRecord | n
   };
 }
 
+function collectDraftBundlesForMessage(records: DraftReply[]): PersistedDraftReplyBundle[] {
+  const grouped = new Map<string, PersistedDraftReplyBundle>();
+
+  for (const record of records) {
+    const parsed = parsePersistedDraftReply(record.structuredOutput);
+
+    if (parsed === null) {
+      continue;
+    }
+
+    const key = `${parsed.draftVersion}:${parsed.bundleId}`;
+    const existing = grouped.get(key);
+
+    if (existing) {
+      existing.records.push(record);
+      continue;
+    }
+
+    grouped.set(key, {
+      version: parsed.draftVersion,
+      bundleId: parsed.bundleId,
+      output: parsed.bundleOutput,
+      records: [record],
+    });
+  }
+
+  return [...grouped.values()].sort((left, right) => right.version - left.version);
+}
+
+function buildReplyTimeline(input: {
+  messages: Message[];
+  analyses: Awaited<ReturnType<ReplyAnalysisRepository["listReplyAnalysesByThread"]>>;
+  draftReplies: DraftReply[];
+}): ReplyTimelineEntry[] {
+  const latestAnalysisByMessageId = new Map<string, PersistedReplyAnalysisRecord>();
+
+  for (const analysis of input.analyses) {
+    const parsed = parsePersistedReplyAnalysis(analysis.structuredOutput);
+    if (parsed !== null) {
+      latestAnalysisByMessageId.set(analysis.messageId, parsed);
+    }
+  }
+
+  const draftsByMessageId = new Map<string, DraftReply[]>();
+  for (const draft of input.draftReplies) {
+    if (!draft.messageId) {
+      continue;
+    }
+
+    const current = draftsByMessageId.get(draft.messageId) ?? [];
+    current.push(draft);
+    draftsByMessageId.set(draft.messageId, current);
+  }
+
+  return [...input.messages]
+    .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime())
+    .map((message) => ({
+      message,
+      analysis: latestAnalysisByMessageId.get(message.id) ?? null,
+      draftBundles: collectDraftBundlesForMessage(
+        draftsByMessageId.get(message.id) ?? [],
+      ),
+    }));
+}
+
 function mapReplyClassification(
   intent: ReplyAnalysisOutput["analysis"]["intent"],
 ): {
@@ -218,11 +317,11 @@ function mapReplyClassification(
   }
 }
 
-async function getProspectAndThread(input: {
+async function getProspectForWorkspaceCampaign(input: {
   workspaceId: string;
   campaignId: string;
   prospectId: string;
-}) {
+}): Promise<Prospect> {
   const prospect = await getProspectForCampaign(
     input.workspaceId,
     input.campaignId,
@@ -233,14 +332,118 @@ async function getProspectAndThread(input: {
     throw new Error("Prospect not found for workspace campaign.");
   }
 
-  const thread = await getConversationThreadRepository().findOrCreateThreadForProspect({
+  return prospect;
+}
+
+export async function ensureThreadForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+}): Promise<ConversationThread> {
+  await getProspectForWorkspaceCampaign(input);
+
+  return getConversationThreadRepository().findOrCreateThreadForProspect({
     workspaceId: input.workspaceId,
     campaignId: input.campaignId,
     prospectId: input.prospectId,
     metadata: {},
   });
+}
 
-  return { prospect, thread };
+export async function appendMessageToProspectThread(
+  input: AppendProspectThreadMessageInput,
+): Promise<Message> {
+  const [prospect, thread] = await Promise.all([
+    getProspectForWorkspaceCampaign(input),
+    ensureThreadForProspect(input),
+  ]);
+  const existingMessages = await getMessageRepository().listMessagesByThread(thread.id);
+  const messageVersion = existingMessages.length + 1;
+
+  const message = await getMessageRepository().createMessage({
+    workspaceId: input.workspaceId,
+    threadId: thread.id,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    sequenceId: input.sequenceId ?? null,
+    replyToMessageId: input.replyToMessageId ?? null,
+    direction: input.direction,
+    messageKind:
+      input.messageKind ?? (input.direction === "inbound" ? "reply" : "email"),
+    status:
+      input.status ?? (input.direction === "inbound" ? "received" : "draft"),
+    providerMessageId: input.providerMessageId ?? null,
+    subject: input.subject ?? null,
+    bodyText: input.bodyText,
+    bodyHtml: input.bodyHtml ?? null,
+    metadata: {
+      source: input.source ?? "manual",
+      generatedFrom: input.generatedFrom ?? null,
+      messageVersion,
+      sequenceVersion: input.sequenceVersion ?? undefined,
+      importedFrom: input.importedFrom ?? null,
+      timelineLabel: input.timelineLabel ?? null,
+    },
+    sentAt: input.sentAt ?? null,
+    receivedAt:
+      input.receivedAt ?? (input.direction === "inbound" ? new Date() : null),
+  });
+
+  await getConversationThreadRepository().updateThread({
+    threadId: thread.id,
+    workspaceId: input.workspaceId,
+    latestMessageAt: message.createdAt,
+    metadata: {
+      ...thread.metadata,
+      latestMessageId: message.id,
+      latestInboundMessageId:
+        input.direction === "inbound"
+          ? message.id
+          : (thread.metadata.latestInboundMessageId as string | undefined) ?? null,
+    },
+  });
+
+  if (input.direction === "inbound") {
+    await setProspectStatusToReplied(prospect, input.campaignId);
+  }
+
+  await getUsageEventRepository().createUsageEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    eventName: `thread_message_${input.direction}_created`,
+    entityType: "message",
+    entityId: message.id,
+    quantity: 1,
+    billable: false,
+    metadata: {
+      direction: input.direction,
+      source: input.source ?? "manual",
+      messageVersion,
+      generatedFrom: input.generatedFrom ?? null,
+    },
+  });
+
+  await getAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    actorType: input.userId ? "user" : "system",
+    action: `thread.message.${input.direction}.created`,
+    entityType: "message",
+    entityId: message.id,
+    changes: {
+      threadId: thread.id,
+      messageVersion,
+      source: input.source ?? "manual",
+    },
+    metadata: {
+      generatedFrom: input.generatedFrom ?? null,
+      timelineLabel: input.timelineLabel ?? null,
+    },
+  });
+
+  return message;
 }
 
 async function buildReplyAnalysisRequest(input: {
@@ -387,7 +590,7 @@ async function setProspectStatusToReplied(
   });
 }
 
-export async function getReplyThreadStateForProspect(
+export async function loadFullThreadHistoryForProspect(
   workspaceId: string,
   campaignId: string,
   prospectId: string,
@@ -402,66 +605,45 @@ export async function getReplyThreadStateForProspect(
     return {
       thread: null,
       messages: [],
+      timeline: [],
       latestInboundMessage: null,
       latestAnalysis: null,
       latestDrafts: null,
     };
   }
 
-  const messages = await getMessageRepository().listMessagesByThread(thread.id);
+  const [messages, analyses, draftRecords] = await Promise.all([
+    getMessageRepository().listMessagesByThread(thread.id),
+    getReplyAnalysisRepository().listReplyAnalysesByThread(thread.id),
+    getDraftReplyRepository().listDraftRepliesByThread(thread.id),
+  ]);
+  const timeline = buildReplyTimeline({
+    messages,
+    analyses,
+    draftReplies: draftRecords,
+  });
   const latestInboundMessage = getLatestInboundMessage(messages);
-  const latestAnalysis =
+  const latestEntry =
     latestInboundMessage === null
       ? null
-      : parsePersistedReplyAnalysis(
-          (
-            await getReplyAnalysisRepository().getReplyAnalysisByMessage(
-              latestInboundMessage.id,
-            )
-          )?.structuredOutput,
-        );
-
-  const draftRecords =
-    latestInboundMessage === null
-      ? []
-      : await getDraftReplyRepository().listDraftRepliesByMessage(
-          latestInboundMessage.id,
-        );
-
-  const parsedDrafts = draftRecords
-    .map((record) => ({
-      record,
-      parsed: parsePersistedDraftReply(record.structuredOutput),
-    }))
-    .filter(
-      (item): item is { record: DraftReply; parsed: PersistedDraftReplyRecord } =>
-        item.parsed !== null,
-    )
-    .sort((left, right) => right.parsed.draftVersion - left.parsed.draftVersion);
-
-  const latestDraft = parsedDrafts[0];
+      : timeline.find((entry) => entry.message.id === latestInboundMessage.id) ?? null;
 
   return {
     thread,
     messages,
+    timeline,
     latestInboundMessage,
-    latestAnalysis,
-    latestDrafts:
-      latestDraft === undefined
-        ? null
-        : {
-            version: latestDraft.parsed.draftVersion,
-            bundleId: latestDraft.parsed.bundleId,
-            output: latestDraft.parsed.bundleOutput,
-            records: parsedDrafts
-              .filter(
-                (item) =>
-                  item.parsed.draftVersion === latestDraft.parsed.draftVersion &&
-                  item.parsed.bundleId === latestDraft.parsed.bundleId,
-              )
-              .map((item) => item.record),
-          },
+    latestAnalysis: latestEntry?.analysis ?? null,
+    latestDrafts: latestEntry?.draftBundles[0] ?? null,
   };
+}
+
+export async function getReplyThreadStateForProspect(
+  workspaceId: string,
+  campaignId: string,
+  prospectId: string,
+): Promise<ReplyThreadState> {
+  return loadFullThreadHistoryForProspect(workspaceId, campaignId, prospectId);
 }
 
 export async function createInboundReplyForProspect(input: {
@@ -472,13 +654,8 @@ export async function createInboundReplyForProspect(input: {
   bodyText: string;
   userId?: string;
 }): Promise<Message> {
-  const { prospect, thread } = await getProspectAndThread(input);
-  const existingMessages = await getMessageRepository().listMessagesByThread(thread.id);
-  const messageVersion = existingMessages.length + 1;
-
-  const message = await getMessageRepository().createMessage({
+  return appendMessageToProspectThread({
     workspaceId: input.workspaceId,
-    threadId: thread.id,
     campaignId: input.campaignId,
     prospectId: input.prospectId,
     direction: "inbound",
@@ -486,56 +663,106 @@ export async function createInboundReplyForProspect(input: {
     status: "received",
     subject: input.subject ?? null,
     bodyText: input.bodyText,
-    metadata: {
-      messageVersion,
-      capturedManually: true,
-    },
-    receivedAt: new Date(),
-  });
-
-  await getConversationThreadRepository().updateThread({
-    threadId: thread.id,
-    workspaceId: input.workspaceId,
-    latestMessageAt: message.createdAt,
-    metadata: {
-      ...thread.metadata,
-      latestInboundMessageId: message.id,
-    },
-  });
-
-  await setProspectStatusToReplied(prospect, input.campaignId);
-
-  await getUsageEventRepository().createUsageEvent({
-    workspaceId: input.workspaceId,
+    source: "manual",
+    timelineLabel: "Inbound reply",
     userId: input.userId,
+  });
+}
+
+export async function createManualOutboundMessageForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  subject?: string | null;
+  bodyText: string;
+  userId?: string;
+}): Promise<Message> {
+  return appendMessageToProspectThread({
+    workspaceId: input.workspaceId,
     campaignId: input.campaignId,
     prospectId: input.prospectId,
-    eventName: "inbound_reply_created",
-    entityType: "message",
-    entityId: message.id,
-    quantity: 1,
-    billable: false,
-    metadata: {
-      direction: "inbound",
-      messageVersion,
-    },
-  });
-
-  await getAuditEventRepository().createAuditEvent({
-    workspaceId: input.workspaceId,
+    direction: "outbound",
+    messageKind: "email",
+    status: "draft",
+    subject: input.subject ?? null,
+    bodyText: input.bodyText,
+    source: "manual",
+    timelineLabel: "Manual outbound draft",
     userId: input.userId,
-    actorType: input.userId ? "user" : "system",
-    action: "reply.inbound_message.created",
-    entityType: "message",
-    entityId: message.id,
-    changes: {
-      threadId: thread.id,
-      messageVersion,
-    },
-    metadata: {},
   });
+}
 
-  return message;
+export async function appendLatestSequenceMessagesToProspectThread(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  userId?: string;
+}): Promise<Message[]> {
+  const [thread, latestSequenceRecord] = await Promise.all([
+    ensureThreadForProspect(input),
+    getLatestStoredSequenceForProspect(
+      input.workspaceId,
+      input.campaignId,
+      input.prospectId,
+    ),
+  ]);
+
+  if (latestSequenceRecord === null) {
+    throw new Error("Generate a sequence before adding outbound messages to the thread.");
+  }
+
+  const compiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
+  const existingMessages = await getMessageRepository().listMessagesByThread(thread.id);
+  const sequenceVersion = compiled.sequenceVersion;
+  const alreadyAppendedCount = existingMessages.filter(
+    (message) =>
+      message.sequenceId === latestSequenceRecord.id &&
+      message.metadata.generatedFrom === "sequence" &&
+      message.metadata.sequenceVersion === sequenceVersion,
+  ).length;
+
+  if (alreadyAppendedCount > 0) {
+    throw new Error("The latest generated sequence has already been added to this thread.");
+  }
+
+  const draftMessages = [
+    {
+      subject: compiled.initialEmail.email.subject,
+      bodyText: `${compiled.initialEmail.email.opener}\n\n${compiled.initialEmail.email.body}\n\n${compiled.initialEmail.email.cta}`,
+      timelineLabel: "Generated initial email",
+    },
+    ...compiled.followUpSequence.sequenceSteps.map((step) => ({
+      subject: step.subject,
+      bodyText: `${step.opener}\n\n${step.body}\n\n${step.cta}`,
+      timelineLabel:
+        step.stepNumber === 3
+          ? "Generated final soft-close"
+          : `Generated follow-up ${step.stepNumber}`,
+    })),
+  ];
+
+  const createdMessages: Message[] = [];
+  for (const draftMessage of draftMessages) {
+    const created = await appendMessageToProspectThread({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      direction: "outbound",
+      messageKind: "email",
+      status: "draft",
+      subject: draftMessage.subject,
+      bodyText: draftMessage.bodyText,
+      sequenceId: latestSequenceRecord.id,
+      sequenceVersion,
+      source: "generated",
+      generatedFrom: "sequence",
+      timelineLabel: draftMessage.timelineLabel,
+      userId: input.userId,
+    });
+    createdMessages.push(created);
+  }
+
+  return createdMessages;
 }
 
 export async function analyzeLatestReplyForProspect(input: {
