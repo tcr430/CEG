@@ -77,3 +77,13 @@ Those records should preserve:
 - before/after text for edits and regenerations
 
 This keeps future evaluation and dataset export focused on one normalized supervision stream instead of reverse-engineering behavior from scattered feature tables.
+
+## Evaluation Groundwork
+
+The repo now also keeps a lightweight evaluation-ready layer in `@ceg/testing` for:
+- golden examples
+- expected output property checks
+- regression cases
+- representative fixtures for sender modes, prospect summaries, and inbound replies
+
+The intent is to make future provider comparisons and dataset export easier without coupling tests to any one model's exact phrasing.

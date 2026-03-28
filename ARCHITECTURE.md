@@ -46,6 +46,11 @@ Planned shared packages:
 - `jobs`
 - `testing`
 
+`@ceg/testing` now carries lightweight evaluation scaffolding as well:
+- reusable fixtures for sender modes, prospect website summaries, and inbound replies
+- golden examples expressed as expected output properties instead of provider-specific exact text
+- regression cases for unsupported claims, generic fluff, and hard-no pushiness
+
 Why this shape:
 - shared contracts live outside the app
 - future provider integrations are isolated behind internal interfaces

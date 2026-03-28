@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
 
+import {
+  inboundReplyFixtures,
+  prospectWebsiteSummaryFixtures,
+  regressionCases,
+  senderProfileFixtures,
+} from "../../testing/dist/index.js";
+
 import { createReplyEngineService, scoreDraftReplyQuality } from "../dist/index.js";
 import type { ReplyGenerationModelAdapter } from "../dist/index.js";
 
@@ -17,31 +24,7 @@ const metadata = {
 const request = {
   senderContext: {
     mode: "sender_aware",
-    senderProfile: {
-      id: "0bf58ec1-f61f-45a0-8eab-f56c53b4bd4b",
-      workspaceId: "d2558988-0bf3-421c-922d-7dca0fd84838",
-      name: "Founder profile",
-      senderType: "saas_founder",
-      companyName: "Acme",
-      companyWebsite: "https://acme.com",
-      productDescription: "Structured outbound copilot",
-      targetCustomer: "Lean SaaS teams",
-      valueProposition: "Improve outbound quality",
-      differentiation: "Grounded personalization",
-      proofPoints: ["Used by revenue teams"],
-      goals: ["Book qualified meetings"],
-      tonePreferences: {
-        style: "calm and direct",
-        do: ["be concise"],
-        avoid: ["be pushy"],
-      },
-      metadata: {},
-      status: "active",
-      isDefault: true,
-      createdByUserId: null,
-      createdAt: new Date("2026-03-28T09:00:00.000Z"),
-      updatedAt: new Date("2026-03-28T09:00:00.000Z"),
-    },
+    senderProfile: senderProfileFixtures.saasFounder,
     credibilityLevel: "balanced",
   },
   campaign: {
@@ -69,54 +52,8 @@ const request = {
     createdAt: new Date("2026-03-28T09:00:00.000Z"),
     updatedAt: new Date("2026-03-28T09:00:00.000Z"),
   },
-  prospectCompanyProfile: {
-    domain: "prospect.com",
-    websiteUrl: "https://prospect.com",
-    companyName: "ProspectCo",
-    summary: "ProspectCo helps finance teams automate reporting.",
-    targetCustomers: ["Finance teams"],
-    industries: ["Fintech"],
-    valuePropositions: ["Automated reporting"],
-    proofPoints: [],
-    differentiators: [],
-    likelyPainPoints: ["Manual reporting"],
-    personalizationHooks: ["Recent product launch"],
-    callsToAction: [],
-    sourceEvidence: [],
-    confidence: {
-      score: 0.42,
-      label: "low",
-      reasons: ["Only one source was available."],
-    },
-    flags: [],
-    metadata: {},
-  },
-  analysisInput: {
-    workspaceId: "d2558988-0bf3-421c-922d-7dca0fd84838",
-    campaignId: "f197d80f-5709-4b4f-aa9c-610f1e991f62",
-    prospectId: "90d113d3-b398-4820-8cd0-b09185220545",
-    threadId: "b8fa04ac-430d-4a62-85be-e290be1d029a",
-    latestInboundMessage: {
-      messageId: "6127e49b-3e1a-494e-93c0-22256cf09d00",
-      subject: "Re: outbound",
-      bodyText: "Timing is not right for us this quarter. Can you send more context?",
-    },
-    threadMessages: [
-      {
-        direction: "outbound",
-        subject: "Outbound",
-        bodyText: "Open to a quick conversation next week?",
-      },
-      {
-        direction: "inbound",
-        subject: "Re: outbound",
-        bodyText: "Timing is not right for us this quarter. Can you send more context?",
-      },
-    ],
-    campaignSummary: "Founder-led outreach for outbound quality software.",
-    senderContextSummary: "Founder writing directly with grounded tone.",
-    prospectCompanyProfileSummary: "Finance workflow software company.",
-  },
+  prospectCompanyProfile: prospectWebsiteSummaryFixtures.financeAutomation,
+  analysisInput: inboundReplyFixtures.needsMoreInfo,
   promptContext: {
     tone: {
       style: "clear",
@@ -271,6 +208,12 @@ assert.equal(
 );
 assert.equal(
   scoredDraft.checks.some((check) => check.code === "spammy_or_overhyped_language" && !check.passed),
+  true,
+);
+assert.equal(
+  regressionCases.hardNoPushiness.some((caseItem) =>
+    caseItem.expectedFlag === "respect_hard_no",
+  ),
   true,
 );
 

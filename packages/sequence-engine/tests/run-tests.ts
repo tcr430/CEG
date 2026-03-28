@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 
 import {
+  prospectWebsiteSummaryFixtures,
+  regressionCases,
+  senderProfileFixtures,
+} from "../../testing/dist/index.js";
+
+import {
   createSequenceEngineService,
   runSequenceQualityChecks,
   scoreCompiledSequenceQuality,
@@ -24,30 +30,7 @@ const metadata: SequenceGenerationMetadata = {
 const input = sequenceGenerationInputSchema.parse({
   senderContext: {
     mode: "sender_aware",
-    senderProfile: {
-      id: "54ad043c-9435-4388-92b9-9e0becbeff74",
-      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
-      name: "Founder profile",
-      senderType: "saas_founder",
-      companyName: "Acme",
-      companyWebsite: "https://acme.com",
-      productDescription: "Outbound copilot for lean teams",
-      targetCustomer: "B2B SaaS founders",
-      valueProposition: "Sharper outbound without manual research busywork",
-      differentiation: "Structured evidence and sender-aware workflows",
-      proofPoints: ["Trusted by 30 growth teams"],
-      goals: ["Book qualified meetings"],
-      tonePreferences: {
-        style: "Direct and credible",
-        do: ["Be concise", "Lead with specifics"],
-        avoid: ["Hype", "Guarantees"],
-      },
-      metadata: {},
-      status: "active",
-      isDefault: true,
-      createdAt: new Date("2026-03-27T10:00:00.000Z"),
-      updatedAt: new Date("2026-03-27T10:00:00.000Z"),
-    },
+    senderProfile: senderProfileFixtures.saasFounder,
   },
   campaign: {
     id: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
@@ -67,40 +50,7 @@ const input = sequenceGenerationInputSchema.parse({
     createdAt: new Date("2026-03-27T10:00:00.000Z"),
     updatedAt: new Date("2026-03-27T10:00:00.000Z"),
   },
-  prospectCompanyProfile: {
-    domain: "prospect.com",
-    websiteUrl: "https://prospect.com",
-    companyName: "ProspectCo",
-    summary: "ProspectCo helps revenue teams reduce manual outbound work.",
-    likelyTargetCustomer: "Revenue teams at growing SaaS companies",
-    targetCustomers: ["Revenue teams"],
-    industries: ["SaaS"],
-    valuePropositions: ["Reduce manual outbound work"],
-    proofPoints: ["Used by growth-stage revenue teams"],
-    differentiators: ["Structured workflows"],
-    likelyPainPoints: ["Manual personalization takes too long"],
-    personalizationHooks: ["Revenue workflow automation"],
-    callsToAction: ["Book a demo"],
-    sourceEvidence: [
-      {
-        snippet: "Reduce manual outbound work.",
-        sourceUrl: "https://prospect.com",
-        confidence: {
-          score: 0.81,
-          label: "high",
-          reasons: ["Direct website copy"],
-        },
-        supports: ["value_propositions"],
-      },
-    ],
-    confidence: {
-      score: 0.79,
-      label: "medium",
-      reasons: ["Public website evidence"],
-    },
-    flags: [],
-    metadata: {},
-  },
+  prospectCompanyProfile: prospectWebsiteSummaryFixtures.revenueAutomation,
   promptContext: {
     framework: "Problem -> proof -> CTA",
     tone: {
@@ -246,6 +196,7 @@ assert.equal(
   scoredSequence.checks.some((check) => check.code === "spammy_or_overhyped_language" && !check.passed),
   true,
 );
+assert.equal(regressionCases.unsupportedClaims.length >= 1, true);
 
 const adapter: SequenceGenerationModelAdapter = {
   async generateSubjectLines() {
