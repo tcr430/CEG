@@ -1,31 +1,25 @@
-import {
-  createInMemoryAuditEventRepository,
-  createInMemoryResearchSnapshotRepository,
-  type AuditEventRepository,
-  type ResearchSnapshotRepository,
-} from "@ceg/database";
-import { createConsoleLogger } from "@ceg/observability";
+import { createInMemoryResearchSnapshotRepository, type ResearchSnapshotRepository } from "@ceg/database";
 import {
   createResearchEngineService,
   type ResearchEngineService,
 } from "@ceg/research-engine";
 import { assertSafeUrl } from "@ceg/security";
+import type { Prospect, ResearchSnapshot } from "@ceg/validation";
 
+import { getSharedAuditEventRepository } from "./audit-events";
 import {
   assertWorkspaceFeatureAccess,
   assertWorkspaceUsageAccess,
 } from "./billing";
-import type { Prospect, ResearchSnapshot } from "@ceg/validation";
-
 import {
   getProspectForCampaign,
   updateProspectForCampaign,
 } from "./campaigns";
+import { createOperationContext } from "./observability";
 import { getSharedUsageEventRepository } from "./usage-events";
 
 declare global {
   var __cegResearchSnapshotRepository: ResearchSnapshotRepository | undefined;
-  var __cegAuditEventRepository: AuditEventRepository | undefined;
   var __cegResearchEngineService: ResearchEngineService | undefined;
 }
 
@@ -38,14 +32,6 @@ function getResearchSnapshotRepository(): ResearchSnapshotRepository {
   return globalThis.__cegResearchSnapshotRepository;
 }
 
-function getAuditEventRepository(): AuditEventRepository {
-  if (globalThis.__cegAuditEventRepository === undefined) {
-    globalThis.__cegAuditEventRepository = createInMemoryAuditEventRepository();
-  }
-
-  return globalThis.__cegAuditEventRepository;
-}
-
 function getResearchEngine(): ResearchEngineService {
   if (globalThis.__cegResearchEngineService === undefined) {
     globalThis.__cegResearchEngineService = createResearchEngineService();
@@ -53,8 +39,6 @@ function getResearchEngine(): ResearchEngineService {
 
   return globalThis.__cegResearchEngineService;
 }
-
-const logger = createConsoleLogger({ area: "prospect_research" });
 
 function mergeProspectMetadata(
   prospect: Prospect,
@@ -93,7 +77,17 @@ export async function runProspectResearchForCampaign(input: {
   websiteUrl: string;
   userId?: string;
   workspacePlanCode?: string | null;
+  requestId?: string;
 }): Promise<ResearchSnapshot> {
+  const operation = createOperationContext({
+    operation: "prospect_research.run",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+  });
+
   const prospect = await getProspectForCampaign(
     input.workspaceId,
     input.campaignId,
@@ -116,13 +110,8 @@ export async function runProspectResearchForCampaign(input: {
     workspacePlanCode: input.workspacePlanCode,
     meterKey: "websiteResearchRuns",
   });
-  const runLogger = logger.child({
-    workspaceId: input.workspaceId,
-    campaignId: input.campaignId,
-    prospectId: input.prospectId,
-  });
 
-  runLogger.info("Prospect research started", {
+  operation.logger.info("Prospect research started", {
     websiteUrl: normalizedUrl,
   });
 
@@ -189,6 +178,8 @@ export async function runProspectResearchForCampaign(input: {
       source: prospect.source ?? "website",
       status: "researched",
       metadata: mergeProspectMetadata(prospect, snapshot),
+      userId: input.userId,
+      requestId: operation.requestId,
     });
 
     await getSharedUsageEventRepository().createUsageEvent({
@@ -210,13 +201,14 @@ export async function runProspectResearchForCampaign(input: {
       },
     });
 
-    await getAuditEventRepository().createAuditEvent({
+    await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       actorType: input.userId ? "user" : "system",
       action: "prospect.research.completed",
       entityType: "prospect",
       entityId: prospect.id,
+      requestId: operation.requestId,
       changes: {
         snapshotId: snapshot.id,
         sourceUrl: snapshot.sourceUrl,
@@ -227,20 +219,21 @@ export async function runProspectResearchForCampaign(input: {
       },
     });
 
-    runLogger.info("Prospect research completed", {
+    operation.logger.info("Prospect research completed", {
       snapshotId: snapshot.id,
       confidence: snapshot.structuredData.quality.overall.label,
     });
 
     return snapshot;
   } catch (error) {
-    await getAuditEventRepository().createAuditEvent({
+    await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       actorType: input.userId ? "user" : "system",
       action: "prospect.research.failed",
       entityType: "prospect",
       entityId: input.prospectId,
+      requestId: operation.requestId,
       changes: {},
       metadata: {
         websiteUrl: normalizedUrl,
@@ -248,7 +241,7 @@ export async function runProspectResearchForCampaign(input: {
       },
     });
 
-    runLogger.error("Prospect research failed", {
+    operation.logger.error("Prospect research failed", {
       websiteUrl: normalizedUrl,
       error: error instanceof Error ? error.message : "Unknown error",
     });

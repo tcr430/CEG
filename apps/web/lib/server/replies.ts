@@ -1,19 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import {
-  createInMemoryAuditEventRepository,
   createInMemoryConversationThreadRepository,
   createInMemoryDraftReplyRepository,
   createInMemoryMessageRepository,
   createInMemoryReplyAnalysisRepository,
-  type AuditEventRepository,
   type ConversationThreadRepository,
   type DraftReplyRepository,
   type MessageRepository,
   type ReplyAnalysisRepository,
 } from "@ceg/database";
 import { checkFeatureEntitlement, resolveBillingPlanCode } from "@ceg/billing";
-import { createConsoleLogger } from "@ceg/observability";
 import {
   createReplyEngineService,
   replyAnalysisOutputSchema,
@@ -36,8 +33,10 @@ import {
   type Prospect,
 } from "@ceg/validation";
 
+import { getSharedAuditEventRepository } from "./audit-events";
 import { getCampaignForWorkspace, getProspectForCampaign, updateProspectForCampaign } from "./campaigns";
 import { createOpenAiReplyModelAdapter } from "./openai-reply-provider";
+import { createOperationContext } from "./observability";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
 import {
   assertWorkspaceFeatureAccess,
@@ -140,11 +139,9 @@ declare global {
   var __cegMessageRepository: MessageRepository | undefined;
   var __cegReplyAnalysisRepository: ReplyAnalysisRepository | undefined;
   var __cegDraftReplyRepository: DraftReplyRepository | undefined;
-  var __cegReplyAuditEventRepository: AuditEventRepository | undefined;
   var __cegReplyEngineService: ReplyEngineService | undefined;
 }
 
-const logger = createConsoleLogger({ area: "reply_intelligence" });
 const REPLY_PROMPT_TEMPLATE_ID = "reply.v1";
 
 function getConversationThreadRepository(): ConversationThreadRepository {
@@ -179,13 +176,6 @@ function getDraftReplyRepository(): DraftReplyRepository {
   return globalThis.__cegDraftReplyRepository;
 }
 
-function getAuditEventRepository(): AuditEventRepository {
-  if (globalThis.__cegReplyAuditEventRepository === undefined) {
-    globalThis.__cegReplyAuditEventRepository = createInMemoryAuditEventRepository();
-  }
-
-  return globalThis.__cegReplyAuditEventRepository;
-}
 
 function getReplyEngine(): ReplyEngineService {
   if (globalThis.__cegReplyEngineService === undefined) {
@@ -460,7 +450,7 @@ export async function appendMessageToProspectThread(
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
@@ -815,6 +805,7 @@ export async function analyzeLatestReplyForProspect(input: {
   prospectId: string;
   userId?: string;
   workspacePlanCode?: string | null;
+  requestId?: string;
 }): Promise<PersistedReplyAnalysisRecord> {
   await assertWorkspaceFeatureAccess({
     workspaceId: input.workspaceId,
@@ -826,6 +817,16 @@ export async function analyzeLatestReplyForProspect(input: {
     workspacePlanCode: input.workspacePlanCode,
     meterKey: "replyAnalyses",
   });
+
+  const operation = createOperationContext({
+    operation: "reply.analysis",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+  });
+
 
   const state = await getReplyThreadStateForProspect(
     input.workspaceId,
@@ -846,10 +847,8 @@ export async function analyzeLatestReplyForProspect(input: {
     workspacePlanCode: input.workspacePlanCode,
   });
 
-  const runLogger = logger.child({
-    workspaceId: input.workspaceId,
-    campaignId: input.campaignId,
-    prospectId: input.prospectId,
+  const runLogger = operation.logger.child({
+    area: "reply_intelligence",
     messageId: state.latestInboundMessage.id,
   });
 
@@ -920,7 +919,7 @@ export async function analyzeLatestReplyForProspect(input: {
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
@@ -1050,7 +1049,7 @@ export async function generateDraftRepliesForProspect(input: {
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
@@ -1189,7 +1188,7 @@ export async function regenerateDraftReplyForProspect(input: {
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
@@ -1337,7 +1336,7 @@ export async function editDraftReplyForProspect(
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",

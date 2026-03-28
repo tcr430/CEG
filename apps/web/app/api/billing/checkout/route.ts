@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { requireWorkspaceAccess } from "@ceg/auth";
 import { NextResponse } from "next/server";
 
@@ -5,6 +6,7 @@ import { getServerAuthContext } from "../../../../lib/server/auth";
 import { createCheckoutSessionForWorkspace } from "../../../../lib/server/billing";
 
 export async function POST(request: Request) {
+  const requestId = request.headers.get("x-request-id") ?? randomUUID();
   const formData = await request.formData();
   const workspaceId = formData.get("workspaceId");
   const planCode = formData.get("planCode");
@@ -31,6 +33,7 @@ export async function POST(request: Request) {
       planCode,
       userId: auth.user.userId,
       customerEmail: auth.user.email ?? null,
+      requestId,
     });
 
     return NextResponse.redirect(session.url, 303);

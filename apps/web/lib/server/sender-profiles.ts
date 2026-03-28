@@ -8,7 +8,9 @@ import type {
   UpdateSenderProfileInput,
 } from "@ceg/validation";
 
+import { getSharedAuditEventRepository } from "./audit-events";
 import { assertWorkspaceFeatureAccess } from "./billing";
+import { createOperationContext } from "./observability";
 
 declare global {
   var __cegSenderProfileRepository: SenderProfileRepository | undefined;
@@ -44,8 +46,19 @@ export async function getSenderProfileForWorkspace(
 }
 
 export async function createSenderProfileForWorkspace(
-  input: CreateSenderProfileInput & { workspacePlanCode?: string | null },
+  input: CreateSenderProfileInput & {
+    workspacePlanCode?: string | null;
+    userId?: string;
+    requestId?: string;
+  },
 ): Promise<SenderProfile> {
+  const operation = createOperationContext({
+    operation: "sender_profile.create",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? input.createdByUserId ?? null,
+  });
+
   if (input.senderType !== "basic") {
     await assertWorkspaceFeatureAccess({
       workspaceId: input.workspaceId,
@@ -54,12 +67,49 @@ export async function createSenderProfileForWorkspace(
     });
   }
 
-  return getSenderProfileRepository().createSenderProfile(input);
+  const created = await getSenderProfileRepository().createSenderProfile(input);
+
+  await getSharedAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? input.createdByUserId ?? null,
+    actorType: input.userId ? "user" : "system",
+    action: "sender_profile.created",
+    entityType: "sender_profile",
+    entityId: created.id,
+    requestId: operation.requestId,
+    changes: {
+      senderType: created.senderType,
+      status: created.status,
+      isDefault: created.isDefault,
+    },
+    metadata: {
+      profileName: created.name,
+    },
+  });
+
+  operation.logger.info("Sender profile created", {
+    senderProfileId: created.id,
+    senderType: created.senderType,
+    isDefault: created.isDefault,
+  });
+
+  return created;
 }
 
 export async function updateSenderProfileForWorkspace(
-  input: UpdateSenderProfileInput & { workspacePlanCode?: string | null },
+  input: UpdateSenderProfileInput & {
+    workspacePlanCode?: string | null;
+    userId?: string;
+    requestId?: string;
+  },
 ): Promise<SenderProfile> {
+  const operation = createOperationContext({
+    operation: "sender_profile.update",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+  });
+
   if (input.senderType !== "basic") {
     await assertWorkspaceFeatureAccess({
       workspaceId: input.workspaceId,
@@ -68,5 +118,31 @@ export async function updateSenderProfileForWorkspace(
     });
   }
 
-  return getSenderProfileRepository().updateSenderProfile(input);
+  const updated = await getSenderProfileRepository().updateSenderProfile(input);
+
+  await getSharedAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    actorType: input.userId ? "user" : "system",
+    action: "sender_profile.updated",
+    entityType: "sender_profile",
+    entityId: updated.id,
+    requestId: operation.requestId,
+    changes: {
+      senderType: updated.senderType,
+      status: updated.status,
+      isDefault: updated.isDefault,
+    },
+    metadata: {
+      profileName: updated.name,
+    },
+  });
+
+  operation.logger.info("Sender profile updated", {
+    senderProfileId: updated.id,
+    senderType: updated.senderType,
+    isDefault: updated.isDefault,
+  });
+
+  return updated;
 }

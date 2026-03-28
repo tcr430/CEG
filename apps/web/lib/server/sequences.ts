@@ -1,11 +1,8 @@
 import {
-  createInMemoryAuditEventRepository,
   createInMemorySequenceRepository,
-  type AuditEventRepository,
   type SequenceRepository,
 } from "@ceg/database";
 import { checkFeatureEntitlement, resolveBillingPlanCode } from "@ceg/billing";
-import { createConsoleLogger } from "@ceg/observability";
 import {
   compiledSequenceOutputSchema,
   createSequenceEngineService,
@@ -32,12 +29,13 @@ import {
   assertWorkspaceUsageAccess,
 } from "./billing";
 import { getSenderProfileForWorkspace } from "./sender-profiles";
+import { getSharedAuditEventRepository } from "./audit-events";
+import { createOperationContext } from "./observability";
 import { getSharedUsageEventRepository } from "./usage-events";
 
 declare global {
   var __cegSequenceRepository: SequenceRepository | undefined;
-  var __cegSequenceAuditEventRepository: AuditEventRepository | undefined;
-  var __cegSequenceEngineService: SequenceEngineService | undefined;
+    var __cegSequenceEngineService: SequenceEngineService | undefined;
 }
 
 function getSequenceRepository(): SequenceRepository {
@@ -46,14 +44,6 @@ function getSequenceRepository(): SequenceRepository {
   }
 
   return globalThis.__cegSequenceRepository;
-}
-
-function getAuditEventRepository(): AuditEventRepository {
-  if (globalThis.__cegSequenceAuditEventRepository === undefined) {
-    globalThis.__cegSequenceAuditEventRepository = createInMemoryAuditEventRepository();
-  }
-
-  return globalThis.__cegSequenceAuditEventRepository;
 }
 
 function getSequenceEngine(): SequenceEngineService {
@@ -66,7 +56,6 @@ function getSequenceEngine(): SequenceEngineService {
   return globalThis.__cegSequenceEngineService;
 }
 
-const logger = createConsoleLogger({ area: "sequence_generation" });
 const SEQUENCE_PROMPT_VERSION = "sequence.v1";
 
 export type StoredCompiledSequence = CompiledSequenceOutput & {
@@ -98,6 +87,7 @@ type SequenceStepEditInput = {
   cta: string;
   rationale: string;
   userId?: string;
+  requestId?: string;
 };
 
 function readSequenceEditHistory(record: Sequence): ArtifactEditRecord[] {
@@ -587,6 +577,7 @@ export async function generateSequenceForProspect(input: {
   prospectId: string;
   userId?: string;
   workspacePlanCode?: string | null;
+  requestId?: string;
 }): Promise<CompiledSequenceOutput> {
   await assertWorkspaceFeatureAccess({
     workspaceId: input.workspaceId,
@@ -599,6 +590,14 @@ export async function generateSequenceForProspect(input: {
     meterKey: "sequenceGenerations",
   });
 
+  const operation = createOperationContext({
+    operation: "sequence.generate",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+  });
   const sequenceInput = await buildSequenceGenerationInput(input);
   const existingSequences = await getSequenceRepository().listSequencesByProspect(
     input.workspaceId,
@@ -606,10 +605,8 @@ export async function generateSequenceForProspect(input: {
     input.prospectId,
   );
   const version = getNextSequenceVersion(existingSequences);
-  const runLogger = logger.child({
-    workspaceId: input.workspaceId,
-    campaignId: input.campaignId,
-    prospectId: input.prospectId,
+  const runLogger = operation.logger.child({
+    area: "sequence_generation",
     sequenceVersion: version,
   });
 
@@ -682,13 +679,14 @@ export async function generateSequenceForProspect(input: {
       },
     });
 
-    await getAuditEventRepository().createAuditEvent({
+    await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       actorType: input.userId ? "user" : "system",
       action: "sequence.generated",
       entityType: "sequence",
       entityId: created.id,
+      requestId: operation.requestId,
       changes: {
         sequenceVersion: version,
         generationMode: sequenceInput.senderContext.mode,
@@ -708,13 +706,14 @@ export async function generateSequenceForProspect(input: {
 
     return compiled;
   } catch (error) {
-    await getAuditEventRepository().createAuditEvent({
+    await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       actorType: input.userId ? "user" : "system",
       action: "sequence.generation_failed",
       entityType: "prospect",
       entityId: input.prospectId,
+      requestId: operation.requestId,
       changes: {},
       metadata: {
         error: error instanceof Error ? error.message : "Unknown sequence generation error",
@@ -739,6 +738,7 @@ export async function regenerateSequencePartForProspect(input: {
   feedback: string;
   userId?: string;
   workspacePlanCode?: string | null;
+  requestId?: string;
 }): Promise<StoredCompiledSequence> {
   await assertWorkspaceFeatureAccess({
     workspaceId: input.workspaceId,
@@ -751,6 +751,14 @@ export async function regenerateSequencePartForProspect(input: {
     meterKey: "regenerations",
   });
 
+  const operation = createOperationContext({
+    operation: "sequence.edit",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+  });
   const [sequenceInput, latestSequenceRecord, existingSequences] = await Promise.all([
     buildSequenceGenerationInput(input),
     getLatestStoredSequenceOrThrow(input),
@@ -833,13 +841,14 @@ export async function regenerateSequencePartForProspect(input: {
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
     action: "sequence.part.regenerated",
     entityType: "sequence",
     entityId: created.id,
+    requestId: operation.requestId,
     changes: {
       targetPart: target.targetPart,
       targetStepNumber:
@@ -862,6 +871,14 @@ export async function regenerateSequencePartForProspect(input: {
 export async function editSequenceStepForProspect(
   input: SequenceStepEditInput,
 ): Promise<StoredCompiledSequence> {
+  const operation = createOperationContext({
+    operation: "sequence.edit",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+  });
   const [sequenceInput, latestSequenceRecord, existingSequences] = await Promise.all([
     buildSequenceGenerationInput(input),
     getLatestStoredSequenceOrThrow(input),
@@ -942,13 +959,14 @@ export async function editSequenceStepForProspect(
     },
   });
 
-  await getAuditEventRepository().createAuditEvent({
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     actorType: input.userId ? "user" : "system",
     action: "sequence.step.edited",
     entityType: "sequence",
     entityId: created.id,
+    requestId: operation.requestId,
     changes: editRecord,
     metadata: {
       sourceSequenceId: latestSequenceRecord.id,
@@ -961,3 +979,4 @@ export async function editSequenceStepForProspect(
     qualityReport: created.qualityChecksJson ?? null,
   };
 }
+

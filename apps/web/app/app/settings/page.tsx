@@ -51,6 +51,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <Link href="/app" className="buttonSecondary">
           Back to dashboard
         </Link>
+        <Link href={`/app/settings/debug?workspace=${context.workspace.workspaceId}`} className="buttonSecondary">Debug activity</Link>
       </div>
 
       {params.billing === "success" ? (

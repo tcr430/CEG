@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -49,6 +51,7 @@ export async function createSenderProfileAction(formData: FormData) {
   }
 
   const auth = await getServerAuthContext();
+  const requestId = randomUUID();
 
   await createSenderProfileForWorkspace({
     workspaceId,
@@ -78,6 +81,8 @@ export async function createSenderProfileAction(formData: FormData) {
       | "archived",
     isDefault: formData.get("isDefault") === "on",
     workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+    userId: auth.user?.userId,
+    requestId,
   });
 
   revalidatePath("/app/sender-profiles");
@@ -93,6 +98,7 @@ export async function updateSenderProfileAction(formData: FormData) {
   }
 
   const auth = await getServerAuthContext();
+  const requestId = randomUUID();
 
   await updateSenderProfileForWorkspace({
     senderProfileId,
@@ -123,6 +129,7 @@ export async function updateSenderProfileAction(formData: FormData) {
       | "archived",
     isDefault: formData.get("isDefault") === "on",
     workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+    requestId,
   });
 
   revalidatePath("/app/sender-profiles");

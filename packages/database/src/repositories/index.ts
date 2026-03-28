@@ -1,4 +1,6 @@
 export * from "./workspaces.js";
+export * from "./in-memory-workspaces.js";
+export * from "./workspaces.js";
 export * from "./sender-profiles.js";
 export * from "./in-memory-sender-profiles.js";
 export * from "./campaigns.js";

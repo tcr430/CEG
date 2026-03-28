@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { AuditEvent, CreateAuditEventInput } from "@ceg/validation";
 
 import type { AuditEventRepository } from "./audit-events.js";
-import { validateCreateAuditEventInput } from "./shared.js";
+import { validateCreateAuditEventInput, validateWorkspaceId } from "./shared.js";
 
 export function createInMemoryAuditEventRepository(
   initialEvents: AuditEvent[] = [],
@@ -30,6 +30,21 @@ export function createInMemoryAuditEventRepository(
 
       records.set(record.id, record);
       return record;
+    },
+    async listAuditEventsByWorkspace(workspaceId: string) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
+      return [...records.values()]
+        .filter((record) => record.workspaceId === validatedWorkspaceId)
+        .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+    },
+    async listRecentAuditEventsByWorkspace(input) {
+      const validatedWorkspaceId = validateWorkspaceId(input.workspaceId);
+      const limit = input.limit ?? 25;
+
+      return [...records.values()]
+        .filter((record) => record.workspaceId === validatedWorkspaceId)
+        .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+        .slice(0, limit);
     },
   };
 }

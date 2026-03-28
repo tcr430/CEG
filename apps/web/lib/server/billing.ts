@@ -13,14 +13,13 @@ import {
   type NormalizedBillingSubscription,
   type StripeBillingProvider,
 } from "@ceg/billing";
-import { createConsoleLogger } from "@ceg/observability";
 import { getOptionalEnv, getRequiredEnv } from "@ceg/security";
 import type { Subscription } from "@ceg/validation";
 
+import { getSharedAuditEventRepository } from "./audit-events";
+import { createOperationContext } from "./observability";
 import { getSharedSubscriptionRepository } from "./subscriptions";
 import { getSharedUsageEventRepository } from "./usage-events";
-
-const logger = createConsoleLogger({ area: "billing" });
 
 export type WorkspaceBillingState = {
   planCode: BillingPlanCode;
@@ -64,20 +63,15 @@ function resolvePlanCode(input: {
 
 function getStripeBillingProvider(): StripeBillingProvider {
   if (globalThis.__cegStripeBillingProvider === undefined) {
-    globalThis.__cegStripeBillingProvider = createStripeBillingProvider(
-      {
-        secretKey: getRequiredEnv("STRIPE_SECRET_KEY"),
-        webhookSecret: getRequiredEnv("STRIPE_WEBHOOK_SECRET"),
-        appUrl: getRequiredEnv("NEXT_PUBLIC_APP_URL"),
-        monthlyPriceIds: {
-          pro: getRequiredEnv("STRIPE_PRICE_PRO_MONTHLY"),
-          agency: getRequiredEnv("STRIPE_PRICE_AGENCY_MONTHLY"),
-        },
+    globalThis.__cegStripeBillingProvider = createStripeBillingProvider({
+      secretKey: getRequiredEnv("STRIPE_SECRET_KEY"),
+      webhookSecret: getRequiredEnv("STRIPE_WEBHOOK_SECRET"),
+      appUrl: getRequiredEnv("NEXT_PUBLIC_APP_URL"),
+      monthlyPriceIds: {
+        pro: getRequiredEnv("STRIPE_PRICE_PRO_MONTHLY"),
+        agency: getRequiredEnv("STRIPE_PRICE_AGENCY_MONTHLY"),
       },
-      {
-        logger,
-      },
-    );
+    });
   }
 
   return globalThis.__cegStripeBillingProvider;
@@ -191,7 +185,14 @@ export async function createCheckoutSessionForWorkspace(input: {
   planCode: Exclude<BillingPlanCode, "free">;
   userId?: string | null;
   customerEmail?: string | null;
+  requestId?: string;
 }): Promise<{ url: string; id: string }> {
+  const operation = createOperationContext({
+    operation: "billing.checkout.create",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+  });
   const currentSubscription = await getWorkspaceCurrentSubscription(input.workspaceId);
   const appUrl = getRequiredEnv("NEXT_PUBLIC_APP_URL");
 
@@ -205,10 +206,9 @@ export async function createCheckoutSessionForWorkspace(input: {
     cancelUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}&billing=canceled`,
   });
 
-  logger.info("Stripe checkout session created", {
-    workspaceId: input.workspaceId,
-    planCode: input.planCode,
+  operation.logger.info("Stripe checkout session created", {
     sessionId: session.id,
+    planCode: input.planCode,
   });
 
   return session;
@@ -216,7 +216,15 @@ export async function createCheckoutSessionForWorkspace(input: {
 
 export async function createBillingPortalSessionForWorkspace(input: {
   workspaceId: string;
+  userId?: string | null;
+  requestId?: string;
 }): Promise<{ url: string }> {
+  const operation = createOperationContext({
+    operation: "billing.portal.create",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+  });
   const currentSubscription = await getWorkspaceCurrentSubscription(input.workspaceId);
   if (!currentSubscription?.providerCustomerId) {
     throw new Error("No Stripe customer is synced for this workspace yet.");
@@ -228,8 +236,7 @@ export async function createBillingPortalSessionForWorkspace(input: {
     returnUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}`,
   });
 
-  logger.info("Stripe billing portal session created", {
-    workspaceId: input.workspaceId,
+  operation.logger.info("Stripe billing portal session created", {
     customerId: currentSubscription.providerCustomerId,
   });
 
@@ -253,15 +260,44 @@ function toSubscriptionInput(subscription: NormalizedBillingSubscription) {
   } as const;
 }
 
-export async function syncNormalizedSubscription(
-  subscription: NormalizedBillingSubscription,
-): Promise<Subscription> {
+export async function syncNormalizedSubscription(input: {
+  subscription: NormalizedBillingSubscription;
+  requestId?: string;
+  actorType?: "user" | "system" | "api";
+}): Promise<Subscription> {
+  const operation = createOperationContext({
+    operation: "billing.subscription.sync",
+    requestId: input.requestId,
+    workspaceId: input.subscription.workspaceId,
+  });
+  const previous = await getSharedSubscriptionRepository().getLatestSubscriptionByWorkspace(
+    input.subscription.workspaceId,
+  );
   const record = await getSharedSubscriptionRepository().upsertSubscription(
-    toSubscriptionInput(subscription),
+    toSubscriptionInput(input.subscription),
   );
 
-  logger.info("Subscription synced", {
+  await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: record.workspaceId,
+    userId: null,
+    actorType: input.actorType ?? "system",
+    action: "subscription.synced",
+    entityType: "subscription",
+    entityId: record.id,
+    requestId: operation.requestId,
+    changes: {
+      previousPlanCode: previous?.planCode ?? null,
+      nextPlanCode: record.planCode,
+      previousStatus: previous?.status ?? null,
+      nextStatus: record.status,
+    },
+    metadata: {
+      provider: record.provider,
+      providerSubscriptionId: record.providerSubscriptionId ?? null,
+    },
+  });
+
+  operation.logger.info("Subscription synced", {
     subscriptionId: record.providerSubscriptionId ?? null,
     planCode: record.planCode,
     status: record.status,
@@ -273,26 +309,35 @@ export async function syncNormalizedSubscription(
 export async function handleStripeWebhook(input: {
   payload: string;
   signature: string;
+  requestId?: string;
 }): Promise<{ eventType: string; synced: boolean }> {
+  const operation = createOperationContext({
+    operation: "billing.webhook.handle",
+    requestId: input.requestId,
+  });
   const event = getStripeBillingProvider().verifyWebhook(
     input.payload,
     input.signature,
   );
-  logger.info("Stripe webhook verified", {
+  operation.logger.info("Stripe webhook verified", {
     eventId: event.id,
     eventType: event.type,
   });
 
   const normalized = await getStripeBillingProvider().normalizeSubscriptionFromEvent(event);
   if (normalized === null) {
-    logger.info("Stripe webhook ignored", {
+    operation.logger.info("Stripe webhook ignored", {
       eventId: event.id,
       eventType: event.type,
     });
     return { eventType: event.type, synced: false };
   }
 
-  await syncNormalizedSubscription(normalized);
+  await syncNormalizedSubscription({
+    subscription: normalized,
+    requestId: operation.requestId,
+    actorType: "api",
+  });
   return { eventType: event.type, synced: true };
 }
 

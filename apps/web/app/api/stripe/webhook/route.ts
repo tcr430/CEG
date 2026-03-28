@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { handleStripeWebhook } from "../../../../lib/server/billing";
@@ -5,6 +6,7 @@ import { handleStripeWebhook } from "../../../../lib/server/billing";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const requestId = request.headers.get("x-request-id") ?? randomUUID();
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
     return NextResponse.json({ error: "Missing stripe-signature header." }, { status: 400 });
@@ -13,7 +15,7 @@ export async function POST(request: Request) {
   const payload = await request.text();
 
   try {
-    const result = await handleStripeWebhook({ payload, signature });
+    const result = await handleStripeWebhook({ payload, signature, requestId });
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     return NextResponse.json(
