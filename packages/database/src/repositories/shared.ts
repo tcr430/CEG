@@ -48,9 +48,13 @@ import {
   sequenceSchema,
   researchSnapshotSchema,
   senderProfileSchema,
+  subscriptionSchema,
   usageEventSchema,
   auditEventSchema,
   workspaceSchema,
+  upsertSubscriptionInputSchema,
+  type Subscription,
+  type UpsertSubscriptionInput,
 } from "@ceg/validation";
 
 export class RepositoryValidationError extends AppError {
@@ -142,6 +146,12 @@ export function validateCreateAuditEventInput(
   input: CreateAuditEventInput,
 ): CreateAuditEventInput {
   return createAuditEventInputSchema.parse(input);
+}
+
+export function validateUpsertSubscriptionInput(
+  input: UpsertSubscriptionInput,
+): UpsertSubscriptionInput {
+  return upsertSubscriptionInputSchema.parse(input);
 }
 
 export function validateUpdateProspectInput(
@@ -326,6 +336,24 @@ type DraftReplyRow = {
   quality_checks_json: DraftReply["qualityChecksJson"];
   model_metadata: DraftReply["modelMetadata"];
   created_by_user_id: string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type SubscriptionRow = {
+  id: string;
+  workspace_id: string;
+  provider: Subscription["provider"];
+  provider_customer_id: string | null;
+  provider_subscription_id: string | null;
+  plan_code: Subscription["planCode"];
+  status: Subscription["status"];
+  seats: number;
+  billing_email: string | null;
+  current_period_start: Date | string | null;
+  current_period_end: Date | string | null;
+  cancel_at_period_end: boolean;
+  metadata: Subscription["metadata"];
   created_at: Date | string;
   updated_at: Date | string;
 };
@@ -591,6 +619,28 @@ export function mapDraftReplyRow(row: DraftReplyRow): DraftReply {
     qualityChecksJson: row.quality_checks_json,
     modelMetadata: row.model_metadata,
     createdByUserId: row.created_by_user_id,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapSubscriptionRow(row: SubscriptionRow): Subscription {
+  return subscriptionSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    provider: row.provider,
+    providerCustomerId: row.provider_customer_id,
+    providerSubscriptionId: row.provider_subscription_id,
+    planCode: row.plan_code,
+    status: row.status,
+    seats: row.seats,
+    billingEmail: row.billing_email,
+    currentPeriodStart:
+      row.current_period_start === null ? null : asDate(row.current_period_start),
+    currentPeriodEnd:
+      row.current_period_end === null ? null : asDate(row.current_period_end),
+    cancelAtPeriodEnd: row.cancel_at_period_end,
+    metadata: row.metadata,
     createdAt: asDate(row.created_at),
     updatedAt: asDate(row.updated_at),
   });

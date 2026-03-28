@@ -21,3 +21,5 @@ export * from "./reply-analyses.js";
 export * from "./in-memory-reply-analyses.js";
 export * from "./draft-replies.js";
 export * from "./in-memory-draft-replies.js";
+export * from "./subscriptions.js";
+export * from "./in-memory-subscriptions.js";

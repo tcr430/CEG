@@ -496,3 +496,45 @@ h2 {
     flex-direction: column;
   }
 }
+
+.settingsGrid {
+  align-items: start;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pricingCard {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.featuredPricingCard {
+  border-color: rgba(26, 82, 64, 0.3);
+  box-shadow: 0 10px 30px rgba(26, 82, 64, 0.08);
+}
+
+.statusCard {
+  margin-bottom: 16px;
+}
+
+.successCard {
+  border-color: rgba(26, 82, 64, 0.3);
+}
+
+.warningCard {
+  border-color: rgba(145, 88, 25, 0.3);
+}
+
+@media (max-width: 900px) {
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+}

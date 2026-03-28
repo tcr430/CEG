@@ -109,6 +109,8 @@ Billing and usage gating should stay server-side:
 - costly workflows enforce feature access and monthly usage limits before execution
 - `usage_events` remains the first aggregation spine for outcome-based pricing and cost controls
 - workspace auth metadata can carry the active plan for now, with room to swap to the `subscriptions` table later without changing UI components
+- Stripe checkout, billing portal, and webhook normalization should stay behind the billing boundary
+- local `subscriptions` records become the workspace billing source of truth once synced from Stripe
 
 ## Auth Boundary
 

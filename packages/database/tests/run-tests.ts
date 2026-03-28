@@ -11,6 +11,7 @@ import {
   createInMemoryResearchSnapshotRepository,
   createInMemorySequenceRepository,
   createInMemorySenderProfileRepository,
+  createInMemorySubscriptionRepository,
   createInMemoryUsageEventRepository,
   createCampaignRepository,
   createProspectRepository,
@@ -346,6 +347,59 @@ async function run(): Promise<void> {
 
     assert.equal(snapshot.sourceUrl, "https://acme.com");
     assert.equal(latest?.id, snapshot.id);
+  }
+
+  {
+    const subscriptionRepository = createInMemorySubscriptionRepository();
+
+    const first = await subscriptionRepository.upsertSubscription({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      provider: "stripe",
+      providerCustomerId: "cus_123",
+      providerSubscriptionId: "sub_123",
+      planCode: "pro",
+      status: "active",
+      seats: 1,
+      billingEmail: "owner@example.com",
+      currentPeriodStart: new Date("2026-03-01T00:00:00.000Z"),
+      currentPeriodEnd: new Date("2026-04-01T00:00:00.000Z"),
+      cancelAtPeriodEnd: false,
+      metadata: {},
+    });
+
+    const updated = await subscriptionRepository.upsertSubscription({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      provider: "stripe",
+      providerCustomerId: "cus_123",
+      providerSubscriptionId: "sub_123",
+      planCode: "agency",
+      status: "past_due",
+      seats: 3,
+      billingEmail: "billing@example.com",
+      currentPeriodStart: new Date("2026-03-01T00:00:00.000Z"),
+      currentPeriodEnd: new Date("2026-04-01T00:00:00.000Z"),
+      cancelAtPeriodEnd: true,
+      metadata: { source: "webhook" },
+    });
+
+    const latest = await subscriptionRepository.getLatestSubscriptionByWorkspace(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+    );
+    const bySubscriptionId = await subscriptionRepository.getSubscriptionByProviderSubscriptionId(
+      "stripe",
+      "sub_123",
+    );
+    const byCustomerId = await subscriptionRepository.getSubscriptionByProviderCustomerId(
+      "stripe",
+      "cus_123",
+    );
+
+    assert.equal(first.planCode, "pro");
+    assert.equal(updated.id, first.id);
+    assert.equal(updated.planCode, "agency");
+    assert.equal(latest?.status, "past_due");
+    assert.equal(bySubscriptionId?.billingEmail, "billing@example.com");
+    assert.equal(byCustomerId?.seats, 3);
   }
 
   {

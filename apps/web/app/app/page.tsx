@@ -61,6 +61,12 @@ export default async function DashboardPage({
           >
             Campaigns
           </Link>
+          <Link
+            href={`/app/settings?workspace=${context.workspace.workspaceId}`}
+            className="buttonSecondary"
+          >
+            Billing
+          </Link>
           <form action="/auth/sign-out" method="post">
             <button type="submit" className="buttonGhost">
               Sign out

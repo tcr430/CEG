@@ -163,6 +163,15 @@ export const replyIntentSchema = z.enum([
   "hard_no",
   "unclear",
 ]);
+export const subscriptionProviderSchema = z.enum(["stripe"]);
+export const subscriptionStatusSchema = z.enum([
+  "trialing",
+  "active",
+  "past_due",
+  "canceled",
+  "incomplete",
+]);
+
 export const recommendedActionSchema = z.enum([
   "send_more_info",
   "ask_clarifying_question",
@@ -467,6 +476,24 @@ export const draftReplyOutputSchema = z.object({
   guardrails: stringListSchema,
 });
 
+export const subscriptionSchema = z.object({
+  id: subscriptionIdSchema,
+  workspaceId: workspaceIdSchema,
+  provider: subscriptionProviderSchema,
+  providerCustomerId: optionalTextSchema,
+  providerSubscriptionId: optionalTextSchema,
+  planCode: z.enum(["free", "pro", "agency"]),
+  status: subscriptionStatusSchema,
+  seats: z.number().int().positive(),
+  billingEmail: optionalTextSchema,
+  currentPeriodStart: timestampSchema.nullable().optional(),
+  currentPeriodEnd: timestampSchema.nullable().optional(),
+  cancelAtPeriodEnd: z.boolean().default(false),
+  metadata: metadataSchema,
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+});
+
 export const promptTemplateSchema = z.object({
   id: promptTemplateIdSchema,
   workspaceId: workspaceIdSchema.nullable().optional(),
@@ -684,6 +711,21 @@ export const auditEventSchema = z.object({
   createdAt: timestampSchema,
 });
 
+export const upsertSubscriptionInputSchema = z.object({
+  workspaceId: workspaceIdSchema,
+  provider: subscriptionProviderSchema.default("stripe"),
+  providerCustomerId: optionalTextSchema,
+  providerSubscriptionId: optionalTextSchema,
+  planCode: z.enum(["free", "pro", "agency"]),
+  status: subscriptionStatusSchema,
+  seats: z.number().int().positive().default(1),
+  billingEmail: optionalTextSchema,
+  currentPeriodStart: timestampSchema.nullable().optional(),
+  currentPeriodEnd: timestampSchema.nullable().optional(),
+  cancelAtPeriodEnd: z.boolean().default(false),
+  metadata: metadataSchema,
+});
+
 export const createAuditEventInputSchema = z.object({
   workspaceId: workspaceIdSchema,
   userId: userIdSchema.nullable().optional(),
@@ -707,6 +749,7 @@ export type Message = z.infer<typeof messageSchema>;
 export type MessageSource = z.infer<typeof messageSourceSchema>;
 export type ReplyAnalysis = z.infer<typeof replyAnalysisSchema>;
 export type DraftReply = z.infer<typeof draftReplySchema>;
+export type Subscription = z.infer<typeof subscriptionSchema>;
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;
 export type ConfidenceScore = z.infer<typeof confidenceScoreSchema>;
 export type EvidenceSnippet = z.infer<typeof evidenceSnippetSchema>;
@@ -739,5 +782,6 @@ export type CreateResearchSnapshotInput = z.infer<
   typeof createResearchSnapshotInputSchema
 >;
 export type CreateUsageEventInput = z.infer<typeof createUsageEventInputSchema>;
+export type UpsertSubscriptionInput = z.infer<typeof upsertSubscriptionInputSchema>;
 export type CreateAuditEventInput = z.infer<typeof createAuditEventInputSchema>;
 
