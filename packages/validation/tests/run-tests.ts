@@ -6,7 +6,12 @@ import {
   createCampaignInputSchema,
   createProspectInputSchema,
   createSenderProfileInputSchema,
+  draftReplyOutputSchema,
   prospectStatusSchema,
+  recommendedActionSchema,
+  replyAnalysisInputSchema,
+  replyClassificationOutputSchema,
+  replyIntentSchema,
   senderProfileTypeSchema,
   updateCampaignInputSchema,
   updateProspectInputSchema,
@@ -194,5 +199,73 @@ const researchSnapshotResult = createResearchSnapshotInputSchema.parse({
 });
 
 assert.equal(researchSnapshotResult.fetchStatus, "captured");
+
+const replyAnalysisInputResult = replyAnalysisInputSchema.parse({
+  workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+  campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+  prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+  threadId: "ba7a8384-f5f5-4c87-96cd-e2b36045dad0",
+  latestInboundMessage: {
+    messageId: "aa532df5-fc7d-4e25-bb23-ee2476a57349",
+    subject: "Re: outbound",
+    bodyText: "Can you send more information? Timing is difficult this month.",
+  },
+  threadMessages: [
+    {
+      direction: "outbound",
+      subject: "Outbound",
+      bodyText: "Open to a quick conversation?",
+    },
+    {
+      direction: "inbound",
+      subject: "Re: outbound",
+      bodyText: "Can you send more information? Timing is difficult this month.",
+    },
+  ],
+  campaignSummary: "Founder-led outbound support",
+});
+
+assert.equal(replyAnalysisInputResult.threadMessages.length, 2);
+assert.equal(replyIntentSchema.parse("hard_no"), "hard_no");
+assert.equal(recommendedActionSchema.parse("stop_outreach"), "stop_outreach");
+
+const replyClassificationResult = replyClassificationOutputSchema.parse({
+  intent: "objection_timing",
+  objectionType: "timing",
+  classification: "needs_more_info",
+  confidence: {
+    score: 0.7,
+    label: "medium",
+    reasons: ["Timing and information request were both explicit."],
+  },
+  recommendedAction: "send_more_info",
+  rationale: "The prospect raised timing friction but did not close the door.",
+  keySignals: ["timing is difficult", "send more information"],
+  cautionFlags: ["avoid pressure"],
+});
+
+assert.equal(replyClassificationResult.objectionType, "timing");
+
+const draftReplyOutputResult = draftReplyOutputSchema.parse({
+  recommendedAction: "send_more_info",
+  draftingStrategy: "Acknowledge timing and share concise context.",
+  confidence: {
+    score: 0.64,
+    label: "medium",
+    reasons: ["The ask for more information is explicit."],
+  },
+  drafts: [
+    {
+      slotId: "option-1",
+      label: "Concise info",
+      subject: "More context",
+      bodyText: "Happy to send a short summary you can review when timing improves.",
+      strategyNote: "Keeps the pressure low.",
+    },
+  ],
+  guardrails: ["Do not overstate outcomes"],
+});
+
+assert.equal(draftReplyOutputResult.drafts[0]?.slotId, "option-1");
 
 console.log("@ceg/validation entity contract tests passed");

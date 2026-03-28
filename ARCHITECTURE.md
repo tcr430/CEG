@@ -84,6 +84,11 @@ For sequence generation specifically:
 - provider-specific model calls must be implemented behind the sequence model adapter interface
 - the app layer may compose the active provider, but components should only trigger server actions and render stored sequence records
 
+For reply intelligence specifically:
+- inbound reply analysis, strategy recommendation, and draft generation should stay behind `@ceg/reply-engine`
+- classification should remain separate from drafting so the system can audit intent, objections, and recommended actions independently
+- provider-specific reply analysis or drafting calls must stay behind the reply model adapter interface
+
 ## Async-Ready, Not Queue-Heavy
 
 Research and generation flows should be designed so they can move to queues later, but Phase 1 does not introduce queue infrastructure or microservices yet.

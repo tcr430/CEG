@@ -94,6 +94,36 @@ export const messageStatusSchema = z.enum([
   "failed",
   "archived",
 ]);
+export const objectionTypeSchema = z.enum([
+  "price",
+  "timing",
+  "authority",
+  "already_has_solution",
+  "none",
+  "other",
+]);
+export const replyIntentSchema = z.enum([
+  "interested",
+  "needs_more_info",
+  "objection_price",
+  "objection_timing",
+  "objection_authority",
+  "objection_already_has_solution",
+  "referral_to_other_person",
+  "soft_no",
+  "hard_no",
+  "unclear",
+]);
+export const recommendedActionSchema = z.enum([
+  "send_more_info",
+  "ask_clarifying_question",
+  "propose_meeting",
+  "follow_up_later",
+  "route_to_other_person",
+  "stop_outreach",
+  "close_lost",
+  "escalate_to_human",
+]);
 
 export const workspaceSchema = z.object({
   id: workspaceIdSchema,
@@ -299,6 +329,65 @@ export const draftReplySchema = z.object({
   createdByUserId: userIdSchema.nullable().optional(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
+});
+
+const replyAnalysisMessageSchema = z.object({
+  messageId: messageIdSchema,
+  subject: optionalTextSchema,
+  bodyText: z.string().trim().min(1),
+});
+
+const replyThreadMessageSchema = z.object({
+  direction: messageDirectionSchema,
+  subject: optionalTextSchema,
+  bodyText: z.string().trim().min(1),
+});
+
+export const replyAnalysisInputSchema = z.object({
+  workspaceId: workspaceIdSchema,
+  campaignId: campaignIdSchema.nullable().optional(),
+  prospectId: prospectIdSchema.nullable().optional(),
+  threadId: conversationThreadIdSchema.nullable().optional(),
+  latestInboundMessage: replyAnalysisMessageSchema,
+  threadMessages: z.array(replyThreadMessageSchema).min(1),
+  campaignSummary: optionalTextSchema,
+  senderContextSummary: optionalTextSchema,
+  prospectCompanyProfileSummary: optionalTextSchema,
+});
+
+export const replyClassificationOutputSchema = z.object({
+  intent: replyIntentSchema,
+  objectionType: objectionTypeSchema.nullable().optional(),
+  classification: replyIntentSchema,
+  confidence: confidenceScoreSchema,
+  recommendedAction: recommendedActionSchema,
+  rationale: z.string().trim().min(1),
+  keySignals: stringListSchema,
+  cautionFlags: stringListSchema,
+});
+
+export const responseStrategyRecommendationSchema = z.object({
+  recommendedAction: recommendedActionSchema,
+  draftingStrategy: z.string().trim().min(1),
+  guardrails: stringListSchema,
+  toneGuidance: stringListSchema,
+  escalationNeeded: z.boolean().default(false),
+});
+
+const draftReplySlotSchema = z.object({
+  slotId: z.string().trim().min(1),
+  label: z.string().trim().min(1),
+  subject: optionalTextSchema,
+  bodyText: z.string().trim().min(1),
+  strategyNote: z.string().trim().min(1),
+});
+
+export const draftReplyOutputSchema = z.object({
+  recommendedAction: recommendedActionSchema,
+  draftingStrategy: z.string().trim().min(1),
+  confidence: confidenceScoreSchema,
+  drafts: z.array(draftReplySlotSchema).min(1).max(5),
+  guardrails: stringListSchema,
 });
 
 export const promptTemplateSchema = z.object({
@@ -540,6 +629,14 @@ export type CompanyProfile = z.infer<typeof companyProfileSchema>;
 export type ConfidenceScore = z.infer<typeof confidenceScoreSchema>;
 export type EvidenceSnippet = z.infer<typeof evidenceSnippetSchema>;
 export type EvidenceFlag = z.infer<typeof evidenceFlagSchema>;
+export type ReplyAnalysisInput = z.infer<typeof replyAnalysisInputSchema>;
+export type ReplyClassificationOutput = z.infer<
+  typeof replyClassificationOutputSchema
+>;
+export type ResponseStrategyRecommendation = z.infer<
+  typeof responseStrategyRecommendationSchema
+>;
+export type DraftReplyOutput = z.infer<typeof draftReplyOutputSchema>;
 export type UsageEvent = z.infer<typeof usageEventSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceInputSchema>;

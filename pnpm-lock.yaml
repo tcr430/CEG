@@ -113,7 +113,14 @@ importers:
 
   packages/observability: {}
 
-  packages/reply-engine: {}
+  packages/reply-engine:
+    dependencies:
+      '@ceg/validation':
+        specifier: workspace:*
+        version: link:../validation
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
 
   packages/research-engine:
     dependencies:

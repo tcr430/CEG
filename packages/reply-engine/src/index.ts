@@ -1,4 +1,8 @@
+export * from "./contracts.js";
+export * from "./validators.js";
+export * from "./service.js";
+
 export const replyEngineBoundary = {
   name: "@ceg/reply-engine",
-  purpose: "Reply analysis and drafting orchestration contracts",
+  purpose: "Schema-validated inbound reply analysis and drafting contracts",
 } as const;

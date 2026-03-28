@@ -79,9 +79,11 @@ pnpm --filter web dev
 
 ## Environment
 
-Document local environment variables in [`.env.example`](D:/Project/CEG/.env.example).
+Use [`.env.local`](D:/Project/CEG/.env.local) for actual local runtime values.
 
-For compatibility with repository guidance, the same values are mirrored in [`.env.examples`](D:/Project/CEG/.env.examples).
+Use [`.env.example`](D:/Project/CEG/.env.example) as the committed template.
+
+For compatibility with repository guidance in `AGENTS.md`, the same template values are mirrored in [`.env.examples`](D:/Project/CEG/.env.examples).
 
 ## Documentation
 
