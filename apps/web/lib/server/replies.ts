@@ -27,7 +27,15 @@ import {
   type ResponseStrategyRecommendationOutput,
 } from "@ceg/reply-engine";
 import { compiledSequenceOutputSchema } from "@ceg/sequence-engine";
-import { draftReplyOutputSchema, type ConversationThread, type DraftReply, type Message, type Prospect } from "@ceg/validation";
+import {
+  artifactEditRecordSchema,
+  draftReplyOutputSchema,
+  type ArtifactEditRecord,
+  type ConversationThread,
+  type DraftReply,
+  type Message,
+  type Prospect,
+} from "@ceg/validation";
 
 import { getCampaignForWorkspace, getProspectForCampaign, updateProspectForCampaign } from "./campaigns";
 import { createOpenAiReplyModelAdapter } from "./openai-reply-provider";
@@ -53,6 +61,37 @@ type PersistedDraftReplyBundle = {
   output: DraftReplyGenerationOutput["output"];
   records: DraftReply[];
 };
+
+type DraftReplyEditInput = {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  targetSlotId: string;
+  subject?: string | null;
+  bodyText: string;
+  strategyNote: string;
+  userId?: string;
+};
+
+function readDraftEditHistory(record: DraftReply): ArtifactEditRecord[] {
+  if (typeof record.structuredOutput !== "object" || record.structuredOutput === null) {
+    return [];
+  }
+
+  const candidate = (record.structuredOutput as Record<string, unknown>).editHistory;
+  if (!Array.isArray(candidate)) {
+    return [];
+  }
+
+  return candidate.flatMap((item) => {
+    const parsed = artifactEditRecordSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function serializeDraftReplyArtifact(value: { subject?: string | null; bodyText: string; strategyNote: string }) {
+  return JSON.stringify(value, null, 2);
+}
 
 export type ReplyTimelineEntry = {
   message: Message;
@@ -1021,6 +1060,7 @@ export async function regenerateDraftReplyForProspect(input: {
 
   const latestInboundMessage = state.latestInboundMessage;
   const latestAnalysis = state.latestAnalysis;
+  const latestDrafts = state.latestDrafts;
 
   const request = await buildReplyAnalysisRequest({
     workspaceId: input.workspaceId,
@@ -1037,14 +1077,14 @@ export async function regenerateDraftReplyForProspect(input: {
       strategy: latestAnalysis.strategyOutput.strategy,
     },
     targetSlotId: input.targetSlotId,
-    currentOutput: state.latestDrafts.output,
+    currentOutput: latestDrafts.output,
     feedback: input.feedback,
   });
 
-  const nextDraftVersion = state.latestDrafts.version + 1;
+  const nextDraftVersion = latestDrafts.version + 1;
   const updatedOutput = draftReplyOutputSchema.parse({
-    ...state.latestDrafts.output,
-    drafts: state.latestDrafts.output.drafts.map((draft) =>
+    ...latestDrafts.output,
+    drafts: latestDrafts.output.drafts.map((draft) =>
       draft.slotId === input.targetSlotId ? regenerated.regeneratedDraft : draft,
     ),
   });
@@ -1117,3 +1157,149 @@ export async function regenerateDraftReplyForProspect(input: {
   return updatedOutput;
 }
 
+
+
+export async function editDraftReplyForProspect(
+  input: DraftReplyEditInput,
+): Promise<DraftReplyGenerationOutput["output"]> {
+  const state = await getReplyThreadStateForProspect(
+    input.workspaceId,
+    input.campaignId,
+    input.prospectId,
+  );
+
+  if (
+    state.latestInboundMessage === null ||
+    state.latestAnalysis === null ||
+    state.latestDrafts === null
+  ) {
+    throw new Error("Generate draft replies before editing one option.");
+  }
+
+  const latestInboundMessage = state.latestInboundMessage;
+  const latestAnalysis = state.latestAnalysis;
+  const latestDrafts = state.latestDrafts;
+  const priorRecordBySlotId = new Map(
+    latestDrafts.output.drafts.map((draft, index) => [
+      draft.slotId,
+      latestDrafts.records[index] ?? null,
+    ]),
+  );
+  const existingDraft = latestDrafts.output.drafts.find(
+    (draft) => draft.slotId === input.targetSlotId,
+  );
+  const existingDraftRecord = priorRecordBySlotId.get(input.targetSlotId) ?? null;
+
+  if (existingDraft === undefined || existingDraftRecord === null) {
+    throw new Error("The target draft option could not be resolved.");
+  }
+
+  const request = await buildReplyAnalysisRequest({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    latestInboundMessage,
+    threadMessages: state.messages,
+  });
+
+  const nextDraftVersion = latestDrafts.version + 1;
+  const updatedOutput = draftReplyOutputSchema.parse({
+    ...latestDrafts.output,
+    drafts: latestDrafts.output.drafts.map((draft) =>
+      draft.slotId === input.targetSlotId
+        ? {
+            ...draft,
+            subject: input.subject ?? null,
+            bodyText: input.bodyText,
+            strategyNote: input.strategyNote,
+          }
+        : draft,
+    ),
+  });
+  const bundleId = randomUUID();
+  const targetDraft = updatedOutput.drafts.find((draft) => draft.slotId === input.targetSlotId);
+
+  if (!targetDraft) {
+    throw new Error("Edited draft option could not be resolved.");
+  }
+
+  const editRecord = artifactEditRecordSchema.parse({
+    artifactType: "draft_reply_option",
+    artifactId: existingDraftRecord.id,
+    originalText: serializeDraftReplyArtifact(existingDraft),
+    editedText: serializeDraftReplyArtifact(targetDraft),
+    editedAt: new Date(),
+    editorUserId: input.userId ?? null,
+  });
+
+  await Promise.all(
+    updatedOutput.drafts.map((draft) => {
+      const priorRecord = priorRecordBySlotId.get(draft.slotId) ?? null;
+      const priorHistory = priorRecord ? readDraftEditHistory(priorRecord) : [];
+
+      return getDraftReplyRepository().createDraftReply({
+        workspaceId: input.workspaceId,
+        threadId: latestInboundMessage.threadId,
+        messageId: latestInboundMessage.id,
+        senderProfileId:
+          request.senderContext.mode === "sender_aware"
+            ? request.senderContext.senderProfile.id
+            : null,
+        promptTemplateId: REPLY_PROMPT_TEMPLATE_ID,
+        subject: draft.subject ?? null,
+        bodyText: draft.bodyText,
+        structuredOutput: {
+          draftVersion: nextDraftVersion,
+          bundleId,
+          bundleOutput: updatedOutput,
+          editHistory:
+            draft.slotId === input.targetSlotId
+              ? [...priorHistory, editRecord]
+              : priorHistory,
+        },
+        qualityChecksJson: scoreDraftReplyQuality(draft, {
+          request,
+          analysis: latestAnalysis.analysisOutput.analysis,
+          strategy: latestAnalysis.strategyOutput.strategy,
+        }),
+        modelMetadata: {
+          editedAt: new Date().toISOString(),
+          editRecord,
+          sourceDraftId: existingDraftRecord.id,
+        },
+        createdByUserId: input.userId ?? null,
+      });
+    }),
+  );
+
+  await getUsageEventRepository().createUsageEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    eventName: "reply_draft_edited",
+    entityType: "draft_reply",
+    entityId: existingDraftRecord.id,
+    quantity: 1,
+    billable: false,
+    metadata: {
+      targetSlotId: input.targetSlotId,
+      draftVersion: nextDraftVersion,
+    },
+  });
+
+  await getAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    actorType: input.userId ? "user" : "system",
+    action: "reply.draft.edited",
+    entityType: "draft_reply",
+    entityId: existingDraftRecord.id,
+    changes: editRecord,
+    metadata: {
+      draftVersion: nextDraftVersion,
+    },
+  });
+
+  return updatedOutput;
+}

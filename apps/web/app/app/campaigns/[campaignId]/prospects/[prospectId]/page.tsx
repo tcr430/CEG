@@ -18,9 +18,12 @@ import {
   appendGeneratedSequenceMessagesAction,
   createInboundReplyAction,
   createManualOutboundMessageAction,
+  editReplyDraftAction,
+  editSequenceStepAction,
   generateProspectSequenceAction,
   generateReplyDraftsAction,
   regenerateReplyDraftAction,
+  regenerateSequencePartAction,
   runProspectResearchAction,
 } from "../../../actions";
 
@@ -460,25 +463,50 @@ export default async function ProspectDetailPage({
                                             </div>
                                           ) : null}
                                           {bundleIndex === 0 ? (
-                                            <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
-                                              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                                              <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-                                              <input type="hidden" name="prospectId" value={prospect.id} />
-                                              <input type="hidden" name="targetSlotId" value={draft.slotId} />
-                                              <label className="field">
-                                                <span>Regeneration feedback</span>
-                                                <textarea
-                                                  name="feedback"
-                                                  rows={3}
-                                                  defaultValue="Make this a little shorter and softer."
-                                                />
-                                              </label>
-                                              <div className="inlineActions">
-                                                <button type="submit" className="buttonSecondary">
-                                                  Regenerate this option
-                                                </button>
-                                              </div>
-                                            </form>
+                                            <>
+                                              <form action={regenerateReplyDraftAction} className="panel prospectResearchForm compactPanel">
+                                                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                                <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                                <input type="hidden" name="prospectId" value={prospect.id} />
+                                                <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                                                <label className="field">
+                                                  <span>Regeneration feedback</span>
+                                                  <textarea
+                                                    name="feedback"
+                                                    rows={3}
+                                                    defaultValue="Make this a little shorter and softer."
+                                                  />
+                                                </label>
+                                                <div className="inlineActions">
+                                                  <button type="submit" className="buttonSecondary">
+                                                    Regenerate this option
+                                                  </button>
+                                                </div>
+                                              </form>
+                                              <form action={editReplyDraftAction} className="panel prospectResearchForm compactPanel">
+                                                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                                <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                                <input type="hidden" name="prospectId" value={prospect.id} />
+                                                <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                                                <label className="field">
+                                                  <span>Subject</span>
+                                                  <input name="subject" defaultValue={draft.subject ?? ""} />
+                                                </label>
+                                                <label className="field">
+                                                  <span>Body</span>
+                                                  <textarea name="bodyText" rows={5} defaultValue={draft.bodyText} />
+                                                </label>
+                                                <label className="field">
+                                                  <span>Strategy note</span>
+                                                  <textarea name="strategyNote" rows={3} defaultValue={draft.strategyNote} />
+                                                </label>
+                                                <div className="inlineActions">
+                                                  <button type="submit" className="buttonSecondary">
+                                                    Save edited draft
+                                                  </button>
+                                                </div>
+                                              </form>
+                                            </>
                                           ) : null}
                                         </li>
                                       );
@@ -600,6 +628,23 @@ export default async function ProspectDetailPage({
                     </li>
                   ))}
                 </ul>
+                <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <input type="hidden" name="targetPart" value="subject_line" />
+                  <label className="field">
+                    <span>Regenerate subject lines</span>
+                    <textarea
+                      name="feedback"
+                      rows={3}
+                      defaultValue="Keep the set sharper and more specific to this prospect."
+                    />
+                  </label>
+                  <div className="inlineActions">
+                    <button type="submit" className="buttonSecondary">Regenerate subject set</button>
+                  </div>
+                </form>
               </div>
               <div className="researchSection">
                 <h3>Opener options</h3>
@@ -611,6 +656,23 @@ export default async function ProspectDetailPage({
                     </li>
                   ))}
                 </ul>
+                <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <input type="hidden" name="targetPart" value="opener" />
+                  <label className="field">
+                    <span>Regenerate opener options</span>
+                    <textarea
+                      name="feedback"
+                      rows={3}
+                      defaultValue="Make the openers more tailored to the strongest research hook."
+                    />
+                  </label>
+                  <div className="inlineActions">
+                    <button type="submit" className="buttonSecondary">Regenerate opener set</button>
+                  </div>
+                </form>
               </div>
               <div className="researchSection">
                 <h3>Initial email</h3>
@@ -619,18 +681,112 @@ export default async function ProspectDetailPage({
                 <p>{latestSequence.initialEmail.email.body}</p>
                 <p><strong>CTA:</strong> {latestSequence.initialEmail.email.cta}</p>
                 <p><strong>Rationale:</strong> {latestSequence.initialEmail.rationale}</p>
+                <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <input type="hidden" name="targetPart" value="initial_email" />
+                  <label className="field">
+                    <span>Regenerate this email step</span>
+                    <textarea
+                      name="feedback"
+                      rows={3}
+                      defaultValue="Keep the message concise and improve the CTA."
+                    />
+                  </label>
+                  <div className="inlineActions">
+                    <button type="submit" className="buttonSecondary">Regenerate initial email</button>
+                  </div>
+                </form>
+                <form action={editSequenceStepAction} className="panel prospectResearchForm compactPanel">
+                  <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                  <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                  <input type="hidden" name="prospectId" value={prospect.id} />
+                  <input type="hidden" name="targetPart" value="initial_email" />
+                  <label className="field">
+                    <span>Subject</span>
+                    <input name="subject" defaultValue={latestSequence.initialEmail.email.subject} />
+                  </label>
+                  <label className="field">
+                    <span>Opener</span>
+                    <textarea name="opener" rows={3} defaultValue={latestSequence.initialEmail.email.opener} />
+                  </label>
+                  <label className="field">
+                    <span>Body</span>
+                    <textarea name="body" rows={6} defaultValue={latestSequence.initialEmail.email.body} />
+                  </label>
+                  <label className="field">
+                    <span>CTA</span>
+                    <input name="cta" defaultValue={latestSequence.initialEmail.email.cta} />
+                  </label>
+                  <label className="field">
+                    <span>Rationale</span>
+                    <textarea name="rationale" rows={3} defaultValue={latestSequence.initialEmail.email.rationale} />
+                  </label>
+                  <div className="inlineActions">
+                    <button type="submit" className="buttonSecondary">Save edited initial email</button>
+                  </div>
+                </form>
               </div>
               <div className="researchSection">
                 <h3>Follow-ups</h3>
-                <ul className="researchList">
+                <ul className="researchList sequenceStepList">
                   {latestSequence.followUpSequence.sequenceSteps.map((step) => (
-                    <li key={step.stepNumber}>
+                    <li key={step.stepNumber} className="sequenceStepItem">
                       <strong>Step {step.stepNumber} | Wait {step.waitDays} day(s)</strong>
                       <p><strong>{step.subject}</strong></p>
                       <p>{step.opener}</p>
                       <p>{step.body}</p>
                       <p><strong>CTA:</strong> {step.cta}</p>
                       <p><strong>Rationale:</strong> {step.rationale}</p>
+                      <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
+                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                        <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                        <input type="hidden" name="prospectId" value={prospect.id} />
+                        <input type="hidden" name="targetPart" value="follow_up_step" />
+                        <input type="hidden" name="targetStepNumber" value={step.stepNumber} />
+                        <label className="field">
+                          <span>Regenerate this step</span>
+                          <textarea
+                            name="feedback"
+                            rows={3}
+                            defaultValue={`Refresh follow-up ${step.stepNumber} and keep it specific.`}
+                          />
+                        </label>
+                        <div className="inlineActions">
+                          <button type="submit" className="buttonSecondary">Regenerate step</button>
+                        </div>
+                      </form>
+                      <form action={editSequenceStepAction} className="panel prospectResearchForm compactPanel">
+                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                        <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                        <input type="hidden" name="prospectId" value={prospect.id} />
+                        <input type="hidden" name="targetPart" value="follow_up_step" />
+                        <input type="hidden" name="targetStepNumber" value={step.stepNumber} />
+                        <label className="field">
+                          <span>Subject</span>
+                          <input name="subject" defaultValue={step.subject} />
+                        </label>
+                        <label className="field">
+                          <span>Opener</span>
+                          <textarea name="opener" rows={3} defaultValue={step.opener} />
+                        </label>
+                        <label className="field">
+                          <span>Body</span>
+                          <textarea name="body" rows={5} defaultValue={step.body} />
+                        </label>
+                        <label className="field">
+                          <span>CTA</span>
+                          <input name="cta" defaultValue={step.cta} />
+                        </label>
+                        <label className="field">
+                          <span>Rationale</span>
+                          <textarea name="rationale" rows={3} defaultValue={step.rationale} />
+                        </label>
+                        <div className="inlineActions">
+                          <button type="submit" className="buttonSecondary">Save edited step</button>
+                        </div>
+                      </form>
                     </li>
                   ))}
                 </ul>

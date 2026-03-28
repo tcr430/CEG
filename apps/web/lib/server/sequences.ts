@@ -10,13 +10,20 @@ import { createConsoleLogger } from "@ceg/observability";
 import {
   compiledSequenceOutputSchema,
   createSequenceEngineService,
+  regenerateSequencePartOutputSchema,
   scoreCompiledSequenceQuality,
   type CompiledSequenceOutput,
   type SenderContext,
   type SequenceEngineService,
   type SequenceGenerationInput,
 } from "@ceg/sequence-engine";
-import { companyProfileSchema, type CompanyProfile, type Sequence } from "@ceg/validation";
+import {
+  artifactEditRecordSchema,
+  companyProfileSchema,
+  type ArtifactEditRecord,
+  type CompanyProfile,
+  type Sequence,
+} from "@ceg/validation";
 
 import { getCampaignForWorkspace, getProspectForCampaign } from "./campaigns";
 import { createOpenAiSequenceModelAdapter } from "./openai-sequence-provider";
@@ -68,8 +75,192 @@ const logger = createConsoleLogger({ area: "sequence_generation" });
 const SEQUENCE_PROMPT_VERSION = "sequence.v1";
 
 export type StoredCompiledSequence = CompiledSequenceOutput & {
+  recordId: string;
   qualityReport: Sequence["qualityChecksJson"] | null;
 };
+
+type SequenceArtifactType =
+  | "sequence_subject_line_set"
+  | "sequence_opener_set"
+  | "sequence_initial_email"
+  | "sequence_follow_up_step";
+
+type SequencePartTarget =
+  | { targetPart: "subject_line"; feedback: string }
+  | { targetPart: "opener"; feedback: string }
+  | { targetPart: "initial_email"; feedback: string }
+  | { targetPart: "follow_up_step"; targetStepNumber: number; feedback: string };
+
+type SequenceStepEditInput = {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  targetPart: "initial_email" | "follow_up_step";
+  targetStepNumber?: number;
+  subject: string;
+  opener: string;
+  body: string;
+  cta: string;
+  rationale: string;
+  userId?: string;
+};
+
+function readSequenceEditHistory(record: Sequence): ArtifactEditRecord[] {
+  if (typeof record.content !== "object" || record.content === null) {
+    return [];
+  }
+
+  const candidate = (record.content as Record<string, unknown>).editHistory;
+  if (!Array.isArray(candidate)) {
+    return [];
+  }
+
+  return candidate.flatMap((item) => {
+    const parsed = artifactEditRecordSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function serializeSequenceArtifact(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return JSON.stringify(value, null, 2);
+}
+
+function withSequenceEditHistory(
+  compiled: CompiledSequenceOutput,
+  history: ArtifactEditRecord[],
+): Record<string, unknown> {
+  return {
+    ...compiled,
+    editHistory: history,
+  };
+}
+
+function toSequenceArtifactType(targetPart: SequencePartTarget["targetPart"]): SequenceArtifactType {
+  switch (targetPart) {
+    case "subject_line":
+      return "sequence_subject_line_set";
+    case "opener":
+      return "sequence_opener_set";
+    case "initial_email":
+      return "sequence_initial_email";
+    case "follow_up_step":
+      return "sequence_follow_up_step";
+  }
+}
+
+function buildSequenceArtifactId(
+  sequenceId: string,
+  targetPart: SequencePartTarget["targetPart"] | SequenceStepEditInput["targetPart"],
+  targetStepNumber?: number,
+): string {
+  if (targetPart === "follow_up_step") {
+    return `${sequenceId}:follow-up:${targetStepNumber ?? 1}`;
+  }
+
+  return `${sequenceId}:${targetPart}`;
+}
+
+function mergeRegeneratedSequence(
+  compiled: CompiledSequenceOutput,
+  regeneratedOutput: ReturnType<typeof regenerateSequencePartOutputSchema.parse>,
+): CompiledSequenceOutput {
+  const regenerated = regeneratedOutput.regeneratedPart;
+
+  switch (regenerated.part) {
+    case "subject_line":
+      return compiledSequenceOutputSchema.parse({
+        ...compiled,
+        subjectLineSet: {
+          ...compiled.subjectLineSet,
+          subjectLines: regenerated.subjectLines ?? compiled.subjectLineSet.subjectLines,
+          rationale: regeneratedOutput.rationale,
+          qualityChecks: regeneratedOutput.qualityChecks,
+          generationMetadata: regeneratedOutput.generationMetadata,
+        },
+      });
+    case "opener":
+      return compiledSequenceOutputSchema.parse({
+        ...compiled,
+        openerSet: {
+          ...compiled.openerSet,
+          openerOptions: regenerated.openerOptions ?? compiled.openerSet.openerOptions,
+          rationale: regeneratedOutput.rationale,
+          qualityChecks: regeneratedOutput.qualityChecks,
+          generationMetadata: regeneratedOutput.generationMetadata,
+        },
+      });
+    case "initial_email":
+      return compiledSequenceOutputSchema.parse({
+        ...compiled,
+        initialEmail: {
+          email: regenerated.email ?? compiled.initialEmail.email,
+          rationale: regeneratedOutput.rationale,
+          qualityChecks: regeneratedOutput.qualityChecks,
+          generationMetadata: regeneratedOutput.generationMetadata,
+        },
+      });
+    case "follow_up_step":
+      return compiledSequenceOutputSchema.parse({
+        ...compiled,
+        followUpSequence: {
+          ...compiled.followUpSequence,
+          sequenceSteps: compiled.followUpSequence.sequenceSteps.map((step) =>
+            step.stepNumber === regenerated.sequenceStep?.stepNumber
+              ? regenerated.sequenceStep
+              : step,
+          ),
+          rationale: regeneratedOutput.rationale,
+          qualityChecks: regeneratedOutput.qualityChecks,
+          generationMetadata: regeneratedOutput.generationMetadata,
+        },
+      });
+  }
+}
+
+function mergeEditedSequenceStep(
+  compiled: CompiledSequenceOutput,
+  input: SequenceStepEditInput,
+): CompiledSequenceOutput {
+  if (input.targetPart === "initial_email") {
+    return compiledSequenceOutputSchema.parse({
+      ...compiled,
+      initialEmail: {
+        ...compiled.initialEmail,
+        email: {
+          ...compiled.initialEmail.email,
+          subject: input.subject,
+          opener: input.opener,
+          body: input.body,
+          cta: input.cta,
+          rationale: input.rationale,
+        },
+      },
+    });
+  }
+
+  return compiledSequenceOutputSchema.parse({
+    ...compiled,
+    followUpSequence: {
+      ...compiled.followUpSequence,
+      sequenceSteps: compiled.followUpSequence.sequenceSteps.map((step) =>
+        step.stepNumber === input.targetStepNumber
+          ? {
+              ...step,
+              subject: input.subject,
+              opener: input.opener,
+              body: input.body,
+              cta: input.cta,
+              rationale: input.rationale,
+            }
+          : step,
+      ),
+    },
+  });
+}
 
 function buildFallbackCompanyProfile(input: {
   websiteUrl?: string | null;
@@ -292,9 +483,85 @@ export async function getLatestSequenceForProspect(
   }
 
   return {
+    recordId: latest.id,
     ...compiledSequenceOutputSchema.parse(latest.content),
     qualityReport: latest.qualityChecksJson ?? null,
   };
+}
+
+async function persistCompiledSequenceVersion(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  userId?: string;
+  sequenceInput: SequenceGenerationInput;
+  compiled: CompiledSequenceOutput;
+  latestSequenceRecord: Sequence;
+  version: number;
+  operation: {
+    kind: "partial_regeneration" | "manual_edit";
+    artifactType: SequenceArtifactType;
+    artifactId: string;
+    feedback?: string;
+    editRecord?: ArtifactEditRecord;
+    providerMetadata?: unknown;
+  };
+}): Promise<Sequence> {
+  const editHistory = [
+    ...readSequenceEditHistory(input.latestSequenceRecord),
+    ...(input.operation.editRecord ? [input.operation.editRecord] : []),
+  ];
+  const contentWithHistory = withSequenceEditHistory(input.compiled, editHistory);
+  const qualityReport = scoreCompiledSequenceQuality(input.compiled, input.sequenceInput);
+  const modelMetadata = {
+    ...(typeof input.latestSequenceRecord.modelMetadata === "object" && input.latestSequenceRecord.modelMetadata !== null
+      ? input.latestSequenceRecord.modelMetadata
+      : {}),
+    lastOperation: {
+      kind: input.operation.kind,
+      artifactType: input.operation.artifactType,
+      artifactId: input.operation.artifactId,
+      feedback: input.operation.feedback ?? null,
+      occurredAt: new Date().toISOString(),
+      providerMetadata: input.operation.providerMetadata ?? null,
+    },
+    editHistory,
+  };
+
+  return getSequenceRepository().createSequence({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    senderProfileId:
+      input.sequenceInput.senderContext.mode === "sender_aware"
+        ? input.sequenceInput.senderContext.senderProfile.id
+        : null,
+    generationMode: input.sequenceInput.senderContext.mode,
+    channel: "email",
+    status: "draft",
+    content: contentWithHistory,
+    qualityChecksJson: qualityReport,
+    modelMetadata,
+    createdByUserId: input.userId ?? null,
+  });
+}
+
+async function getLatestStoredSequenceOrThrow(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+}): Promise<Sequence> {
+  const latestSequence = await getLatestStoredSequenceForProspect(
+    input.workspaceId,
+    input.campaignId,
+    input.prospectId,
+  );
+
+  if (latestSequence === null) {
+    throw new Error("Generate a sequence before editing or regenerating one.");
+  }
+
+  return latestSequence;
 }
 
 export async function generateSequenceForProspect(input: {
@@ -429,4 +696,223 @@ export async function generateSequenceForProspect(input: {
 
     throw error;
   }
+}
+
+
+export async function regenerateSequencePartForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  targetPart: SequencePartTarget["targetPart"];
+  targetStepNumber?: number;
+  feedback: string;
+  userId?: string;
+}): Promise<StoredCompiledSequence> {
+  const [sequenceInput, latestSequenceRecord, existingSequences] = await Promise.all([
+    buildSequenceGenerationInput(input),
+    getLatestStoredSequenceOrThrow(input),
+    getSequenceRepository().listSequencesByProspect(
+      input.workspaceId,
+      input.campaignId,
+      input.prospectId,
+    ),
+  ]);
+  const currentCompiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
+  const target =
+    input.targetPart === "follow_up_step"
+      ? {
+          targetPart: input.targetPart,
+          targetStepNumber: input.targetStepNumber ?? 1,
+          feedback: input.feedback,
+        }
+      : { targetPart: input.targetPart, feedback: input.feedback };
+
+  const regeneratedOutput = regenerateSequencePartOutputSchema.parse(
+    await getSequenceEngine().regenerateSequencePart({
+      baseInput: sequenceInput,
+      targetPart: target.targetPart,
+      targetStepNumber:
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : undefined,
+      currentSequenceSteps: currentCompiled.followUpSequence.sequenceSteps,
+      currentEmail: currentCompiled.initialEmail.email,
+      feedback: target.feedback,
+    }),
+  );
+
+  const nextVersion = getNextSequenceVersion(existingSequences);
+  const updatedCompiled = compiledSequenceOutputSchema.parse({
+    ...mergeRegeneratedSequence(currentCompiled, regeneratedOutput),
+    sequenceVersion: nextVersion,
+  });
+
+  const created = await persistCompiledSequenceVersion({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    sequenceInput,
+    compiled: updatedCompiled,
+    latestSequenceRecord,
+    version: nextVersion,
+    operation: {
+      kind: "partial_regeneration",
+      artifactType: toSequenceArtifactType(target.targetPart),
+      artifactId: buildSequenceArtifactId(
+        latestSequenceRecord.id,
+        target.targetPart,
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : undefined,
+      ),
+      feedback: target.feedback,
+      providerMetadata: regeneratedOutput.generationMetadata,
+    },
+  });
+
+  await getUsageEventRepository().createUsageEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    eventName: "sequence_part_regenerated",
+    entityType: "sequence",
+    entityId: created.id,
+    quantity: 1,
+    billable: false,
+    inputTokens: regeneratedOutput.generationMetadata.inputTokens ?? null,
+    outputTokens: regeneratedOutput.generationMetadata.outputTokens ?? null,
+    costUsd: regeneratedOutput.generationMetadata.costUsd ?? null,
+    metadata: {
+      targetPart: target.targetPart,
+      targetStepNumber:
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : null,
+      sequenceVersion: nextVersion,
+    },
+  });
+
+  await getAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    actorType: input.userId ? "user" : "system",
+    action: "sequence.part.regenerated",
+    entityType: "sequence",
+    entityId: created.id,
+    changes: {
+      targetPart: target.targetPart,
+      targetStepNumber:
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : null,
+      sequenceVersion: nextVersion,
+      feedback: target.feedback,
+    },
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+    },
+  });
+
+  return {
+    recordId: created.id,
+    ...updatedCompiled,
+    qualityReport: created.qualityChecksJson ?? null,
+  };
+}
+
+export async function editSequenceStepForProspect(
+  input: SequenceStepEditInput,
+): Promise<StoredCompiledSequence> {
+  const [sequenceInput, latestSequenceRecord, existingSequences] = await Promise.all([
+    buildSequenceGenerationInput(input),
+    getLatestStoredSequenceOrThrow(input),
+    getSequenceRepository().listSequencesByProspect(
+      input.workspaceId,
+      input.campaignId,
+      input.prospectId,
+    ),
+  ]);
+  const currentCompiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
+  const originalArtifact =
+    input.targetPart === "initial_email"
+      ? currentCompiled.initialEmail.email
+      : currentCompiled.followUpSequence.sequenceSteps.find(
+          (step) => step.stepNumber === input.targetStepNumber,
+        );
+
+  if (!originalArtifact) {
+    throw new Error("The target sequence step could not be resolved.");
+  }
+
+  const nextVersion = getNextSequenceVersion(existingSequences);
+  const updatedCompiled = compiledSequenceOutputSchema.parse({
+    ...mergeEditedSequenceStep(currentCompiled, input),
+    sequenceVersion: nextVersion,
+  });
+  const artifactId = buildSequenceArtifactId(
+    latestSequenceRecord.id,
+    input.targetPart,
+    input.targetPart === "follow_up_step" ? input.targetStepNumber : undefined,
+  );
+  const editRecord = artifactEditRecordSchema.parse({
+    artifactType: toSequenceArtifactType(input.targetPart),
+    artifactId,
+    originalText: serializeSequenceArtifact(originalArtifact),
+    editedText: serializeSequenceArtifact(
+      input.targetPart === "initial_email"
+        ? updatedCompiled.initialEmail.email
+        : updatedCompiled.followUpSequence.sequenceSteps.find(
+            (step) => step.stepNumber === input.targetStepNumber,
+          ),
+    ),
+    editedAt: new Date(),
+    editorUserId: input.userId ?? null,
+  });
+
+  const created = await persistCompiledSequenceVersion({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    sequenceInput,
+    compiled: updatedCompiled,
+    latestSequenceRecord,
+    version: nextVersion,
+    operation: {
+      kind: "manual_edit",
+      artifactType: toSequenceArtifactType(input.targetPart),
+      artifactId,
+      editRecord,
+    },
+  });
+
+  await getUsageEventRepository().createUsageEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    eventName: "sequence_step_edited",
+    entityType: "sequence",
+    entityId: created.id,
+    quantity: 1,
+    billable: false,
+    metadata: {
+      artifactType: editRecord.artifactType,
+      artifactId: editRecord.artifactId,
+      sequenceVersion: nextVersion,
+    },
+  });
+
+  await getAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    actorType: input.userId ? "user" : "system",
+    action: "sequence.step.edited",
+    entityType: "sequence",
+    entityId: created.id,
+    changes: editRecord,
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+    },
+  });
+
+  return {
+    recordId: created.id,
+    ...updatedCompiled,
+    qualityReport: created.qualityChecksJson ?? null,
+  };
 }

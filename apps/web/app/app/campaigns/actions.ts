@@ -15,10 +15,15 @@ import {
   appendLatestSequenceMessagesToProspectThread,
   createInboundReplyForProspect,
   createManualOutboundMessageForProspect,
+  editDraftReplyForProspect,
   generateDraftRepliesForProspect,
   regenerateDraftReplyForProspect,
 } from "../../../lib/server/replies";
-import { generateSequenceForProspect } from "../../../lib/server/sequences";
+import {
+  editSequenceStepForProspect,
+  generateSequenceForProspect,
+  regenerateSequencePartForProspect,
+} from "../../../lib/server/sequences";
 
 function readOptionalText(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
@@ -361,6 +366,128 @@ export async function regenerateReplyDraftAction(formData: FormData) {
     prospectId,
     targetSlotId,
     feedback,
+    userId: auth.user?.userId,
+  });
+
+  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+}
+
+
+export async function regenerateSequencePartAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const targetPart = formData.get("targetPart");
+  const feedback = formData.get("feedback");
+  const targetStepNumberValue = formData.get("targetStepNumber");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof targetPart !== "string" ||
+    typeof feedback !== "string"
+  ) {
+    throw new Error("Workspace, campaign, prospect, target part, and feedback are required.");
+  }
+
+  const auth = await getServerAuthContext();
+  const targetStepNumber =
+    typeof targetStepNumberValue === "string" && targetStepNumberValue.trim() !== ""
+      ? Number(targetStepNumberValue)
+      : undefined;
+
+  await regenerateSequencePartForProspect({
+    workspaceId,
+    campaignId,
+    prospectId,
+    targetPart: targetPart as "subject_line" | "opener" | "initial_email" | "follow_up_step",
+    targetStepNumber,
+    feedback,
+    userId: auth.user?.userId,
+  });
+
+  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+}
+
+export async function editSequenceStepAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const targetPart = formData.get("targetPart");
+  const subject = formData.get("subject");
+  const opener = formData.get("opener");
+  const body = formData.get("body");
+  const cta = formData.get("cta");
+  const rationale = formData.get("rationale");
+  const targetStepNumberValue = formData.get("targetStepNumber");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof targetPart !== "string" ||
+    typeof subject !== "string" ||
+    typeof opener !== "string" ||
+    typeof body !== "string" ||
+    typeof cta !== "string" ||
+    typeof rationale !== "string"
+  ) {
+    throw new Error("Sequence edit fields are required.");
+  }
+
+  const auth = await getServerAuthContext();
+  const targetStepNumber =
+    typeof targetStepNumberValue === "string" && targetStepNumberValue.trim() !== ""
+      ? Number(targetStepNumberValue)
+      : undefined;
+
+  await editSequenceStepForProspect({
+    workspaceId,
+    campaignId,
+    prospectId,
+    targetPart: targetPart as "initial_email" | "follow_up_step",
+    targetStepNumber,
+    subject,
+    opener,
+    body,
+    cta,
+    rationale,
+    userId: auth.user?.userId,
+  });
+
+  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+}
+
+export async function editReplyDraftAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const targetSlotId = formData.get("targetSlotId");
+  const bodyText = formData.get("bodyText");
+  const strategyNote = formData.get("strategyNote");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof targetSlotId !== "string" ||
+    typeof bodyText !== "string" ||
+    typeof strategyNote !== "string"
+  ) {
+    throw new Error("Reply draft edit fields are required.");
+  }
+
+  const auth = await getServerAuthContext();
+
+  await editDraftReplyForProspect({
+    workspaceId,
+    campaignId,
+    prospectId,
+    targetSlotId,
+    subject: readOptionalText(formData, "subject") ?? null,
+    bodyText,
+    strategyNote,
     userId: auth.user?.userId,
   });
 

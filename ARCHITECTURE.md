@@ -89,6 +89,7 @@ For reply intelligence specifically:
 - classification should remain separate from drafting so the system can audit intent, objections, and recommended actions independently
 - provider-specific reply analysis or drafting calls must stay behind the reply model adapter interface
 - deterministic quality scoring for generated sequences and draft replies should run server-side, remain auditable, and persist into `sequences.quality_checks_json` and `draft_replies.quality_checks_json` for UI review and future evaluation workflows
+- partial regenerations and manual edits should create new artifact versions rather than mutating stored generation records in place, and edit metadata should be captured server-side for later training-data reconstruction
 
 ## Async-Ready, Not Queue-Heavy
 

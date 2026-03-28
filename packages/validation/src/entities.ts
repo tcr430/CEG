@@ -70,6 +70,21 @@ export const draftReplyQualityReportSchema = z.object({
   checks: z.array(qualityCheckResultSchema).default([]),
   notes: stringListSchema,
 });
+export const generatedArtifactTypeSchema = z.enum([
+  "sequence_subject_line_set",
+  "sequence_opener_set",
+  "sequence_initial_email",
+  "sequence_follow_up_step",
+  "draft_reply_option",
+]);
+export const artifactEditRecordSchema = z.object({
+  artifactType: generatedArtifactTypeSchema,
+  artifactId: z.string().trim().min(1),
+  originalText: z.string().trim().min(1),
+  editedText: z.string().trim().min(1),
+  editedAt: timestampSchema,
+  editorUserId: uuidSchema.nullable().optional(),
+});
 const researchQualitySchema = z.object({
   overall: confidenceScoreSchema,
   dimensions: z
@@ -706,6 +721,7 @@ export type ResponseStrategyRecommendation = z.infer<
 export type DraftReplyOutput = z.infer<typeof draftReplyOutputSchema>;
 export type SequenceQualityReport = z.infer<typeof sequenceQualityReportSchema>;
 export type DraftReplyQualityReport = z.infer<typeof draftReplyQualityReportSchema>;
+export type ArtifactEditRecord = z.infer<typeof artifactEditRecordSchema>;
 export type UsageEvent = z.infer<typeof usageEventSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceInputSchema>;
