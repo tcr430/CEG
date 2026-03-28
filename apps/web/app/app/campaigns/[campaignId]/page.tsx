@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import {
   getCampaignForWorkspace,
@@ -17,6 +18,8 @@ type CampaignDetailPageProps = {
   }>;
   searchParams?: Promise<{
     workspace?: string;
+    error?: string;
+    success?: string;
   }>;
 };
 
@@ -58,6 +61,8 @@ export default async function CampaignDetailPage({
           generation later on.
         </p>
       </section>
+
+      <FeedbackBanner error={resolvedSearchParams.error} success={resolvedSearchParams.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link

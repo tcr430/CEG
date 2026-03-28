@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "lint": "eslint src --max-warnings=0",
-    "test": "node -e \"console.log('@ceg/observability: no tests yet')\"",
+    "test": "node --experimental-strip-types tests/run-tests.ts",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   }
 }

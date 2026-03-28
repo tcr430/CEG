@@ -1,3 +1,5 @@
+﻿import { SubmitButton } from "../../../components/submit-button";
+
 export function ProspectForm({
   action,
   workspaceId,
@@ -50,9 +52,9 @@ export function ProspectForm({
       </label>
 
       <div className="inlineActions">
-        <button type="submit" className="buttonPrimary">
+        <SubmitButton className="buttonPrimary" pendingLabel="Adding prospect...">
           Add prospect
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );

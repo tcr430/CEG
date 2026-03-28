@@ -1,32 +1,33 @@
 import Link from "next/link";
 
+import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
+import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 type SignInPageProps = {
   searchParams?: Promise<{
     error?: string;
+    notice?: string;
+    success?: string;
     "check-email"?: string;
   }>;
 };
 
-function getMessage(params: { error?: string; "check-email"?: string }) {
+function getMessage(params: {
+  error?: string;
+  notice?: string;
+  success?: string;
+  "check-email"?: string;
+}) {
   if (params["check-email"] === "1") {
     return "Magic link sent. Check your inbox to continue.";
   }
 
-  if (params.error === "supabase-not-configured") {
-    return "Configure Supabase env vars to enable sign-in.";
-  }
-
-  if (params.error === "sign-in-failed") {
-    return "We could not start sign-in. Please try again.";
-  }
-
-  if (params.error === "missing-email") {
-    return "Enter a work email to continue.";
-  }
-
-  return null;
+  return (
+    decodeUserFacingMessage(params.success) ??
+    decodeUserFacingMessage(params.notice) ??
+    decodeUserFacingMessage(params.error)
+  );
 }
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
@@ -65,9 +66,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               required
             />
           </label>
-          <button type="submit" className="buttonPrimary">
+          <SubmitButton className="buttonPrimary" pendingLabel="Sending magic link...">
             Send magic link
-          </button>
+          </SubmitButton>
         </form>
 
         {getMessage(params) !== null ? (
@@ -80,9 +81,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               Go to dashboard
             </Link>
             <form action="/auth/sign-out" method="post">
-              <button type="submit" className="buttonGhost">
+              <SubmitButton className="buttonGhost" pendingLabel="Signing out...">
                 Sign out
-              </button>
+              </SubmitButton>
             </form>
           </div>
         ) : null}

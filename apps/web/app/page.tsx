@@ -1,5 +1,6 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
+import { FeedbackBanner } from "../components/feedback-banner";
 import { getServerAuthContext } from "../lib/server/auth";
 
 const milestones = [
@@ -8,8 +9,18 @@ const milestones = [
   "Protected dashboard shell with workspace context",
 ];
 
-export default async function HomePage() {
-  const context = await getServerAuthContext();
+type HomePageProps = {
+  searchParams?: Promise<{
+    notice?: string;
+    error?: string;
+  }>;
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const [context, params] = await Promise.all([
+    getServerAuthContext(),
+    searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
+  ]);
 
   return (
     <main className="shell">
@@ -37,6 +48,8 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      <FeedbackBanner error={params.error} notice={params.notice} />
 
       <section className="panel" aria-labelledby="phase-summary-title">
         <div>

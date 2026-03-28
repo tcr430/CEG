@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../../lib/server/billing";
 import { createSenderProfileAction } from "../actions";
@@ -9,6 +10,7 @@ import { SenderProfileForm } from "../sender-profile-form";
 type NewSenderProfilePageProps = {
   searchParams?: Promise<{
     workspace?: string;
+    error?: string;
   }>;
 };
 
@@ -39,6 +41,8 @@ export default async function NewSenderProfilePage({
         </p>
       </section>
 
+      <FeedbackBanner error={params.error} />
+
       <div className="inlineActions profileHeaderActions">
         <Link
           href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}
@@ -58,4 +62,3 @@ export default async function NewSenderProfilePage({
     </main>
   );
 }
-

@@ -1,6 +1,8 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FeedbackBanner } from "../../../components/feedback-banner";
+import { SubmitButton } from "../../../components/submit-button";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../lib/server/billing";
 
@@ -47,26 +49,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </p>
       </section>
 
+      <FeedbackBanner
+        success={params.billing === "success" ? encodeURIComponent("Stripe checkout completed. Subscription state will sync automatically through the webhook.") : undefined}
+        error={params.billingError}
+      />
+
       <div className="inlineActions profileHeaderActions">
         <Link href="/app" className="buttonSecondary">
           Back to dashboard
         </Link>
         <Link href={`/app/settings/debug?workspace=${context.workspace.workspaceId}`} className="buttonSecondary">Debug activity</Link>
       </div>
-
-      {params.billing === "success" ? (
-        <div className="dashboardCard statusCard successCard">
-          <p className="cardLabel">Billing updated</p>
-          <p>Stripe checkout completed. Subscription state will sync automatically through the webhook.</p>
-        </div>
-      ) : null}
-
-      {params.billingError ? (
-        <div className="dashboardCard statusCard warningCard">
-          <p className="cardLabel">Billing notice</p>
-          <p>{decodeURIComponent(params.billingError)}</p>
-        </div>
-      ) : null}
 
       <section className="profileDetailGrid settingsGrid">
         <div className="dashboardCard">
@@ -111,7 +104,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <form action="/api/billing/checkout" method="post">
               <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
               <input type="hidden" name="planCode" value="pro" />
-              <button type="submit" className="buttonPrimary">Upgrade to Pro</button>
+              <SubmitButton className="buttonPrimary" pendingLabel="Starting checkout...">Upgrade to Pro</SubmitButton>
             </form>
           </article>
 
@@ -122,7 +115,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <form action="/api/billing/checkout" method="post">
               <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
               <input type="hidden" name="planCode" value="agency" />
-              <button type="submit" className="buttonSecondary">Upgrade to Agency</button>
+              <SubmitButton className="buttonSecondary" pendingLabel="Starting checkout...">Upgrade to Agency</SubmitButton>
             </form>
           </article>
         </div>
@@ -136,7 +129,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           {billing.currentSubscription?.providerCustomerId ? (
             <form action="/api/billing/portal" method="post">
               <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
-              <button type="submit" className="buttonSecondary">Manage billing</button>
+              <SubmitButton className="buttonSecondary" pendingLabel="Opening portal...">Manage billing</SubmitButton>
             </form>
           ) : (
             <p className="statusMessage">

@@ -1,4 +1,6 @@
-import type { SenderProfile } from "@ceg/validation";
+﻿import type { SenderProfile } from "@ceg/validation";
+
+import { SubmitButton } from "../../../components/submit-button";
 
 type SenderProfileFormProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -172,9 +174,9 @@ export function SenderProfileForm({
       </div>
 
       <div className="inlineActions">
-        <button type="submit" className="buttonPrimary">
+        <SubmitButton className="buttonPrimary" pendingLabel="Saving sender profile...">
           {submitLabel}
-        </button>
+        </SubmitButton>
       </div>
     </form>
   );

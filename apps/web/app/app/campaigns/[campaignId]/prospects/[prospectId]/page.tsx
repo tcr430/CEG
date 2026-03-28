@@ -8,6 +8,9 @@ import type {
   SequenceQualityReport,
 } from "@ceg/validation";
 
+import { FeedbackBanner } from "../../../../../../components/feedback-banner";
+import { SubmitButton } from "../../../../../../components/submit-button";
+
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../../../../lib/server/billing";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
@@ -35,6 +38,8 @@ type ProspectDetailPageProps = {
   }>;
   searchParams?: Promise<{
     workspace?: string;
+    error?: string;
+    success?: string;
   }>;
 };
 
@@ -145,6 +150,8 @@ export default async function ProspectDetailPage({
           the full prospect thread without mixing server logic into the UI.
         </p>
       </section>
+
+      <FeedbackBanner error={resolvedSearchParams.error} success={resolvedSearchParams.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link
@@ -327,7 +334,7 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <button type="submit" className="buttonPrimary">Analyze latest reply</button>
+                  <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Analyze latest reply</SubmitButton>
                 </form>
               ) : null}
 
@@ -336,7 +343,7 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <button type="submit" className="buttonSecondary">Generate reply drafts</button>
+                  <SubmitButton className="buttonSecondary" pendingLabel="Generating drafts...">Generate reply drafts</SubmitButton>
                 </form>
               ) : null}
 
@@ -345,7 +352,7 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <button type="submit" className="buttonSecondary">Add latest sequence to thread</button>
+                  <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence to thread</SubmitButton>
                 </form>
               ) : null}
             </div>
@@ -687,7 +694,7 @@ export default async function ProspectDetailPage({
                     />
                   </label>
                   <div className="inlineActions">
-                    <button type="submit" className="buttonSecondary">Regenerate subject set</button>
+                    <SubmitButton className="buttonSecondary" pendingLabel="Regenerating...">Regenerate subject set</SubmitButton>
                   </div>
                 </form>
               </div>
@@ -715,7 +722,7 @@ export default async function ProspectDetailPage({
                     />
                   </label>
                   <div className="inlineActions">
-                    <button type="submit" className="buttonSecondary">Regenerate opener set</button>
+                    <SubmitButton className="buttonSecondary" pendingLabel="Regenerating...">Regenerate opener set</SubmitButton>
                   </div>
                 </form>
               </div>
@@ -740,7 +747,7 @@ export default async function ProspectDetailPage({
                     />
                   </label>
                   <div className="inlineActions">
-                    <button type="submit" className="buttonSecondary">Regenerate initial email</button>
+                    <SubmitButton className="buttonSecondary" pendingLabel="Regenerating...">Regenerate initial email</SubmitButton>
                   </div>
                 </form>
                 <form action={editSequenceStepAction} className="panel prospectResearchForm compactPanel">
@@ -769,7 +776,7 @@ export default async function ProspectDetailPage({
                     <textarea name="rationale" rows={3} defaultValue={latestSequence.initialEmail.email.rationale} />
                   </label>
                   <div className="inlineActions">
-                    <button type="submit" className="buttonSecondary">Save edited initial email</button>
+                    <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save edited initial email</SubmitButton>
                   </div>
                 </form>
               </div>
@@ -799,7 +806,7 @@ export default async function ProspectDetailPage({
                           />
                         </label>
                         <div className="inlineActions">
-                          <button type="submit" className="buttonSecondary">Regenerate step</button>
+                          <SubmitButton className="buttonSecondary" pendingLabel="Regenerating...">Regenerate step</SubmitButton>
                         </div>
                       </form>
                       <form action={editSequenceStepAction} className="panel prospectResearchForm compactPanel">
@@ -829,7 +836,7 @@ export default async function ProspectDetailPage({
                           <textarea name="rationale" rows={3} defaultValue={step.rationale} />
                         </label>
                         <div className="inlineActions">
-                          <button type="submit" className="buttonSecondary">Save edited step</button>
+                          <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save edited step</SubmitButton>
                         </div>
                       </form>
                     </li>

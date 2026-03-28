@@ -1,5 +1,6 @@
-"use server";
+﻿"use server";
 
+import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -25,6 +26,7 @@ import {
   generateSequenceForProspect,
   regenerateSequencePartForProspect,
 } from "../../../lib/server/sequences";
+import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
 function readOptionalText(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
@@ -50,15 +52,20 @@ function readList(formData: FormData, key: string): string[] {
     .filter(Boolean);
 }
 
-function revalidateProspectPaths(workspaceId: string, campaignId: string, prospectId: string) {
-  revalidatePath(`/app/campaigns/${campaignId}`);
-  revalidatePath(`/app/campaigns/${campaignId}/prospects/${prospectId}`);
-  redirect(`/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`);
-}
-
 function readWorkspacePlanCode(auth: Awaited<ReturnType<typeof getServerAuthContext>>, workspaceId: string) {
   return auth.user?.memberships.find((membership) => membership.workspaceId === workspaceId)
     ?.billingPlanCode;
+}
+
+function redirectWithError(path: string, error: unknown, fallbackMessage: string) {
+  redirect(`${path}${path.includes("?") ? "&" : "?"}error=${encodeUserFacingError(error, fallbackMessage)}`);
+}
+
+function redirectToProspect(workspaceId: string, campaignId: string, prospectId: string, success?: string) {
+  revalidatePath(`/app/campaigns/${campaignId}`);
+  revalidatePath(`/app/campaigns/${campaignId}/prospects/${prospectId}`);
+  const suffix = success ? `&success=${encodeURIComponent(success)}` : "";
+  redirect(`/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}${suffix}`);
 }
 
 export async function createCampaignAction(formData: FormData) {
@@ -68,31 +75,40 @@ export async function createCampaignAction(formData: FormData) {
     throw new Error("Workspace id is required.");
   }
 
-  await createCampaignForWorkspace({
-    workspaceId,
-    senderProfileId: readOptionalText(formData, "senderProfileId") ?? null,
-    name: String(formData.get("name") ?? ""),
-    offerSummary: readOptionalText(formData, "offerSummary"),
-    targetIcp: readOptionalText(formData, "targetIcp"),
-    targetIndustries: readList(formData, "targetIndustries"),
-    tonePreferences: {
-      style: readOptionalText(formData, "toneStyle"),
-      do: readList(formData, "toneDo"),
-      avoid: readList(formData, "toneAvoid"),
-      notes: readOptionalText(formData, "toneNotes"),
-    },
-    frameworkPreferences: readList(formData, "frameworkPreferences"),
-    settings: {},
-    status: String(formData.get("status") ?? "draft") as
-      | "draft"
-      | "active"
-      | "paused"
-      | "completed"
-      | "archived",
-  });
+  try {
+    await createCampaignForWorkspace({
+      workspaceId,
+      senderProfileId: readOptionalText(formData, "senderProfileId") ?? null,
+      name: String(formData.get("name") ?? ""),
+      offerSummary: readOptionalText(formData, "offerSummary"),
+      targetIcp: readOptionalText(formData, "targetIcp"),
+      targetIndustries: readList(formData, "targetIndustries"),
+      tonePreferences: {
+        style: readOptionalText(formData, "toneStyle"),
+        do: readList(formData, "toneDo"),
+        avoid: readList(formData, "toneAvoid"),
+        notes: readOptionalText(formData, "toneNotes"),
+      },
+      frameworkPreferences: readList(formData, "frameworkPreferences"),
+      settings: {},
+      status: String(formData.get("status") ?? "draft") as
+        | "draft"
+        | "active"
+        | "paused"
+        | "completed"
+        | "archived",
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/new?workspace=${workspaceId}`,
+      error,
+      "We could not create that campaign. Please review the brief and try again.",
+    );
+  }
 
   revalidatePath("/app/campaigns");
-  redirect(`/app/campaigns?workspace=${workspaceId}`);
+  redirect(`/app/campaigns?workspace=${workspaceId}&success=Campaign%20created.`);
 }
 
 export async function updateCampaignAction(formData: FormData) {
@@ -103,32 +119,41 @@ export async function updateCampaignAction(formData: FormData) {
     throw new Error("Workspace id and campaign id are required.");
   }
 
-  await updateCampaignForWorkspace({
-    campaignId,
-    workspaceId,
-    senderProfileId: readOptionalText(formData, "senderProfileId") ?? null,
-    name: String(formData.get("name") ?? ""),
-    offerSummary: readOptionalText(formData, "offerSummary"),
-    targetIcp: readOptionalText(formData, "targetIcp"),
-    targetIndustries: readList(formData, "targetIndustries"),
-    tonePreferences: {
-      style: readOptionalText(formData, "toneStyle"),
-      do: readList(formData, "toneDo"),
-      avoid: readList(formData, "toneAvoid"),
-      notes: readOptionalText(formData, "toneNotes"),
-    },
-    frameworkPreferences: readList(formData, "frameworkPreferences"),
-    settings: {},
-    status: String(formData.get("status") ?? "draft") as
-      | "draft"
-      | "active"
-      | "paused"
-      | "completed"
-      | "archived",
-  });
+  try {
+    await updateCampaignForWorkspace({
+      campaignId,
+      workspaceId,
+      senderProfileId: readOptionalText(formData, "senderProfileId") ?? null,
+      name: String(formData.get("name") ?? ""),
+      offerSummary: readOptionalText(formData, "offerSummary"),
+      targetIcp: readOptionalText(formData, "targetIcp"),
+      targetIndustries: readList(formData, "targetIndustries"),
+      tonePreferences: {
+        style: readOptionalText(formData, "toneStyle"),
+        do: readList(formData, "toneDo"),
+        avoid: readList(formData, "toneAvoid"),
+        notes: readOptionalText(formData, "toneNotes"),
+      },
+      frameworkPreferences: readList(formData, "frameworkPreferences"),
+      settings: {},
+      status: String(formData.get("status") ?? "draft") as
+        | "draft"
+        | "active"
+        | "paused"
+        | "completed"
+        | "archived",
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}?workspace=${workspaceId}`,
+      error,
+      "We could not save that campaign. Please try again.",
+    );
+  }
 
   revalidatePath("/app/campaigns");
-  redirect(`/app/campaigns/${campaignId}?workspace=${workspaceId}`);
+  redirect(`/app/campaigns/${campaignId}?workspace=${workspaceId}&success=Campaign%20updated.`);
 }
 
 export async function createProspectAction(formData: FormData) {
@@ -139,26 +164,35 @@ export async function createProspectAction(formData: FormData) {
     throw new Error("Workspace id and campaign id are required.");
   }
 
-  await createProspectForCampaign({
-    workspaceId,
-    campaignId,
-    companyName: readOptionalText(formData, "companyName"),
-    companyWebsite: readOptionalText(formData, "companyWebsite"),
-    contactName: readOptionalText(formData, "contactName"),
-    email: readOptionalText(formData, "email"),
-    status: String(formData.get("status") ?? "new") as
-      | "new"
-      | "researched"
-      | "sequenced"
-      | "contacted"
-      | "replied"
-      | "closed"
-      | "archived",
-    metadata: {},
-  });
+  try {
+    await createProspectForCampaign({
+      workspaceId,
+      campaignId,
+      companyName: readOptionalText(formData, "companyName"),
+      companyWebsite: readOptionalText(formData, "companyWebsite"),
+      contactName: readOptionalText(formData, "contactName"),
+      email: readOptionalText(formData, "email"),
+      status: String(formData.get("status") ?? "new") as
+        | "new"
+        | "researched"
+        | "sequenced"
+        | "contacted"
+        | "replied"
+        | "closed"
+        | "archived",
+      metadata: {},
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}?workspace=${workspaceId}`,
+      error,
+      "We could not add that prospect. Please review the details and try again.",
+    );
+  }
 
   revalidatePath(`/app/campaigns/${campaignId}`);
-  redirect(`/app/campaigns/${campaignId}?workspace=${workspaceId}`);
+  redirect(`/app/campaigns/${campaignId}?workspace=${workspaceId}&success=Prospect%20added.`);
 }
 
 export async function runProspectResearchAction(formData: FormData) {
@@ -178,16 +212,25 @@ export async function runProspectResearchAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await runProspectResearchForCampaign({
-    workspaceId,
-    campaignId,
-    prospectId,
-    websiteUrl,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await runProspectResearchForCampaign({
+      workspaceId,
+      campaignId,
+      prospectId,
+      websiteUrl,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not complete website research for this prospect.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Research%20snapshot%20saved.".replace(/%20/g, ' '));
 }
 
 export async function generateProspectSequenceAction(formData: FormData) {
@@ -205,15 +248,24 @@ export async function generateProspectSequenceAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await generateSequenceForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await generateSequenceForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not generate a sequence for this prospect yet.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Sequence generated.");
 }
 
 export async function createInboundReplyAction(formData: FormData) {
@@ -233,16 +285,24 @@ export async function createInboundReplyAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await createInboundReplyForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    subject: readOptionalText(formData, "subject") ?? null,
-    bodyText,
-    userId: auth.user?.userId,
-  });
+  try {
+    await createInboundReplyForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      subject: readOptionalText(formData, "subject") ?? null,
+      bodyText,
+      userId: auth.user?.userId,
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not save that inbound reply.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Inbound reply saved.");
 }
 
 export async function createManualOutboundMessageAction(formData: FormData) {
@@ -262,16 +322,24 @@ export async function createManualOutboundMessageAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await createManualOutboundMessageForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    subject: readOptionalText(formData, "subject") ?? null,
-    bodyText,
-    userId: auth.user?.userId,
-  });
+  try {
+    await createManualOutboundMessageForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      subject: readOptionalText(formData, "subject") ?? null,
+      bodyText,
+      userId: auth.user?.userId,
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not save that outbound draft.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Outbound draft added to thread.");
 }
 
 export async function appendGeneratedSequenceMessagesAction(formData: FormData) {
@@ -289,14 +357,22 @@ export async function appendGeneratedSequenceMessagesAction(formData: FormData) 
 
   const auth = await getServerAuthContext();
 
-  await appendLatestSequenceMessagesToProspectThread({
-    workspaceId,
-    campaignId,
-    prospectId,
-    userId: auth.user?.userId,
-  });
+  try {
+    await appendLatestSequenceMessagesToProspectThread({
+      workspaceId,
+      campaignId,
+      prospectId,
+      userId: auth.user?.userId,
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not add the latest sequence to the thread.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Generated sequence added to thread.");
 }
 
 export async function analyzeReplyAction(formData: FormData) {
@@ -314,15 +390,24 @@ export async function analyzeReplyAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await analyzeLatestReplyForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await analyzeLatestReplyForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not analyze that reply yet.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Reply analysis saved.");
 }
 
 export async function generateReplyDraftsAction(formData: FormData) {
@@ -340,15 +425,23 @@ export async function generateReplyDraftsAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await generateDraftRepliesForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await generateDraftRepliesForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not generate reply drafts for that thread yet.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Reply drafts generated.");
 }
 
 export async function regenerateReplyDraftAction(formData: FormData) {
@@ -370,19 +463,26 @@ export async function regenerateReplyDraftAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await regenerateDraftReplyForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    targetSlotId,
-    feedback,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await regenerateDraftReplyForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      targetSlotId,
+      feedback,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not regenerate that draft option.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Draft option regenerated.");
 }
-
 
 export async function regenerateSequencePartAction(formData: FormData) {
   const workspaceId = formData.get("workspaceId");
@@ -408,18 +508,27 @@ export async function regenerateSequencePartAction(formData: FormData) {
       ? Number(targetStepNumberValue)
       : undefined;
 
-  await regenerateSequencePartForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    targetPart: targetPart as "subject_line" | "opener" | "initial_email" | "follow_up_step",
-    targetStepNumber,
-    feedback,
-    userId: auth.user?.userId,
-    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
-  });
+  try {
+    await regenerateSequencePartForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      targetPart: targetPart as "subject_line" | "opener" | "initial_email" | "follow_up_step",
+      targetStepNumber,
+      feedback,
+      userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not regenerate that sequence section.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Sequence section regenerated.");
 }
 
 export async function editSequenceStepAction(formData: FormData) {
@@ -454,21 +563,30 @@ export async function editSequenceStepAction(formData: FormData) {
       ? Number(targetStepNumberValue)
       : undefined;
 
-  await editSequenceStepForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    targetPart: targetPart as "initial_email" | "follow_up_step",
-    targetStepNumber,
-    subject,
-    opener,
-    body,
-    cta,
-    rationale,
-    userId: auth.user?.userId,
-  });
+  try {
+    await editSequenceStepForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      targetPart: targetPart as "initial_email" | "follow_up_step",
+      targetStepNumber,
+      subject,
+      opener,
+      body,
+      cta,
+      rationale,
+      userId: auth.user?.userId,
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not save that sequence edit.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Sequence edit saved.");
 }
 
 export async function editReplyDraftAction(formData: FormData) {
@@ -492,16 +610,24 @@ export async function editReplyDraftAction(formData: FormData) {
 
   const auth = await getServerAuthContext();
 
-  await editDraftReplyForProspect({
-    workspaceId,
-    campaignId,
-    prospectId,
-    targetSlotId,
-    subject: readOptionalText(formData, "subject") ?? null,
-    bodyText,
-    strategyNote,
-    userId: auth.user?.userId,
-  });
+  try {
+    await editDraftReplyForProspect({
+      workspaceId,
+      campaignId,
+      prospectId,
+      targetSlotId,
+      subject: readOptionalText(formData, "subject") ?? null,
+      bodyText,
+      strategyNote,
+      userId: auth.user?.userId,
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not save that draft edit.",
+    );
+  }
 
-  revalidateProspectPaths(workspaceId, campaignId, prospectId);
+  redirectToProspect(workspaceId, campaignId, prospectId, "Reply draft saved.");
 }

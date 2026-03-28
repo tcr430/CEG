@@ -538,3 +538,48 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+.feedbackStack {
+  width: min(860px, 100%);
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.infoCard {
+  border-color: rgba(40, 88, 145, 0.24);
+}
+
+.buttonPrimary:disabled,
+.buttonSecondary:disabled,
+.buttonGhost:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
+.loadingPanel {
+  width: min(860px, 100%);
+}
+
+.loadingSkeleton {
+  min-height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(166, 93, 36, 0.08), rgba(166, 93, 36, 0.2), rgba(166, 93, 36, 0.08));
+  background-size: 200% 100%;
+  animation: loadingPulse 1.2s ease-in-out infinite;
+}
+
+.loadingSkeletonWide {
+  min-height: 56px;
+}
+
+@keyframes loadingPulse {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

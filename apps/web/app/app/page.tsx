@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FeedbackBanner } from "../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../lib/server/auth";
 import { listCampaignsForWorkspace } from "../../lib/server/campaigns";
 import { listSenderProfilesForWorkspace } from "../../lib/server/sender-profiles";
@@ -8,6 +9,8 @@ import { listSenderProfilesForWorkspace } from "../../lib/server/sender-profiles
 type DashboardPageProps = {
   searchParams?: Promise<{
     workspace?: string;
+    notice?: string;
+    error?: string;
   }>;
 };
 
@@ -76,6 +79,8 @@ export default async function DashboardPage({
       </aside>
 
       <section className="dashboardPanel">
+        <FeedbackBanner error={params.error} notice={params.notice} />
+
         <div className="dashboardCard">
           <p className="cardLabel">Authenticated user</p>
           <h2>{context.user.email ?? "Signed-in user"}</h2>
