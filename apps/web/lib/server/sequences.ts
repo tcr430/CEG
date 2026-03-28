@@ -32,6 +32,7 @@ import { getSenderProfileForWorkspace } from "./sender-profiles";
 import { getSharedAuditEventRepository } from "./audit-events";
 import { createOperationContext } from "./observability";
 import { getSharedUsageEventRepository } from "./usage-events";
+import { recordTrainingSignal } from "./training-signals";
 
 declare global {
   var __cegSequenceRepository: SequenceRepository | undefined;
@@ -462,6 +463,97 @@ function summarizeModelMetadata(compiled: CompiledSequenceOutput) {
     generatedAt: new Date().toISOString(),
   };
 }
+function getSequenceArtifactContent(
+  compiled: CompiledSequenceOutput,
+  targetPart: SequencePartTarget["targetPart"] | SequenceStepEditInput["targetPart"],
+  targetStepNumber?: number,
+) {
+  switch (targetPart) {
+    case "subject_line":
+      return compiled.subjectLineSet.subjectLines;
+    case "opener":
+      return compiled.openerSet.openerOptions;
+    case "initial_email":
+      return compiled.initialEmail.email;
+    case "follow_up_step":
+      return compiled.followUpSequence.sequenceSteps.find(
+        (step) => step.stepNumber === (targetStepNumber ?? 1),
+      );
+  }
+}
+
+function getSequenceOptionArtifactId(
+  sequenceId: string,
+  artifactType: "sequence_subject_line_option" | "sequence_opener_option",
+  optionIndex: number,
+): string {
+  const artifactLabel =
+    artifactType === "sequence_subject_line_option" ? "subject-line-option" : "opener-option";
+
+  return `${sequenceId}:${artifactLabel}:${optionIndex + 1}`;
+}
+
+function getSenderProfileIdFromSequenceInput(sequenceInput: SequenceGenerationInput): string | null {
+  return sequenceInput.senderContext.mode === "sender_aware"
+    ? sequenceInput.senderContext.senderProfile.id
+    : null;
+}
+
+function buildSequenceSignalProviderMetadata(modelMetadata: unknown) {
+  if (typeof modelMetadata !== "object" || modelMetadata === null) {
+    return {
+      promptVersion: SEQUENCE_PROMPT_VERSION,
+    };
+  }
+
+  return {
+    ...(modelMetadata as Record<string, unknown>),
+    promptVersion:
+      typeof (modelMetadata as { promptVersion?: unknown }).promptVersion === "string"
+        ? (modelMetadata as { promptVersion: string }).promptVersion
+        : SEQUENCE_PROMPT_VERSION,
+  };
+}
+
+async function recordSequenceTrainingSignal(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  userId?: string;
+  senderProfileId?: string | null;
+  artifactType:
+    | SequenceArtifactType
+    | "sequence_bundle"
+    | "sequence_subject_line_option"
+    | "sequence_opener_option";
+  artifactId: string;
+  actionType: "generated" | "regenerated" | "edited" | "selected" | "copied" | "exported";
+  providerMetadata?: unknown;
+  beforeText?: string | null;
+  afterText?: string | null;
+  selectedOptionId?: string | null;
+  exportFormat?: string | null;
+  metadata?: Record<string, unknown>;
+  requestId?: string;
+}) {
+  await recordTrainingSignal({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    senderProfileId: input.senderProfileId ?? null,
+    artifactType: input.artifactType,
+    artifactId: input.artifactId,
+    actionType: input.actionType,
+    providerMetadata: buildSequenceSignalProviderMetadata(input.providerMetadata),
+    beforeText: input.beforeText ?? null,
+    afterText: input.afterText ?? null,
+    selectedOptionId: input.selectedOptionId ?? null,
+    exportFormat: input.exportFormat ?? null,
+    metadata: input.metadata,
+    requestId: input.requestId,
+  });
+}
 
 export async function getLatestStoredSequenceForProspect(
   workspaceId: string,
@@ -698,6 +790,24 @@ export async function generateSequenceForProspect(input: {
       },
     });
 
+    await recordSequenceTrainingSignal({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      userId: input.userId,
+      senderProfileId: getSenderProfileIdFromSequenceInput(sequenceInput),
+      artifactType: "sequence_bundle",
+      artifactId: created.id,
+      actionType: "generated",
+      providerMetadata: modelMetadata,
+      afterText: JSON.stringify(compiled, null, 2),
+      metadata: {
+        sequenceVersion: version,
+        generationMode: sequenceInput.senderContext.mode,
+      },
+      requestId: operation.requestId,
+    });
+
     runLogger.info("Sequence generation completed", {
       sequenceId: created.id,
       generationMode: sequenceInput.senderContext.mode,
@@ -861,6 +971,44 @@ export async function regenerateSequencePartForProspect(input: {
     },
   });
 
+  await recordSequenceTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: getSenderProfileIdFromSequenceInput(sequenceInput),
+    artifactType: toSequenceArtifactType(target.targetPart),
+    artifactId: buildSequenceArtifactId(
+      latestSequenceRecord.id,
+      target.targetPart,
+      target.targetPart === "follow_up_step" ? target.targetStepNumber : undefined,
+    ),
+    actionType: "regenerated",
+    providerMetadata: regeneratedOutput.generationMetadata,
+    beforeText: serializeSequenceArtifact(
+      getSequenceArtifactContent(
+        currentCompiled,
+        target.targetPart,
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : undefined,
+      ),
+    ),
+    afterText: serializeSequenceArtifact(
+      getSequenceArtifactContent(
+        updatedCompiled,
+        target.targetPart,
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : undefined,
+      ),
+    ),
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+      sequenceVersion: nextVersion,
+      feedback: target.feedback,
+      targetStepNumber:
+        target.targetPart === "follow_up_step" ? target.targetStepNumber : null,
+    },
+    requestId: operation.requestId,
+  });
+
   return {
     recordId: created.id,
     ...updatedCompiled,
@@ -953,7 +1101,7 @@ export async function editSequenceStepForProspect(
     quantity: 1,
     billable: false,
     metadata: {
-      artifactType: editRecord.artifactType,
+      artifactType: toSequenceArtifactType(input.targetPart),
       artifactId: editRecord.artifactId,
       sequenceVersion: nextVersion,
     },
@@ -973,6 +1121,25 @@ export async function editSequenceStepForProspect(
     },
   });
 
+  await recordSequenceTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: getSenderProfileIdFromSequenceInput(sequenceInput),
+    artifactType: toSequenceArtifactType(input.targetPart),
+    artifactId: editRecord.artifactId,
+    actionType: "edited",
+    providerMetadata: created.modelMetadata,
+    beforeText: editRecord.originalText,
+    afterText: editRecord.editedText,
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+      sequenceVersion: nextVersion,
+    },
+    requestId: operation.requestId,
+  });
+
   return {
     recordId: created.id,
     ...updatedCompiled,
@@ -980,3 +1147,99 @@ export async function editSequenceStepForProspect(
   };
 }
 
+
+export async function recordSequencePreferenceSignalForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  artifactType: "sequence_subject_line_option" | "sequence_opener_option";
+  optionIndex: number;
+  userId?: string;
+  requestId?: string;
+}): Promise<void> {
+  const latestSequenceRecord = await getLatestStoredSequenceOrThrow(input);
+  const compiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
+  const options =
+    input.artifactType === "sequence_subject_line_option"
+      ? compiled.subjectLineSet.subjectLines
+      : compiled.openerSet.openerOptions;
+  const option = options[input.optionIndex];
+
+  if (!option) {
+    throw new Error("The selected sequence option could not be resolved.");
+  }
+
+  const artifactId = getSequenceOptionArtifactId(
+    latestSequenceRecord.id,
+    input.artifactType,
+    input.optionIndex,
+  );
+
+  await recordSequenceTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: latestSequenceRecord.senderProfileId ?? null,
+    artifactType: input.artifactType,
+    artifactId,
+    actionType: "selected",
+    providerMetadata: latestSequenceRecord.modelMetadata,
+    afterText: serializeSequenceArtifact(option),
+    selectedOptionId: artifactId,
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+      sequenceVersion: compiled.sequenceVersion,
+      optionIndex: input.optionIndex,
+    },
+    requestId: input.requestId,
+  });
+}
+
+export async function recordSequenceDistributionSignalForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  artifactType: "sequence_initial_email" | "sequence_follow_up_step";
+  actionType: "copied" | "exported";
+  targetStepNumber?: number;
+  exportFormat?: string | null;
+  userId?: string;
+  requestId?: string;
+}): Promise<void> {
+  const latestSequenceRecord = await getLatestStoredSequenceOrThrow(input);
+  const compiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
+  const artifact = getSequenceArtifactContent(
+    compiled,
+    input.artifactType === "sequence_initial_email" ? "initial_email" : "follow_up_step",
+    input.targetStepNumber,
+  );
+
+  if (!artifact) {
+    throw new Error("The requested sequence artifact could not be resolved.");
+  }
+
+  await recordSequenceTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: latestSequenceRecord.senderProfileId ?? null,
+    artifactType: input.artifactType,
+    artifactId: buildSequenceArtifactId(
+      latestSequenceRecord.id,
+      input.artifactType === "sequence_initial_email" ? "initial_email" : "follow_up_step",
+      input.targetStepNumber,
+    ),
+    actionType: input.actionType,
+    providerMetadata: latestSequenceRecord.modelMetadata,
+    afterText: serializeSequenceArtifact(artifact),
+    exportFormat: input.exportFormat ?? null,
+    metadata: {
+      sourceSequenceId: latestSequenceRecord.id,
+      sequenceVersion: compiled.sequenceVersion,
+      targetStepNumber: input.targetStepNumber ?? null,
+    },
+    requestId: input.requestId,
+  });
+}

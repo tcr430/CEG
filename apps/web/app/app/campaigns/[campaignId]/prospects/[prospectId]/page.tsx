@@ -8,6 +8,7 @@ import type {
   SequenceQualityReport,
 } from "@ceg/validation";
 
+import { ArtifactActionButtons } from "../../../../../../components/artifact-action-buttons";
 import { FeedbackBanner } from "../../../../../../components/feedback-banner";
 import { SubmitButton } from "../../../../../../components/submit-button";
 
@@ -475,6 +476,27 @@ export default async function ProspectDetailPage({
                                           {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
                                           <p>{draft.bodyText}</p>
                                           <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
+                                          {bundleIndex === 0 ? (
+                                            <ArtifactActionButtons
+                                              workspaceId={workspace.workspaceId}
+                                              campaignId={resolvedParams.campaignId}
+                                              prospectId={prospect.id}
+                                              artifactType="draft_reply_option"
+                                              targetSlotId={draft.slotId}
+                                              copyText={[
+                                                draft.subject ?? null,
+                                                draft.bodyText,
+                                              ].filter(Boolean).join("\n\n")}
+                                              exportText={[
+                                                draft.subject ?? null,
+                                                draft.bodyText,
+                                              ].filter(Boolean).join("\n\n")}
+                                              exportFileName={`reply-draft-${draft.slotId}-${prospect.companyDomain ?? prospect.id}.txt`}
+                                              allowSelect
+                                              allowCopy
+                                              allowExport
+                                            />
+                                          ) : null}
                                           {draftQuality ? (
                                             <div className="researchSection compactSection">
                                               <div className="pillRow">
@@ -673,12 +695,22 @@ export default async function ProspectDetailPage({
               <div className="researchSection">
                 <h3>Subject lines</h3>
                 <ul className="researchList">
-                  {latestSequence.subjectLineSet.subjectLines.map((item) => (
+                  {
+                  latestSequence.subjectLineSet.subjectLines.map((item, index) => (
                     <li key={item.text}>
                       <strong>{item.text}</strong>
                       <p>{item.rationale}</p>
+                      <ArtifactActionButtons
+                        workspaceId={workspace.workspaceId}
+                        campaignId={resolvedParams.campaignId}
+                        prospectId={prospect.id}
+                        artifactType="sequence_subject_line_option"
+                        optionIndex={index}
+                        allowSelect
+                      />
                     </li>
-                  ))}
+                  ))
+                }
                 </ul>
                 <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
@@ -701,12 +733,22 @@ export default async function ProspectDetailPage({
               <div className="researchSection">
                 <h3>Opener options</h3>
                 <ul className="researchList">
-                  {latestSequence.openerSet.openerOptions.map((item) => (
+                  {
+                  latestSequence.openerSet.openerOptions.map((item, index) => (
                     <li key={item.text}>
                       <strong>{item.text}</strong>
                       <p>{item.rationale}</p>
+                      <ArtifactActionButtons
+                        workspaceId={workspace.workspaceId}
+                        campaignId={resolvedParams.campaignId}
+                        prospectId={prospect.id}
+                        artifactType="sequence_opener_option"
+                        optionIndex={index}
+                        allowSelect
+                      />
                     </li>
-                  ))}
+                  ))
+                }
                 </ul>
                 <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
@@ -733,6 +775,27 @@ export default async function ProspectDetailPage({
                 <p>{latestSequence.initialEmail.email.body}</p>
                 <p><strong>CTA:</strong> {latestSequence.initialEmail.email.cta}</p>
                 <p><strong>Rationale:</strong> {latestSequence.initialEmail.rationale}</p>
+                <ArtifactActionButtons
+                  workspaceId={workspace.workspaceId}
+                  campaignId={resolvedParams.campaignId}
+                  prospectId={prospect.id}
+                  artifactType="sequence_initial_email"
+                  copyText={[
+                    latestSequence.initialEmail.email.subject,
+                    latestSequence.initialEmail.email.opener,
+                    latestSequence.initialEmail.email.body,
+                    `CTA: ${latestSequence.initialEmail.email.cta}`,
+                  ].join("\n\n")}
+                  exportText={[
+                    latestSequence.initialEmail.email.subject,
+                    latestSequence.initialEmail.email.opener,
+                    latestSequence.initialEmail.email.body,
+                    `CTA: ${latestSequence.initialEmail.email.cta}`,
+                  ].join("\n\n")}
+                  exportFileName={`sequence-initial-${prospect.companyDomain ?? prospect.id}.txt`}
+                  allowCopy
+                  allowExport
+                />
                 <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
@@ -791,6 +854,28 @@ export default async function ProspectDetailPage({
                       <p>{step.body}</p>
                       <p><strong>CTA:</strong> {step.cta}</p>
                       <p><strong>Rationale:</strong> {step.rationale}</p>
+                      <ArtifactActionButtons
+                        workspaceId={workspace.workspaceId}
+                        campaignId={resolvedParams.campaignId}
+                        prospectId={prospect.id}
+                        artifactType="sequence_follow_up_step"
+                        targetStepNumber={step.stepNumber}
+                        copyText={[
+                          step.subject,
+                          step.opener,
+                          step.body,
+                          `CTA: ${step.cta}`,
+                        ].join("\n\n")}
+                        exportText={[
+                          step.subject,
+                          step.opener,
+                          step.body,
+                          `CTA: ${step.cta}`,
+                        ].join("\n\n")}
+                        exportFileName={`sequence-follow-up-${step.stepNumber}-${prospect.companyDomain ?? prospect.id}.txt`}
+                        allowCopy
+                        allowExport
+                      />
                       <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                         <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                         <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />

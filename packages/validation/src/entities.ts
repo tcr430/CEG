@@ -75,7 +75,19 @@ export const generatedArtifactTypeSchema = z.enum([
   "sequence_opener_set",
   "sequence_initial_email",
   "sequence_follow_up_step",
+  "sequence_subject_line_option",
+  "sequence_opener_option",
+  "sequence_bundle",
   "draft_reply_option",
+  "draft_reply_bundle",
+]);
+export const trainingSignalActionTypeSchema = z.enum([
+  "generated",
+  "regenerated",
+  "edited",
+  "selected",
+  "copied",
+  "exported",
 ]);
 export const artifactEditRecordSchema = z.object({
   artifactType: generatedArtifactTypeSchema,
@@ -460,6 +472,71 @@ export const responseStrategyRecommendationSchema = z.object({
   escalationNeeded: z.boolean().default(false),
 });
 
+const trainingSignalSenderProfileSnapshotSchema = z.object({
+  id: senderProfileIdSchema,
+  name: z.string().trim().min(1),
+  senderType: senderProfileTypeSchema,
+  companyName: optionalTextSchema,
+  valueProposition: optionalTextSchema,
+  toneStyle: optionalTextSchema,
+});
+
+const trainingSignalCampaignSnapshotSchema = z.object({
+  id: campaignIdSchema,
+  name: z.string().trim().min(1),
+  status: campaignStatusSchema,
+  senderProfileId: senderProfileIdSchema.nullable().optional(),
+  offerSummary: optionalTextSchema,
+  targetIcp: optionalTextSchema,
+  frameworkPreferences: stringListSchema,
+  toneStyle: optionalTextSchema,
+});
+
+const trainingSignalProspectSnapshotSchema = z.object({
+  id: prospectIdSchema,
+  companyName: optionalTextSchema,
+  companyDomain: optionalTextSchema,
+  companyWebsite: optionalUrlSchema,
+  status: prospectStatusSchema,
+});
+
+const trainingSignalResearchSnapshotSchema = z.object({
+  snapshotId: uuidSchema,
+  sourceUrl: z.string().trim().url(),
+  capturedAt: timestampSchema,
+  summary: optionalTextSchema,
+  valuePropositions: stringListSchema,
+  likelyPainPoints: stringListSchema,
+  personalizationHooks: stringListSchema,
+  confidence: confidenceScoreSchema,
+});
+
+export const trainingSignalPayloadSchema = z.object({
+  workspaceId: workspaceIdSchema,
+  userId: userIdSchema.nullable().optional(),
+  campaignId: campaignIdSchema.nullable().optional(),
+  prospectId: prospectIdSchema.nullable().optional(),
+  senderProfileId: senderProfileIdSchema.nullable().optional(),
+  artifactType: generatedArtifactTypeSchema,
+  artifactId: z.string().trim().min(1),
+  actionType: trainingSignalActionTypeSchema,
+  provider: optionalTextSchema,
+  model: optionalTextSchema,
+  promptTemplateId: optionalTextSchema,
+  promptVersion: optionalTextSchema,
+  beforeText: optionalTextSchema,
+  afterText: optionalTextSchema,
+  selectedOptionId: optionalTextSchema,
+  exportFormat: optionalTextSchema,
+  senderProfileSnapshot: trainingSignalSenderProfileSnapshotSchema
+    .nullable()
+    .optional(),
+  campaignSnapshot: trainingSignalCampaignSnapshotSchema.nullable().optional(),
+  prospectSnapshot: trainingSignalProspectSnapshotSchema.nullable().optional(),
+  researchSnapshot: trainingSignalResearchSnapshotSchema.nullable().optional(),
+  metadata: metadataSchema,
+});
+
 const draftReplySlotSchema = z.object({
   slotId: z.string().trim().min(1),
   label: z.string().trim().min(1),
@@ -765,6 +842,11 @@ export type DraftReplyOutput = z.infer<typeof draftReplyOutputSchema>;
 export type SequenceQualityReport = z.infer<typeof sequenceQualityReportSchema>;
 export type DraftReplyQualityReport = z.infer<typeof draftReplyQualityReportSchema>;
 export type ArtifactEditRecord = z.infer<typeof artifactEditRecordSchema>;
+export type TrainingSignalActionType = z.infer<
+  typeof trainingSignalActionTypeSchema
+>;
+export type GeneratedArtifactType = z.infer<typeof generatedArtifactTypeSchema>;
+export type TrainingSignalPayload = z.infer<typeof trainingSignalPayloadSchema>;
 export type UsageEvent = z.infer<typeof usageEventSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceInputSchema>;

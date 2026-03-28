@@ -583,3 +583,13 @@ h2 {
     background-position: -200% 0;
   }
 }
+
+.artifactActionGroup {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.artifactActionRow {
+  flex-wrap: wrap;
+}

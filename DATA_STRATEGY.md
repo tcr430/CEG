@@ -64,3 +64,16 @@ Even before advanced product features exist, the foundation should preserve:
 - versionable contracts
 - auditability
 - future evaluation and fine-tuning readiness
+
+## Normalized Training Signals
+
+The product now records provider-agnostic training signals into `usage_events` metadata when users generate, regenerate, edit, select, copy, or export sequence and reply artifacts.
+
+Those records should preserve:
+- workspace, campaign, prospect, and research context snapshots
+- sender profile context snapshots when available
+- provider, model, and prompt/template version metadata when available
+- structured artifact ids and user action types
+- before/after text for edits and regenerations
+
+This keeps future evaluation and dataset export focused on one normalized supervision stream instead of reverse-engineering behavior from scattered feature tables.

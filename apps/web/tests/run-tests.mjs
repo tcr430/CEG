@@ -1,4 +1,5 @@
-﻿import assert from "node:assert/strict";
+﻿/* global URL, console */
+import assert from "node:assert/strict";
 
 const moduleUrl = new URL("../lib/server/user-facing-errors.ts", import.meta.url);
 const {

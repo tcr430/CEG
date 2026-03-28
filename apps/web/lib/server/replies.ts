@@ -45,6 +45,7 @@ import {
 import { getSenderProfileForWorkspace } from "./sender-profiles";
 import { getLatestStoredSequenceForProspect } from "./sequences";
 import { getSharedUsageEventRepository } from "./usage-events";
+import { recordTrainingSignal } from "./training-signals";
 
 type PersistedReplyAnalysisRecord = {
   analysisVersion: number;
@@ -94,6 +95,67 @@ function readDraftEditHistory(record: DraftReply): ArtifactEditRecord[] {
 
 function serializeDraftReplyArtifact(value: { subject?: string | null; bodyText: string; strategyNote: string }) {
   return JSON.stringify(value, null, 2);
+}
+
+function buildDraftReplyArtifactId(messageId: string, slotId: string): string {
+  return `${messageId}:draft:${slotId}`;
+}
+
+function buildReplySignalProviderMetadata(modelMetadata: unknown) {
+  if (typeof modelMetadata !== "object" || modelMetadata === null) {
+    return {
+      promptTemplateId: REPLY_PROMPT_TEMPLATE_ID,
+      promptVersion: REPLY_PROMPT_TEMPLATE_ID,
+    };
+  }
+
+  return {
+    ...(modelMetadata as Record<string, unknown>),
+    promptTemplateId:
+      typeof (modelMetadata as { promptTemplateId?: unknown }).promptTemplateId === "string"
+        ? (modelMetadata as { promptTemplateId: string }).promptTemplateId
+        : REPLY_PROMPT_TEMPLATE_ID,
+    promptVersion:
+      typeof (modelMetadata as { promptVersion?: unknown }).promptVersion === "string"
+        ? (modelMetadata as { promptVersion: string }).promptVersion
+        : REPLY_PROMPT_TEMPLATE_ID,
+  };
+}
+
+async function recordReplyTrainingSignal(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  userId?: string;
+  senderProfileId?: string | null;
+  artifactType: "draft_reply_bundle" | "draft_reply_option";
+  artifactId: string;
+  actionType: "generated" | "regenerated" | "edited" | "selected" | "copied" | "exported";
+  providerMetadata?: unknown;
+  beforeText?: string | null;
+  afterText?: string | null;
+  selectedOptionId?: string | null;
+  exportFormat?: string | null;
+  metadata?: Record<string, unknown>;
+  requestId?: string;
+}) {
+  await recordTrainingSignal({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    senderProfileId: input.senderProfileId ?? null,
+    artifactType: input.artifactType,
+    artifactId: input.artifactId,
+    actionType: input.actionType,
+    providerMetadata: buildReplySignalProviderMetadata(input.providerMetadata),
+    beforeText: input.beforeText ?? null,
+    afterText: input.afterText ?? null,
+    selectedOptionId: input.selectedOptionId ?? null,
+    exportFormat: input.exportFormat ?? null,
+    metadata: input.metadata,
+    requestId: input.requestId,
+  });
 }
 
 export type ReplyTimelineEntry = {
@@ -1066,6 +1128,27 @@ export async function generateDraftRepliesForProspect(input: {
     },
   });
 
+  await recordReplyTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId:
+      request.senderContext.mode === "sender_aware"
+        ? request.senderContext.senderProfile.id
+        : null,
+    artifactType: "draft_reply_bundle",
+    artifactId: bundleId,
+    actionType: "generated",
+    providerMetadata: generated.generationMetadata,
+    afterText: JSON.stringify(generated.output, null, 2),
+    metadata: {
+      messageId: latestInboundMessage.id,
+      draftVersion: nextDraftVersion,
+      optionCount: generated.output.drafts.length,
+    },
+  });
+
   return generated.output;
 }
 
@@ -1200,6 +1283,33 @@ export async function regenerateDraftReplyForProspect(input: {
       targetSlotId: input.targetSlotId,
     },
     metadata: {},
+  });
+
+  const priorDraft = latestDrafts.output.drafts.find(
+    (draft) => draft.slotId === input.targetSlotId,
+  );
+
+  await recordReplyTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId:
+      request.senderContext.mode === "sender_aware"
+        ? request.senderContext.senderProfile.id
+        : null,
+    artifactType: "draft_reply_option",
+    artifactId: buildDraftReplyArtifactId(latestInboundMessage.id, input.targetSlotId),
+    actionType: "regenerated",
+    providerMetadata: regenerated.generationMetadata,
+    beforeText: priorDraft ? serializeDraftReplyArtifact(priorDraft) : null,
+    afterText: serializeDraftReplyArtifact(regenerated.regeneratedDraft),
+    selectedOptionId: input.targetSlotId,
+    metadata: {
+      messageId: latestInboundMessage.id,
+      draftVersion: nextDraftVersion,
+      feedback: input.feedback,
+    },
   });
 
   return updatedOutput;
@@ -1349,5 +1459,126 @@ export async function editDraftReplyForProspect(
     },
   });
 
+  await recordReplyTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId:
+      request.senderContext.mode === "sender_aware"
+        ? request.senderContext.senderProfile.id
+        : null,
+    artifactType: "draft_reply_option",
+    artifactId: buildDraftReplyArtifactId(latestInboundMessage.id, input.targetSlotId),
+    actionType: "edited",
+    providerMetadata: existingDraftRecord.modelMetadata,
+    beforeText: editRecord.originalText,
+    afterText: editRecord.editedText,
+    selectedOptionId: input.targetSlotId,
+    metadata: {
+      messageId: latestInboundMessage.id,
+      draftVersion: nextDraftVersion,
+      sourceDraftId: existingDraftRecord.id,
+    },
+  });
+
   return updatedOutput;
+}
+
+export async function recordReplyDraftSelectionForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  targetSlotId: string;
+  userId?: string;
+  requestId?: string;
+}): Promise<void> {
+  const state = await getReplyThreadStateForProspect(
+    input.workspaceId,
+    input.campaignId,
+    input.prospectId,
+  );
+
+  if (state.latestInboundMessage === null || state.latestDrafts === null) {
+    throw new Error("Generate draft replies before selecting one.");
+  }
+
+  const draftIndex = state.latestDrafts.output.drafts.findIndex(
+    (item) => item.slotId === input.targetSlotId,
+  );
+  const draft = draftIndex >= 0 ? state.latestDrafts.output.drafts[draftIndex] : undefined;
+  const record = draftIndex >= 0 ? state.latestDrafts.records[draftIndex] ?? null : null;
+
+  if (!draft) {
+    throw new Error("The selected draft reply could not be resolved.");
+  }
+
+  await recordReplyTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: record?.senderProfileId ?? null,
+    artifactType: "draft_reply_option",
+    artifactId: buildDraftReplyArtifactId(state.latestInboundMessage.id, input.targetSlotId),
+    actionType: "selected",
+    providerMetadata: record?.modelMetadata,
+    afterText: serializeDraftReplyArtifact(draft),
+    selectedOptionId: input.targetSlotId,
+    metadata: {
+      messageId: state.latestInboundMessage.id,
+      draftVersion: state.latestDrafts.version,
+    },
+    requestId: input.requestId,
+  });
+}
+
+export async function recordReplyDraftDistributionSignalForProspect(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  targetSlotId: string;
+  actionType: "copied" | "exported";
+  exportFormat?: string | null;
+  userId?: string;
+  requestId?: string;
+}): Promise<void> {
+  const state = await getReplyThreadStateForProspect(
+    input.workspaceId,
+    input.campaignId,
+    input.prospectId,
+  );
+
+  if (state.latestInboundMessage === null || state.latestDrafts === null) {
+    throw new Error("Generate draft replies before exporting one.");
+  }
+
+  const draftIndex = state.latestDrafts.output.drafts.findIndex(
+    (item) => item.slotId === input.targetSlotId,
+  );
+  const draft = draftIndex >= 0 ? state.latestDrafts.output.drafts[draftIndex] : undefined;
+  const record = draftIndex >= 0 ? state.latestDrafts.records[draftIndex] ?? null : null;
+
+  if (!draft) {
+    throw new Error("The requested draft reply could not be resolved.");
+  }
+
+  await recordReplyTrainingSignal({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    userId: input.userId,
+    senderProfileId: record?.senderProfileId ?? null,
+    artifactType: "draft_reply_option",
+    artifactId: buildDraftReplyArtifactId(state.latestInboundMessage.id, input.targetSlotId),
+    actionType: input.actionType,
+    providerMetadata: record?.modelMetadata,
+    afterText: serializeDraftReplyArtifact(draft),
+    exportFormat: input.exportFormat ?? null,
+    metadata: {
+      messageId: state.latestInboundMessage.id,
+      draftVersion: state.latestDrafts.version,
+    },
+    requestId: input.requestId,
+  });
 }

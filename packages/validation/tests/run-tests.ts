@@ -13,6 +13,8 @@ import {
   replyClassificationOutputSchema,
   replyIntentSchema,
   senderProfileTypeSchema,
+  trainingSignalActionTypeSchema,
+  trainingSignalPayloadSchema,
   updateCampaignInputSchema,
   updateProspectInputSchema,
   updateSenderProfileInputSchema,
@@ -267,5 +269,64 @@ const draftReplyOutputResult = draftReplyOutputSchema.parse({
 });
 
 assert.equal(draftReplyOutputResult.drafts[0]?.slotId, "option-1");
+
+const trainingSignalResult = trainingSignalPayloadSchema.parse({
+  workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+  campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+  prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+  artifactType: "draft_reply_option",
+  artifactId: "option-1",
+  actionType: "edited",
+  provider: "openai",
+  model: "gpt-4.1-mini",
+  promptVersion: "reply.v1",
+  beforeText: "Original draft",
+  afterText: "Edited draft",
+  senderProfileSnapshot: {
+    id: "54ad043c-9435-4388-92b9-9e0becbeff74",
+    name: "Founder Profile",
+    senderType: "saas_founder",
+    companyName: "Acme",
+    valueProposition: "Reduce manual outbound work",
+    toneStyle: "Direct but grounded",
+  },
+  campaignSnapshot: {
+    id: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+    name: "Founder outbound sprint",
+    status: "active",
+    senderProfileId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+    offerSummary: "Founder-led outbound support",
+    targetIcp: "Early-stage SaaS teams",
+    frameworkPreferences: ["Problem -> proof -> CTA"],
+    toneStyle: "Consultative",
+  },
+  prospectSnapshot: {
+    id: "54ad043c-9435-4388-92b9-9e0becbeff74",
+    companyName: "Acme",
+    companyDomain: "acme.com",
+    companyWebsite: "https://acme.com",
+    status: "replied",
+  },
+  researchSnapshot: {
+    snapshotId: "3b460327-7bd9-43bf-902f-36e34a82bb75",
+    sourceUrl: "https://acme.com",
+    capturedAt: "2026-03-28T10:00:00.000Z",
+    summary: "Acme helps lean SaaS teams run better outbound.",
+    valuePropositions: ["Higher quality outbound"],
+    likelyPainPoints: ["Low reply quality"],
+    personalizationHooks: ["Messaging quality positioning"],
+    confidence: {
+      score: 0.76,
+      label: "medium",
+      reasons: ["Structured from public website content."],
+    },
+  },
+  metadata: {
+    targetSlotId: "option-1",
+  },
+});
+
+assert.equal(trainingSignalResult.actionType, "edited");
+assert.equal(trainingSignalActionTypeSchema.parse("copied"), "copied");
 
 console.log("@ceg/validation entity contract tests passed");
