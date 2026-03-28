@@ -21,6 +21,7 @@ export type CreateSequenceRecordInput = {
   channel?: Sequence["channel"];
   status?: Sequence["status"];
   content: Sequence["content"];
+  qualityChecksJson?: Sequence["qualityChecksJson"];
   modelMetadata: Sequence["modelMetadata"];
   createdByUserId?: string | null;
 };
@@ -65,10 +66,11 @@ export function createSequenceRepository(
             channel,
             status,
             content,
+            quality_checks_json,
             model_metadata,
             created_by_user_id
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
           RETURNING
             id,
             workspace_id,
@@ -81,6 +83,7 @@ export function createSequenceRepository(
             channel,
             status,
             content,
+            quality_checks_json,
             model_metadata,
             created_by_user_id,
             created_at,
@@ -97,6 +100,7 @@ export function createSequenceRepository(
           input.channel ?? "email",
           input.status ?? "draft",
           input.content,
+          input.qualityChecksJson ?? null,
           input.modelMetadata,
           input.createdByUserId ?? null,
         ],
@@ -122,6 +126,7 @@ export function createSequenceRepository(
             channel,
             status,
             content,
+            quality_checks_json,
             model_metadata,
             created_by_user_id,
             created_at,
@@ -161,6 +166,7 @@ export function createSequenceRepository(
             channel,
             status,
             content,
+            quality_checks_json,
             model_metadata,
             created_by_user_id,
             created_at,

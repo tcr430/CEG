@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { EvidenceFlag, EvidenceSnippet } from "@ceg/validation";
+import type {
+  DraftReplyQualityReport,
+  EvidenceFlag,
+  EvidenceSnippet,
+  SequenceQualityReport,
+} from "@ceg/validation";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
@@ -55,6 +60,18 @@ function formatMessageBadge(direction: string, source: string) {
   return `${directionLabel} | ${sourceLabel}`;
 }
 
+function formatQualityName(value: string) {
+  return value.replaceAll("_", " ");
+}
+
+function formatQualityScore(score: number) {
+  return `${score}/100`;
+}
+
+function getFailedQualityChecks(report: SequenceQualityReport | DraftReplyQualityReport | null) {
+  return report?.checks.filter((check) => !check.passed) ?? [];
+}
+
 export default async function ProspectDetailPage({
   params,
   searchParams,
@@ -103,14 +120,8 @@ export default async function ProspectDetailPage({
   const qualityFlags = (quality?.flags ?? []) as EvidenceFlag[];
   const painPoints = companyProfile?.likelyPainPoints ?? [];
   const hooks = companyProfile?.personalizationHooks ?? [];
-  const allSequenceQualityChecks = latestSequence
-    ? [
-        ...latestSequence.subjectLineSet.qualityChecks,
-        ...latestSequence.openerSet.qualityChecks,
-        ...latestSequence.initialEmail.qualityChecks,
-        ...latestSequence.followUpSequence.qualityChecks,
-      ]
-    : [];
+  const sequenceQualityReport = latestSequence?.qualityReport ?? null;
+  const sequenceFailedChecks = getFailedQualityChecks(sequenceQualityReport);
 
   return (
     <main className="shell">
@@ -398,35 +409,80 @@ export default async function ProspectDetailPage({
                                     <strong>Strategy:</strong> {bundle.output.draftingStrategy}
                                   </p>
                                   <ul className="researchList">
-                                    {bundle.output.drafts.map((draft) => (
-                                      <li key={draft.slotId}>
-                                        <strong>{draft.label}</strong>
-                                        {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
-                                        <p>{draft.bodyText}</p>
-                                        <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
-                                        {bundleIndex === 0 ? (
-                                          <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
-                                            <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                                            <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
-                                            <input type="hidden" name="prospectId" value={prospect.id} />
-                                            <input type="hidden" name="targetSlotId" value={draft.slotId} />
-                                            <label className="field">
-                                              <span>Regeneration feedback</span>
-                                              <textarea
-                                                name="feedback"
-                                                rows={3}
-                                                defaultValue="Make this a little shorter and softer."
-                                              />
-                                            </label>
-                                            <div className="inlineActions">
-                                              <button type="submit" className="buttonSecondary">
-                                                Regenerate this option
-                                              </button>
+                                    {bundle.output.drafts.map((draft, draftIndex) => {
+                                      const storedDraft = bundle.records[draftIndex] ?? null;
+                                      const draftQuality = storedDraft?.qualityChecksJson ?? null;
+                                      const failedDraftChecks = getFailedQualityChecks(draftQuality);
+
+                                      return (
+                                        <li key={draft.slotId}>
+                                          <strong>{draft.label}</strong>
+                                          {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
+                                          <p>{draft.bodyText}</p>
+                                          <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
+                                          {draftQuality ? (
+                                            <div className="researchSection compactSection">
+                                              <div className="pillRow">
+                                                <span className="pill">
+                                                  Quality {formatQualityScore(draftQuality.summary.score)}
+                                                </span>
+                                                <span className="pill">
+                                                  {draftQuality.summary.label}
+                                                </span>
+                                                {draftQuality.summary.blocked ? (
+                                                  <span className="pill">Review before sending</span>
+                                                ) : null}
+                                              </div>
+                                              <ul className="researchList compactResearchList">
+                                                {draftQuality.dimensions.map((dimension) => (
+                                                  <li key={dimension.name}>
+                                                    <strong>{formatQualityName(dimension.name)}</strong>
+                                                    <p>
+                                                      {formatQualityScore(dimension.score)} | {dimension.details}
+                                                    </p>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                              {failedDraftChecks.length > 0 ? (
+                                                <ul className="researchList compactResearchList">
+                                                  {failedDraftChecks.map((check) => (
+                                                    <li key={check.code}>
+                                                      <strong>{formatQualityName(check.code)}</strong>
+                                                      <p>{check.message}</p>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              ) : (
+                                                <p className="statusMessage compactStatusMessage">
+                                                  Deterministic checks passed for this stored draft version.
+                                                </p>
+                                              )}
                                             </div>
-                                          </form>
-                                        ) : null}
-                                      </li>
-                                    ))}
+                                          ) : null}
+                                          {bundleIndex === 0 ? (
+                                            <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
+                                              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                              <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                              <input type="hidden" name="prospectId" value={prospect.id} />
+                                              <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                                              <label className="field">
+                                                <span>Regeneration feedback</span>
+                                                <textarea
+                                                  name="feedback"
+                                                  rows={3}
+                                                  defaultValue="Make this a little shorter and softer."
+                                                />
+                                              </label>
+                                              <div className="inlineActions">
+                                                <button type="submit" className="buttonSecondary">
+                                                  Regenerate this option
+                                                </button>
+                                              </div>
+                                            </form>
+                                          ) : null}
+                                        </li>
+                                      );
+                                    })}
                                   </ul>
                                 </section>
                               ))}
@@ -579,17 +635,44 @@ export default async function ProspectDetailPage({
                   ))}
                 </ul>
               </div>
-              <div className="researchSection">
-                <h3>Quality checks</h3>
-                <ul className="researchList">
-                  {allSequenceQualityChecks.map((check, index) => (
-                    <li key={`${check.name}-${index}`}>
-                      <strong>{check.name}</strong>
-                      <p>{check.passed ? "Passed" : "Needs review"}: {check.details}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {sequenceQualityReport ? (
+                <div className="researchSection">
+                  <h3>Quality review</h3>
+                  <div className="pillRow">
+                    <span className="pill">
+                      Overall {formatQualityScore(sequenceQualityReport.summary.score)}
+                    </span>
+                    <span className="pill">{sequenceQualityReport.summary.label}</span>
+                    {sequenceQualityReport.summary.blocked ? (
+                      <span className="pill">Review before use</span>
+                    ) : null}
+                  </div>
+                  <ul className="researchList compactResearchList">
+                    {sequenceQualityReport.dimensions.map((dimension) => (
+                      <li key={dimension.name}>
+                        <strong>{formatQualityName(dimension.name)}</strong>
+                        <p>
+                          {formatQualityScore(dimension.score)} | {dimension.details}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                  {sequenceFailedChecks.length > 0 ? (
+                    <ul className="researchList compactResearchList">
+                      {sequenceFailedChecks.map((check) => (
+                        <li key={check.code}>
+                          <strong>{formatQualityName(check.code)}</strong>
+                          <p>{check.message}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="statusMessage compactStatusMessage">
+                      Deterministic quality checks passed for the current stored sequence.
+                    </p>
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="dashboardCard">

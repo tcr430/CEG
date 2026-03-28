@@ -88,6 +88,7 @@ For reply intelligence specifically:
 - inbound reply analysis, strategy recommendation, and draft generation should stay behind `@ceg/reply-engine`
 - classification should remain separate from drafting so the system can audit intent, objections, and recommended actions independently
 - provider-specific reply analysis or drafting calls must stay behind the reply model adapter interface
+- deterministic quality scoring for generated sequences and draft replies should run server-side, remain auditable, and persist into `sequences.quality_checks_json` and `draft_replies.quality_checks_json` for UI review and future evaluation workflows
 
 ## Async-Ready, Not Queue-Heavy
 

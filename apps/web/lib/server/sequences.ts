@@ -10,6 +10,7 @@ import { createConsoleLogger } from "@ceg/observability";
 import {
   compiledSequenceOutputSchema,
   createSequenceEngineService,
+  scoreCompiledSequenceQuality,
   type CompiledSequenceOutput,
   type SenderContext,
   type SequenceEngineService,
@@ -65,6 +66,10 @@ function getSequenceEngine(): SequenceEngineService {
 
 const logger = createConsoleLogger({ area: "sequence_generation" });
 const SEQUENCE_PROMPT_VERSION = "sequence.v1";
+
+export type StoredCompiledSequence = CompiledSequenceOutput & {
+  qualityReport: Sequence["qualityChecksJson"] | null;
+};
 
 function buildFallbackCompanyProfile(input: {
   websiteUrl?: string | null;
@@ -275,7 +280,7 @@ export async function getLatestSequenceForProspect(
   workspaceId: string,
   campaignId: string,
   prospectId: string,
-): Promise<CompiledSequenceOutput | null> {
+): Promise<StoredCompiledSequence | null> {
   const latest = await getSequenceRepository().getLatestSequenceByProspect(
     workspaceId,
     campaignId,
@@ -286,7 +291,10 @@ export async function getLatestSequenceForProspect(
     return null;
   }
 
-  return compiledSequenceOutputSchema.parse(latest.content);
+  return {
+    ...compiledSequenceOutputSchema.parse(latest.content),
+    qualityReport: latest.qualityChecksJson ?? null,
+  };
 }
 
 export async function generateSequenceForProspect(input: {
@@ -337,6 +345,7 @@ export async function generateSequenceForProspect(input: {
     });
 
     const modelMetadata = summarizeModelMetadata(compiled);
+    const qualityReport = scoreCompiledSequenceQuality(compiled, sequenceInput);
     const created = await getSequenceRepository().createSequence({
       workspaceId: input.workspaceId,
       campaignId: input.campaignId,
@@ -349,6 +358,7 @@ export async function generateSequenceForProspect(input: {
       channel: "email",
       status: "draft",
       content: compiled,
+      qualityChecksJson: qualityReport,
       modelMetadata,
       createdByUserId: input.userId ?? null,
     });

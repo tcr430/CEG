@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { createReplyEngineService } from "../dist/index.js";
+import { createReplyEngineService, scoreDraftReplyQuality } from "../dist/index.js";
 import type { ReplyGenerationModelAdapter } from "../dist/index.js";
 
 const metadata = {
@@ -245,6 +245,32 @@ const drafts = await service.generateDraftReplies({
 assert.equal(drafts.output.drafts.length, 2);
 assert.equal(
   drafts.qualityChecks.some((check) => check.name === "no_invented_facts"),
+  true,
+);
+
+const scoredDraft = scoreDraftReplyQuality(
+  {
+    slotId: "option-risky",
+    label: "Pushy draft",
+    subject: "Amazing fit for ProspectCo",
+    bodyText:
+      "Love what you are doing. We can guarantee results, so let's get on a call ASAP and I can walk through everything again.",
+    strategyNote: "Intentionally risky for quality test coverage.",
+  },
+  {
+    request,
+    analysis: analysis.analysis,
+    strategy: strategy.strategy,
+  },
+);
+
+assert.ok(scoredDraft.summary.score < 80);
+assert.equal(
+  scoredDraft.checks.some((check) => check.code === "unverifiable_claims" && !check.passed),
+  true,
+);
+assert.equal(
+  scoredDraft.checks.some((check) => check.code === "spammy_or_overhyped_language" && !check.passed),
   true,
 );
 

@@ -41,6 +41,7 @@ export function createInMemorySequenceRepository(
         channel: input.channel ?? "email",
         status: input.status ?? "draft",
         content: input.content,
+        qualityChecksJson: input.qualityChecksJson ?? null,
         modelMetadata: input.modelMetadata,
         createdByUserId: input.createdByUserId ?? null,
         createdAt: now,

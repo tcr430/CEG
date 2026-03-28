@@ -37,6 +37,39 @@ const evidenceFlagSchema = z.object({
   severity: z.enum(["info", "warning", "critical"]),
   message: z.string().trim().min(1),
 });
+const qualityOutcomeLabelSchema = z.enum(["strong", "review", "risky"]);
+const qualityCheckResultSchema = z.object({
+  code: z.string().trim().min(1),
+  passed: z.boolean(),
+  severity: z.enum(["info", "warning", "critical"]),
+  message: z.string().trim().min(1),
+  evidence: stringListSchema,
+});
+const qualityDimensionScoreSchema = z.object({
+  name: z.string().trim().min(1),
+  score: z.number().min(0).max(100),
+  label: qualityOutcomeLabelSchema,
+  details: z.string().trim().min(1),
+});
+const qualitySummarySchema = z.object({
+  score: z.number().min(0).max(100),
+  label: qualityOutcomeLabelSchema,
+  blocked: z.boolean().default(false),
+});
+export const sequenceQualityReportSchema = z.object({
+  generatedAt: timestampSchema,
+  summary: qualitySummarySchema,
+  dimensions: z.array(qualityDimensionScoreSchema).min(1),
+  checks: z.array(qualityCheckResultSchema).default([]),
+  notes: stringListSchema,
+});
+export const draftReplyQualityReportSchema = z.object({
+  generatedAt: timestampSchema,
+  summary: qualitySummarySchema,
+  dimensions: z.array(qualityDimensionScoreSchema).min(1),
+  checks: z.array(qualityCheckResultSchema).default([]),
+  notes: stringListSchema,
+});
 const researchQualitySchema = z.object({
   overall: confidenceScoreSchema,
   dimensions: z
@@ -260,6 +293,7 @@ export const sequenceSchema = z.object({
   channel: z.literal("email"),
   status: sequenceStatusSchema,
   content: metadataSchema,
+  qualityChecksJson: sequenceQualityReportSchema.nullable().optional(),
   modelMetadata: metadataSchema,
   createdByUserId: userIdSchema.nullable().optional(),
   createdAt: timestampSchema,
@@ -352,6 +386,7 @@ export const draftReplySchema = z.object({
   bodyText: optionalTextSchema,
   bodyHtml: optionalTextSchema,
   structuredOutput: metadataSchema,
+  qualityChecksJson: draftReplyQualityReportSchema.nullable().optional(),
   modelMetadata: metadataSchema,
   createdByUserId: userIdSchema.nullable().optional(),
   createdAt: timestampSchema,
@@ -669,6 +704,8 @@ export type ResponseStrategyRecommendation = z.infer<
   typeof responseStrategyRecommendationSchema
 >;
 export type DraftReplyOutput = z.infer<typeof draftReplyOutputSchema>;
+export type SequenceQualityReport = z.infer<typeof sequenceQualityReportSchema>;
+export type DraftReplyQualityReport = z.infer<typeof draftReplyQualityReportSchema>;
 export type UsageEvent = z.infer<typeof usageEventSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceInputSchema>;

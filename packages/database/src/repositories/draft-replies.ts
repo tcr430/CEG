@@ -11,6 +11,7 @@ export type CreateDraftReplyRecordInput = {
   bodyText?: string | null;
   bodyHtml?: string | null;
   structuredOutput: DraftReply["structuredOutput"];
+  qualityChecksJson?: DraftReply["qualityChecksJson"];
   modelMetadata: DraftReply["modelMetadata"];
   createdByUserId?: string | null;
   status?: DraftReply["status"];

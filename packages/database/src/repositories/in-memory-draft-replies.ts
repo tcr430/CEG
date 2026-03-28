@@ -42,6 +42,7 @@ export function createInMemoryDraftReplyRepository(
         bodyText: input.bodyText ?? null,
         bodyHtml: input.bodyHtml ?? null,
         structuredOutput: input.structuredOutput,
+        qualityChecksJson: input.qualityChecksJson ?? null,
         modelMetadata: input.modelMetadata,
         createdByUserId: input.createdByUserId ?? null,
         createdAt: now,

@@ -1,6 +1,7 @@
 export * from "./contracts.js";
 export * from "./validators.js";
 export * from "./service.js";
+export * from "./quality.js";
 
 export const sequenceEngineBoundary = {
   name: "@ceg/sequence-engine",

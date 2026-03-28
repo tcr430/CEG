@@ -19,6 +19,7 @@ import {
   createReplyEngineService,
   replyAnalysisOutputSchema,
   responseStrategyRecommendationOutputSchema,
+  scoreDraftReplyQuality,
   type DraftReplyGenerationOutput,
   type ReplyAnalysisOutput,
   type ReplyAnalysisRequest,
@@ -907,6 +908,7 @@ export async function generateDraftRepliesForProspect(input: {
   }
 
   const latestInboundMessage = state.latestInboundMessage;
+  const latestAnalysis = state.latestAnalysis;
 
   const request = await buildReplyAnalysisRequest({
     workspaceId: input.workspaceId,
@@ -918,8 +920,8 @@ export async function generateDraftRepliesForProspect(input: {
 
   const generated = await getReplyEngine().generateDraftReplies({
     request,
-    analysis: state.latestAnalysis.analysisOutput.analysis,
-    strategy: state.latestAnalysis.strategyOutput.strategy,
+    analysis: latestAnalysis.analysisOutput.analysis,
+    strategy: latestAnalysis.strategyOutput.strategy,
   });
 
   const nextDraftVersion = (state.latestDrafts?.version ?? 0) + 1;
@@ -944,6 +946,11 @@ export async function generateDraftRepliesForProspect(input: {
           bundleId,
           bundleOutput: generated.output,
         },
+        qualityChecksJson: scoreDraftReplyQuality(draft, {
+          request,
+          analysis: latestAnalysis.analysisOutput.analysis,
+          strategy: latestAnalysis.strategyOutput.strategy,
+        }),
         modelMetadata: generated.generationMetadata,
         createdByUserId: input.userId ?? null,
       }),
@@ -1013,6 +1020,7 @@ export async function regenerateDraftReplyForProspect(input: {
   }
 
   const latestInboundMessage = state.latestInboundMessage;
+  const latestAnalysis = state.latestAnalysis;
 
   const request = await buildReplyAnalysisRequest({
     workspaceId: input.workspaceId,
@@ -1025,8 +1033,8 @@ export async function regenerateDraftReplyForProspect(input: {
   const regenerated = await getReplyEngine().regenerateDraftReplyOption({
     baseInput: {
       request,
-      analysis: state.latestAnalysis.analysisOutput.analysis,
-      strategy: state.latestAnalysis.strategyOutput.strategy,
+      analysis: latestAnalysis.analysisOutput.analysis,
+      strategy: latestAnalysis.strategyOutput.strategy,
     },
     targetSlotId: input.targetSlotId,
     currentOutput: state.latestDrafts.output,
@@ -1060,6 +1068,11 @@ export async function regenerateDraftReplyForProspect(input: {
           bundleId,
           bundleOutput: updatedOutput,
         },
+        qualityChecksJson: scoreDraftReplyQuality(draft, {
+          request,
+          analysis: latestAnalysis.analysisOutput.analysis,
+          strategy: latestAnalysis.strategyOutput.strategy,
+        }),
         modelMetadata: regenerated.generationMetadata,
         createdByUserId: input.userId ?? null,
       }),

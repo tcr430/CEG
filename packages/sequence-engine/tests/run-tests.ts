@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createSequenceEngineService,
   runSequenceQualityChecks,
+  scoreCompiledSequenceQuality,
   sequenceGenerationInputSchema,
   validateInitialEmailOutput,
   type SequenceGenerationMetadata,
@@ -154,6 +155,97 @@ const validatedEmail = validateInitialEmailOutput(
 );
 
 assert.ok(validatedEmail.qualityChecks.length >= 5);
+
+const scoredSequence = scoreCompiledSequenceQuality(
+  {
+    subjectLineSet: {
+      subjectLines: [
+        {
+          text: "Great company for a revolutionary workflow",
+          rationale: "Intentionally risky for test coverage.",
+        },
+      ],
+      rationale: "Test subject lines",
+      qualityChecks: [],
+      generationMetadata: metadata,
+    },
+    openerSet: {
+      openerOptions: [
+        {
+          text: "Impressed by what your team is doing at ProspectCo!!!",
+          rationale: "Intentionally hype-heavy.",
+          evidenceSupport: [],
+        },
+      ],
+      rationale: "Test opener",
+      qualityChecks: [],
+      generationMetadata: metadata,
+    },
+    initialEmail: {
+      email: {
+        subject: "Revolutionary workflow for ProspectCo",
+        opener: "Impressed by what your team is doing.",
+        body: "We can guarantee better outbound performance and double your pipeline fast. Open to a quick call next week?",
+        cta: "Open to a quick call next week?",
+        rationale: "Test email",
+        qualityChecks: [],
+      },
+      rationale: "Test initial email",
+      qualityChecks: [],
+      generationMetadata: metadata,
+    },
+    followUpSequence: {
+      sequenceSteps: [
+        {
+          stepNumber: 1,
+          waitDays: 3,
+          subject: "Still relevant?",
+          opener: "Quick nudge.",
+          body: "Following up quickly.",
+          cta: "Worth a reply?",
+          rationale: "Test",
+          qualityChecks: [],
+        },
+        {
+          stepNumber: 2,
+          waitDays: 5,
+          subject: "Any thoughts?",
+          opener: "Another quick note.",
+          body: "Happy to share details.",
+          cta: "Want details?",
+          rationale: "Test",
+          qualityChecks: [],
+        },
+        {
+          stepNumber: 3,
+          waitDays: 7,
+          subject: "Close the loop?",
+          opener: "Last note.",
+          body: "Happy to close the loop.",
+          cta: "Should I close the loop?",
+          rationale: "Test",
+          qualityChecks: [],
+        },
+      ],
+      rationale: "Test follow-ups",
+      qualityChecks: [],
+      generationMetadata: metadata,
+    },
+    sequenceVersion: 2,
+    generatedForMode: "sender_aware",
+  },
+  input,
+);
+
+assert.ok(scoredSequence.summary.score < 80);
+assert.equal(
+  scoredSequence.checks.some((check) => check.code === "unverifiable_claims" && !check.passed),
+  true,
+);
+assert.equal(
+  scoredSequence.checks.some((check) => check.code === "spammy_or_overhyped_language" && !check.passed),
+  true,
+);
 
 const adapter: SequenceGenerationModelAdapter = {
   async generateSubjectLines() {

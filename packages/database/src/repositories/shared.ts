@@ -250,6 +250,7 @@ type SequenceRow = {
   channel: Sequence["channel"];
   status: Sequence["status"];
   content: Sequence["content"];
+  quality_checks_json: Sequence["qualityChecksJson"];
   model_metadata: Sequence["modelMetadata"];
   created_by_user_id: string | null;
   created_at: Date | string;
@@ -322,6 +323,7 @@ type DraftReplyRow = {
   body_text: string | null;
   body_html: string | null;
   structured_output: DraftReply["structuredOutput"];
+  quality_checks_json: DraftReply["qualityChecksJson"];
   model_metadata: DraftReply["modelMetadata"];
   created_by_user_id: string | null;
   created_at: Date | string;
@@ -502,6 +504,7 @@ export function mapSequenceRow(row: SequenceRow): Sequence {
     channel: row.channel,
     status: row.status,
     content: row.content,
+    qualityChecksJson: row.quality_checks_json,
     modelMetadata: row.model_metadata,
     createdByUserId: row.created_by_user_id,
     createdAt: asDate(row.created_at),
@@ -585,6 +588,7 @@ export function mapDraftReplyRow(row: DraftReplyRow): DraftReply {
     bodyText: row.body_text,
     bodyHtml: row.body_html,
     structuredOutput: row.structured_output,
+    qualityChecksJson: row.quality_checks_json,
     modelMetadata: row.model_metadata,
     createdByUserId: row.created_by_user_id,
     createdAt: asDate(row.created_at),

@@ -56,6 +56,24 @@ async function run(): Promise<void> {
       content: {
         sequenceVersion: 1,
       },
+      qualityChecksJson: {
+        generatedAt: new Date("2026-03-28T10:00:00.000Z"),
+        summary: {
+          score: 78,
+          label: "strong",
+          blocked: false,
+        },
+        dimensions: [
+          {
+            name: "tone_fit",
+            score: 78,
+            label: "strong",
+            details: "Tone stays grounded.",
+          },
+        ],
+        checks: [],
+        notes: [],
+      },
       modelMetadata: {
         provider: "openai",
       },
@@ -68,7 +86,9 @@ async function run(): Promise<void> {
     );
 
     assert.equal(first.generationMode, "basic");
+    assert.equal(first.qualityChecksJson?.summary.score, 78);
     assert.equal(latest?.id, first.id);
+    assert.equal(latest?.qualityChecksJson?.summary.label, "strong");
   }
 
   {
@@ -497,6 +517,24 @@ async function run(): Promise<void> {
         draftVersion: 1,
         bundleId: "bundle-1",
       },
+      qualityChecksJson: {
+        generatedAt: new Date("2026-03-28T10:00:00.000Z"),
+        summary: {
+          score: 72,
+          label: "review",
+          blocked: false,
+        },
+        dimensions: [
+          {
+            name: "relevance_to_inbound_reply",
+            score: 72,
+            label: "review",
+            details: "Reply addresses the inbound request.",
+          },
+        ],
+        checks: [],
+        notes: [],
+      },
       modelMetadata: {
         provider: "openai",
       },
@@ -533,6 +571,7 @@ async function run(): Promise<void> {
     assert.equal(analyses.length, 1);
     assert.equal(threadDraftReplies.length, 2);
     assert.equal(threadMessages.length, 3);
+    assert.equal(draftReply.qualityChecksJson?.summary.score, 72);
     assert.deepEqual(new Set(draftReplies.map((draft) => draft.id)), new Set([draftReply.id, secondDraftReply.id]));
   }
   console.log("@ceg/database repository contract tests passed");

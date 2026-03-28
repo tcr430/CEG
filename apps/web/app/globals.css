@@ -455,6 +455,19 @@ h2 {
   line-height: 1.7;
 }
 
+.compactSection {
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.compactResearchList {
+  gap: 8px;
+}
+
+.compactStatusMessage {
+  padding: 12px 14px;
+}
+
 @media (max-width: 900px) {
   .threadComposerGrid {
     grid-template-columns: 1fr;
