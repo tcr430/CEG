@@ -1,14 +1,19 @@
 ﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { EvidenceFlag, EvidenceSnippet } from "@ceg/validation";
+import type { DraftReplyOutput, EvidenceFlag, EvidenceSnippet } from "@ceg/validation";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
 import { getLatestResearchSnapshotForProspect } from "../../../../../../lib/server/prospect-research";
+import { getReplyThreadStateForProspect } from "../../../../../../lib/server/replies";
 import { getLatestSequenceForProspect } from "../../../../../../lib/server/sequences";
 import {
+  analyzeReplyAction,
+  createInboundReplyAction,
   generateProspectSequenceAction,
+  generateReplyDraftsAction,
+  regenerateReplyDraftAction,
   runProspectResearchAction,
 } from "../../../actions";
 
@@ -28,6 +33,10 @@ function renderConfidenceLabel(score: number, label: string) {
 
 function softLead(label: "low" | "medium" | "high") {
   return label === "low" ? "Likely" : label === "medium" ? "Inferred" : "Observed";
+}
+
+function formatIntent(intent: string) {
+  return intent.replaceAll("_", " ");
 }
 
 export default async function ProspectDetailPage({
@@ -53,13 +62,18 @@ export default async function ProspectDetailPage({
     notFound();
   }
 
-  const [latestSnapshot, latestSequence] = await Promise.all([
+  const [latestSnapshot, latestSequence, replyState] = await Promise.all([
     getLatestResearchSnapshotForProspect(
       workspace.workspaceId,
       resolvedParams.campaignId,
       prospect.id,
     ),
     getLatestSequenceForProspect(
+      workspace.workspaceId,
+      resolvedParams.campaignId,
+      prospect.id,
+    ),
+    getReplyThreadStateForProspect(
       workspace.workspaceId,
       resolvedParams.campaignId,
       prospect.id,
@@ -81,6 +95,8 @@ export default async function ProspectDetailPage({
         ...latestSequence.followUpSequence.qualityChecks,
       ]
     : [];
+  const latestReplyAnalysis = replyState.latestAnalysis;
+  const latestReplyDrafts = replyState.latestDrafts;
 
   return (
     <main className="shell">
@@ -118,6 +134,9 @@ export default async function ProspectDetailPage({
               ) : null}
               {latestSequence ? (
                 <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
+              ) : null}
+              {latestReplyDrafts ? (
+                <span className="pill">Reply drafts v{latestReplyDrafts.version}</span>
               ) : null}
             </div>
           </div>
@@ -167,6 +186,141 @@ export default async function ProspectDetailPage({
               </button>
             </div>
           </form>
+
+          <div className="dashboardCard researchSnapshotCard">
+            <p className="cardLabel">Reply intelligence</p>
+            <h2>Prospect thread</h2>
+            <p>
+              Capture an inbound reply, analyze intent and objections, and generate
+              schema-validated response drafts without sending anything yet.
+            </p>
+
+            <form action={createInboundReplyAction} className="panel prospectResearchForm">
+              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+              <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+              <input type="hidden" name="prospectId" value={prospect.id} />
+
+              <label className="field">
+                <span>Inbound subject</span>
+                <input
+                  name="subject"
+                  type="text"
+                  defaultValue={replyState.latestInboundMessage?.subject ?? ""}
+                  placeholder="Re: outbound"
+                />
+              </label>
+
+              <label className="field">
+                <span>Inbound reply</span>
+                <textarea
+                  name="bodyText"
+                  required
+                  rows={6}
+                  defaultValue={replyState.latestInboundMessage?.bodyText ?? ""}
+                  placeholder="Paste the latest inbound prospect reply here."
+                />
+              </label>
+
+              <div className="inlineActions">
+                <button type="submit" className="buttonPrimary">
+                  Save inbound reply
+                </button>
+              </div>
+            </form>
+
+            {replyState.latestInboundMessage ? (
+              <div className="researchSection">
+                <h3>Latest inbound reply</h3>
+                <p><strong>{replyState.latestInboundMessage.subject ?? "No subject"}</strong></p>
+                <p>{replyState.latestInboundMessage.bodyText}</p>
+                <div className="pillRow">
+                  <span className="pill">Message v{String(replyState.latestInboundMessage.metadata.messageVersion ?? 1)}</span>
+                </div>
+                <div className="inlineActions">
+                  <form action={analyzeReplyAction}>
+                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                    <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                    <input type="hidden" name="prospectId" value={prospect.id} />
+                    <button type="submit" className="buttonPrimary">Analyze reply</button>
+                  </form>
+                  <form action={generateReplyDraftsAction}>
+                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                    <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                    <input type="hidden" name="prospectId" value={prospect.id} />
+                    <button type="submit" className="buttonSecondary">Generate reply drafts</button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="researchSection">
+                <h3>No inbound reply yet</h3>
+                <p>Paste a prospect reply above to begin reply analysis and drafting.</p>
+              </div>
+            )}
+
+            {latestReplyAnalysis ? (
+              <div className="researchSection">
+                <h3>Latest analysis</h3>
+                <div className="pillRow">
+                  <span className="pill">Intent: {formatIntent(latestReplyAnalysis.analysisOutput.analysis.intent)}</span>
+                  <span className="pill">Action: {formatIntent(latestReplyAnalysis.strategyOutput.strategy.recommendedAction)}</span>
+                  <span className="pill">
+                    {renderConfidenceLabel(
+                      latestReplyAnalysis.analysisOutput.analysis.confidence.score,
+                      latestReplyAnalysis.analysisOutput.analysis.confidence.label,
+                    )}
+                  </span>
+                </div>
+                <p><strong>Rationale:</strong> {latestReplyAnalysis.analysisOutput.analysis.rationale}</p>
+                {latestReplyAnalysis.analysisOutput.analysis.objectionType ? (
+                  <p><strong>Objection type:</strong> {formatIntent(latestReplyAnalysis.analysisOutput.analysis.objectionType)}</p>
+                ) : null}
+                <p><strong>Recommended action:</strong> {formatIntent(latestReplyAnalysis.strategyOutput.strategy.recommendedAction)}</p>
+                <p><strong>Drafting strategy:</strong> {latestReplyAnalysis.strategyOutput.strategy.draftingStrategy}</p>
+                {latestReplyAnalysis.analysisOutput.analysis.intent === "hard_no" ? (
+                  <p className="statusMessage">
+                    This reply reads as a hard negative. The system will keep recommendations courteous and non-pushy.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {latestReplyDrafts ? (
+              <div className="researchSection">
+                <h3>Draft replies</h3>
+                <p>
+                  Version {latestReplyDrafts.version}. Recommended action: {formatIntent(latestReplyDrafts.output.recommendedAction)}.
+                </p>
+                <ul className="researchList">
+                  {latestReplyDrafts.output.drafts.map((draft: DraftReplyOutput["drafts"][number]) => (
+                    <li key={draft.slotId}>
+                      <strong>{draft.label}</strong>
+                      {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
+                      <p>{draft.bodyText}</p>
+                      <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
+                      <form action={regenerateReplyDraftAction} className="panel prospectResearchForm">
+                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                        <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                        <input type="hidden" name="prospectId" value={prospect.id} />
+                        <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                        <label className="field">
+                          <span>Regeneration feedback</span>
+                          <textarea
+                            name="feedback"
+                            rows={3}
+                            defaultValue="Make this a little shorter and softer."
+                          />
+                        </label>
+                        <div className="inlineActions">
+                          <button type="submit" className="buttonSecondary">Regenerate this option</button>
+                        </div>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
 
           {latestSnapshot ? (
             <div className="dashboardCard researchSnapshotCard">
@@ -335,3 +489,4 @@ export default async function ProspectDetailPage({
     </main>
   );
 }
+

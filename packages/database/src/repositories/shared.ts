@@ -8,7 +8,9 @@ import {
   createSenderProfileInputSchema,
   createUsageEventInputSchema,
   createWorkspaceInputSchema,
+  conversationThreadIdSchema,
   prospectIdSchema,
+  messageIdSchema,
   senderProfileIdSchema,
   sequenceIdSchema,
   updateCampaignInputSchema,
@@ -16,6 +18,7 @@ import {
   updateSenderProfileInputSchema,
   workspaceIdSchema,
   type Campaign,
+  type ConversationThread,
   type CreateCampaignInput,
   type CreateProspectInput,
   type CreateAuditEventInput,
@@ -23,7 +26,10 @@ import {
   type CreateSenderProfileInput,
   type CreateUsageEventInput,
   type CreateWorkspaceInput,
+  type DraftReply,
+  type Message,
   type Prospect,
+  type ReplyAnalysis,
   type Sequence,
   type ResearchSnapshot,
   type SenderProfile,
@@ -34,7 +40,11 @@ import {
   type UpdateSenderProfileInput,
   type Workspace,
   campaignSchema,
+  conversationThreadSchema,
+  draftReplySchema,
+  messageSchema,
   prospectSchema,
+  replyAnalysisSchema,
   sequenceSchema,
   researchSnapshotSchema,
   senderProfileSchema,
@@ -66,6 +76,14 @@ export function validateSenderProfileId(senderProfileId: string): string {
 
 export function validateProspectId(prospectId: string): string {
   return prospectIdSchema.parse(prospectId);
+}
+
+export function validateConversationThreadId(threadId: string): string {
+  return conversationThreadIdSchema.parse(threadId);
+}
+
+export function validateMessageId(messageId: string): string {
+  return messageIdSchema.parse(messageId);
 }
 
 export function validateSequenceId(sequenceId: string): string {
@@ -233,6 +251,78 @@ type SequenceRow = {
   status: Sequence["status"];
   content: Sequence["content"];
   model_metadata: Sequence["modelMetadata"];
+  created_by_user_id: string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type ConversationThreadRow = {
+  id: string;
+  workspace_id: string;
+  campaign_id: string | null;
+  prospect_id: string | null;
+  status: ConversationThread["status"];
+  external_thread_ref: string | null;
+  latest_message_at: Date | string | null;
+  metadata: ConversationThread["metadata"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type MessageRow = {
+  id: string;
+  workspace_id: string;
+  thread_id: string;
+  campaign_id: string | null;
+  prospect_id: string | null;
+  sequence_id: string | null;
+  reply_to_message_id: string | null;
+  direction: Message["direction"];
+  message_kind: Message["messageKind"];
+  status: Message["status"];
+  provider_message_id: string | null;
+  subject: string | null;
+  body_text: string | null;
+  body_html: string | null;
+  metadata: Message["metadata"];
+  sent_at: Date | string | null;
+  received_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type ReplyAnalysisRow = {
+  id: string;
+  workspace_id: string;
+  thread_id: string;
+  message_id: string;
+  prompt_template_id: string | null;
+  classification: ReplyAnalysis["classification"];
+  sentiment: ReplyAnalysis["sentiment"];
+  urgency: ReplyAnalysis["urgency"];
+  intent: string | null;
+  confidence: number | null;
+  structured_output: ReplyAnalysis["structuredOutput"];
+  model_metadata: ReplyAnalysis["modelMetadata"];
+  analyzed_at: Date | string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type DraftReplyRow = {
+  id: string;
+  workspace_id: string;
+  thread_id: string;
+  message_id: string | null;
+  reply_analysis_id: string | null;
+  sender_profile_id: string | null;
+  prompt_template_id: string | null;
+  status: DraftReply["status"];
+  subject: string | null;
+  body_text: string | null;
+  body_html: string | null;
+  structured_output: DraftReply["structuredOutput"];
+  model_metadata: DraftReply["modelMetadata"];
   created_by_user_id: string | null;
   created_at: Date | string;
   updated_at: Date | string;
@@ -412,6 +502,89 @@ export function mapSequenceRow(row: SequenceRow): Sequence {
     channel: row.channel,
     status: row.status,
     content: row.content,
+    modelMetadata: row.model_metadata,
+    createdByUserId: row.created_by_user_id,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapConversationThreadRow(
+  row: ConversationThreadRow,
+): ConversationThread {
+  return conversationThreadSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    campaignId: row.campaign_id,
+    prospectId: row.prospect_id,
+    status: row.status,
+    externalThreadRef: row.external_thread_ref,
+    latestMessageAt:
+      row.latest_message_at === null ? null : asDate(row.latest_message_at),
+    metadata: row.metadata,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapMessageRow(row: MessageRow): Message {
+  return messageSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    threadId: row.thread_id,
+    campaignId: row.campaign_id,
+    prospectId: row.prospect_id,
+    sequenceId: row.sequence_id,
+    replyToMessageId: row.reply_to_message_id,
+    direction: row.direction,
+    messageKind: row.message_kind,
+    status: row.status,
+    providerMessageId: row.provider_message_id,
+    subject: row.subject,
+    bodyText: row.body_text,
+    bodyHtml: row.body_html,
+    metadata: row.metadata,
+    sentAt: row.sent_at === null ? null : asDate(row.sent_at),
+    receivedAt: row.received_at === null ? null : asDate(row.received_at),
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapReplyAnalysisRow(row: ReplyAnalysisRow): ReplyAnalysis {
+  return replyAnalysisSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    threadId: row.thread_id,
+    messageId: row.message_id,
+    promptTemplateId: row.prompt_template_id,
+    classification: row.classification,
+    sentiment: row.sentiment,
+    urgency: row.urgency,
+    intent: row.intent,
+    confidence: row.confidence,
+    structuredOutput: row.structured_output,
+    modelMetadata: row.model_metadata,
+    analyzedAt: asDate(row.analyzed_at),
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapDraftReplyRow(row: DraftReplyRow): DraftReply {
+  return draftReplySchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    threadId: row.thread_id,
+    messageId: row.message_id,
+    replyAnalysisId: row.reply_analysis_id,
+    senderProfileId: row.sender_profile_id,
+    promptTemplateId: row.prompt_template_id,
+    status: row.status,
+    subject: row.subject,
+    bodyText: row.body_text,
+    bodyHtml: row.body_html,
+    structuredOutput: row.structured_output,
     modelMetadata: row.model_metadata,
     createdByUserId: row.created_by_user_id,
     createdAt: asDate(row.created_at),

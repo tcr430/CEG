@@ -1,9 +1,13 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 
 import {
   createInMemoryAuditEventRepository,
   createInMemoryCampaignRepository,
+  createInMemoryConversationThreadRepository,
+  createInMemoryDraftReplyRepository,
+  createInMemoryMessageRepository,
   createInMemoryProspectRepository,
+  createInMemoryReplyAnalysisRepository,
   createInMemoryResearchSnapshotRepository,
   createInMemorySequenceRepository,
   createInMemorySenderProfileRepository,
@@ -385,7 +389,76 @@ async function run(): Promise<void> {
     assert.equal(prospects[0]?.campaignId, "a6092054-22bf-4a2e-bf5c-6ca287c3dab1");
   }
 
+  {
+    const threadRepository = createInMemoryConversationThreadRepository();
+    const messageRepository = createInMemoryMessageRepository();
+    const analysisRepository = createInMemoryReplyAnalysisRepository();
+    const draftReplyRepository = createInMemoryDraftReplyRepository();
+
+    const thread = await threadRepository.findOrCreateThreadForProspect({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+      metadata: {},
+    });
+
+    const message = await messageRepository.createMessage({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      campaignId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+      direction: "inbound",
+      messageKind: "reply",
+      status: "received",
+      subject: "Re: outreach",
+      bodyText: "Can you send more information?",
+      metadata: {
+        messageVersion: 1,
+      },
+    });
+
+    const analysis = await analysisRepository.upsertReplyAnalysis({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      messageId: message.id,
+      classification: "neutral",
+      sentiment: "neutral",
+      urgency: "low",
+      intent: "needs_more_info",
+      confidence: 0.7,
+      structuredOutput: {
+        analysisVersion: 1,
+      },
+      modelMetadata: {
+        provider: "openai",
+      },
+    });
+
+    const draftReply = await draftReplyRepository.createDraftReply({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      threadId: thread.id,
+      messageId: message.id,
+      subject: "More context",
+      bodyText: "Happy to send a short summary.",
+      structuredOutput: {
+        draftVersion: 1,
+      },
+      modelMetadata: {
+        provider: "openai",
+      },
+    });
+
+    const latestAnalysis = await analysisRepository.getReplyAnalysisByMessage(message.id);
+    const draftReplies = await draftReplyRepository.listDraftRepliesByMessage(message.id);
+
+    assert.equal(thread.status, "open");
+    assert.equal(message.direction, "inbound");
+    assert.equal(analysis.intent, "needs_more_info");
+    assert.equal(latestAnalysis?.intent, "needs_more_info");
+    assert.equal(draftReplies[0]?.id, draftReply.id);
+  }
   console.log("@ceg/database repository contract tests passed");
 }
 
 await run();
+

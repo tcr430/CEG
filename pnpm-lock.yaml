@@ -62,6 +62,9 @@ importers:
       '@ceg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@ceg/reply-engine':
+        specifier: workspace:*
+        version: link:../../packages/reply-engine
       '@ceg/research-engine':
         specifier: workspace:*
         version: link:../../packages/research-engine

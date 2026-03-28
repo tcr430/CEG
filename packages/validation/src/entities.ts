@@ -265,6 +265,19 @@ export const sequenceSchema = z.object({
   updatedAt: timestampSchema,
 });
 
+export const conversationThreadSchema = z.object({
+  id: conversationThreadIdSchema,
+  workspaceId: workspaceIdSchema,
+  campaignId: campaignIdSchema.nullable().optional(),
+  prospectId: prospectIdSchema.nullable().optional(),
+  status: z.enum(["open", "closed", "archived"]),
+  externalThreadRef: optionalTextSchema,
+  latestMessageAt: timestampSchema.nullable().optional(),
+  metadata: metadataSchema,
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
+});
+
 export const messageSchema = z.object({
   id: messageIdSchema,
   workspaceId: workspaceIdSchema,
@@ -625,6 +638,10 @@ export type Campaign = z.infer<typeof campaignSchema>;
 export type Prospect = z.infer<typeof prospectSchema>;
 export type ResearchSnapshot = z.infer<typeof researchSnapshotSchema>;
 export type Sequence = z.infer<typeof sequenceSchema>;
+export type ConversationThread = z.infer<typeof conversationThreadSchema>;
+export type Message = z.infer<typeof messageSchema>;
+export type ReplyAnalysis = z.infer<typeof replyAnalysisSchema>;
+export type DraftReply = z.infer<typeof draftReplySchema>;
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;
 export type ConfidenceScore = z.infer<typeof confidenceScoreSchema>;
 export type EvidenceSnippet = z.infer<typeof evidenceSnippetSchema>;

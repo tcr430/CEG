@@ -12,6 +12,7 @@
     "@ceg/auth": "workspace:*",
     "@ceg/database": "workspace:*",
     "@ceg/observability": "workspace:*",
+    "@ceg/reply-engine": "workspace:*",
     "@ceg/research-engine": "workspace:*",
     "@ceg/security": "workspace:*",
     "@ceg/sequence-engine": "workspace:*",
