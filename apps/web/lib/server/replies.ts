@@ -6,14 +6,13 @@ import {
   createInMemoryDraftReplyRepository,
   createInMemoryMessageRepository,
   createInMemoryReplyAnalysisRepository,
-  createInMemoryUsageEventRepository,
   type AuditEventRepository,
   type ConversationThreadRepository,
   type DraftReplyRepository,
   type MessageRepository,
   type ReplyAnalysisRepository,
-  type UsageEventRepository,
 } from "@ceg/database";
+import { checkFeatureEntitlement, resolveBillingPlanCode } from "@ceg/billing";
 import { createConsoleLogger } from "@ceg/observability";
 import {
   createReplyEngineService,
@@ -40,8 +39,13 @@ import {
 import { getCampaignForWorkspace, getProspectForCampaign, updateProspectForCampaign } from "./campaigns";
 import { createOpenAiReplyModelAdapter } from "./openai-reply-provider";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
+import {
+  assertWorkspaceFeatureAccess,
+  assertWorkspaceUsageAccess,
+} from "./billing";
 import { getSenderProfileForWorkspace } from "./sender-profiles";
 import { getLatestStoredSequenceForProspect } from "./sequences";
+import { getSharedUsageEventRepository } from "./usage-events";
 
 type PersistedReplyAnalysisRecord = {
   analysisVersion: number;
@@ -136,7 +140,6 @@ declare global {
   var __cegMessageRepository: MessageRepository | undefined;
   var __cegReplyAnalysisRepository: ReplyAnalysisRepository | undefined;
   var __cegDraftReplyRepository: DraftReplyRepository | undefined;
-  var __cegReplyUsageEventRepository: UsageEventRepository | undefined;
   var __cegReplyAuditEventRepository: AuditEventRepository | undefined;
   var __cegReplyEngineService: ReplyEngineService | undefined;
 }
@@ -174,14 +177,6 @@ function getDraftReplyRepository(): DraftReplyRepository {
   }
 
   return globalThis.__cegDraftReplyRepository;
-}
-
-function getUsageEventRepository(): UsageEventRepository {
-  if (globalThis.__cegReplyUsageEventRepository === undefined) {
-    globalThis.__cegReplyUsageEventRepository = createInMemoryUsageEventRepository();
-  }
-
-  return globalThis.__cegReplyUsageEventRepository;
 }
 
 function getAuditEventRepository(): AuditEventRepository {
@@ -447,7 +442,7 @@ export async function appendMessageToProspectThread(
     await setProspectStatusToReplied(prospect, input.campaignId);
   }
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,
@@ -492,6 +487,7 @@ async function buildReplyAnalysisRequest(input: {
   prospectId: string;
   latestInboundMessage: Message;
   threadMessages: Message[];
+  workspacePlanCode?: string | null;
 }): Promise<ReplyAnalysisRequest> {
   const campaign = await getCampaignForWorkspace(input.workspaceId, input.campaignId);
 
@@ -499,7 +495,12 @@ async function buildReplyAnalysisRequest(input: {
     throw new Error("Campaign not found for workspace.");
   }
 
-  const senderContext = campaign.senderProfileId
+  const senderAwareAccess = checkFeatureEntitlement(
+    resolveBillingPlanCode(input.workspacePlanCode),
+    "sender_aware_profiles",
+  );
+
+  const senderContext = campaign.senderProfileId && senderAwareAccess.allowed
     ? await (async () => {
         const senderProfile = await getSenderProfileForWorkspace(
           input.workspaceId,
@@ -523,7 +524,10 @@ async function buildReplyAnalysisRequest(input: {
       })()
     : {
         mode: "basic" as const,
-        basicModeReason: "Campaign does not currently have a sender profile attached.",
+        basicModeReason:
+          campaign.senderProfileId && !senderAwareAccess.allowed
+            ? "Current workspace plan does not include sender-aware profiles, so reply handling fell back to basic mode."
+            : "Campaign does not currently have a sender profile attached.",
         credibilityLevel: "cautious" as const,
       };
 
@@ -810,7 +814,19 @@ export async function analyzeLatestReplyForProspect(input: {
   campaignId: string;
   prospectId: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<PersistedReplyAnalysisRecord> {
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "reply_intelligence",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "replyAnalyses",
+  });
+
   const state = await getReplyThreadStateForProspect(
     input.workspaceId,
     input.campaignId,
@@ -827,6 +843,7 @@ export async function analyzeLatestReplyForProspect(input: {
     prospectId: input.prospectId,
     latestInboundMessage: state.latestInboundMessage,
     threadMessages: state.messages,
+    workspacePlanCode: input.workspacePlanCode,
   });
 
   const runLogger = logger.child({
@@ -875,7 +892,7 @@ export async function analyzeLatestReplyForProspect(input: {
     (analysisOutput.analysisMetadata.totalTokens ?? 0) +
     (strategyOutput.analysisMetadata.totalTokens ?? 0);
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,
@@ -898,6 +915,8 @@ export async function analyzeLatestReplyForProspect(input: {
       analysisVersion: nextVersion,
       recommendedAction: analysisOutput.analysis.recommendedAction,
       totalTokens,
+      meterKey: "replyAnalyses",
+      workspacePlanCode: input.workspacePlanCode ?? "free",
     },
   });
 
@@ -935,7 +954,19 @@ export async function generateDraftRepliesForProspect(input: {
   campaignId: string;
   prospectId: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<DraftReplyGenerationOutput["output"]> {
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "reply_intelligence",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "replyDraftGenerations",
+  });
+
   const state = await getReplyThreadStateForProspect(
     input.workspaceId,
     input.campaignId,
@@ -955,6 +986,7 @@ export async function generateDraftRepliesForProspect(input: {
     prospectId: input.prospectId,
     latestInboundMessage,
     threadMessages: state.messages,
+    workspacePlanCode: input.workspacePlanCode,
   });
 
   const generated = await getReplyEngine().generateDraftReplies({
@@ -996,7 +1028,7 @@ export async function generateDraftRepliesForProspect(input: {
     ),
   );
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,
@@ -1013,6 +1045,8 @@ export async function generateDraftRepliesForProspect(input: {
       provider: generated.generationMetadata.provider,
       model: generated.generationMetadata.model,
       draftVersion: nextDraftVersion,
+      meterKey: "replyDraftGenerations",
+      workspacePlanCode: input.workspacePlanCode ?? "free",
     },
   });
 
@@ -1043,7 +1077,19 @@ export async function regenerateDraftReplyForProspect(input: {
   targetSlotId: string;
   feedback: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<DraftReplyGenerationOutput["output"]> {
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "reply_regeneration",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "regenerations",
+  });
+
   const state = await getReplyThreadStateForProspect(
     input.workspaceId,
     input.campaignId,
@@ -1068,6 +1114,7 @@ export async function regenerateDraftReplyForProspect(input: {
     prospectId: input.prospectId,
     latestInboundMessage,
     threadMessages: state.messages,
+    workspacePlanCode: input.workspacePlanCode,
   });
 
   const regenerated = await getReplyEngine().regenerateDraftReplyOption({
@@ -1119,7 +1166,7 @@ export async function regenerateDraftReplyForProspect(input: {
     ),
   );
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,
@@ -1137,6 +1184,8 @@ export async function regenerateDraftReplyForProspect(input: {
       model: regenerated.generationMetadata.model,
       draftVersion: nextDraftVersion,
       targetSlotId: input.targetSlotId,
+      meterKey: "regenerations",
+      workspacePlanCode: input.workspacePlanCode ?? "free",
     },
   });
 
@@ -1272,7 +1321,7 @@ export async function editDraftReplyForProspect(
     }),
   );
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,

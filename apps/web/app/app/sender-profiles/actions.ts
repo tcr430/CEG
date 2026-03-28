@@ -7,6 +7,7 @@ import {
   createSenderProfileForWorkspace,
   updateSenderProfileForWorkspace,
 } from "../../../lib/server/sender-profiles";
+import { getServerAuthContext } from "../../../lib/server/auth";
 
 function readOptionalText(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
@@ -32,12 +33,22 @@ function readList(formData: FormData, key: string): string[] {
     .filter(Boolean);
 }
 
+function readWorkspacePlanCode(
+  auth: Awaited<ReturnType<typeof getServerAuthContext>>,
+  workspaceId: string,
+) {
+  return auth.user?.memberships.find((membership) => membership.workspaceId === workspaceId)
+    ?.billingPlanCode;
+}
+
 export async function createSenderProfileAction(formData: FormData) {
   const workspaceId = formData.get("workspaceId");
 
   if (typeof workspaceId !== "string") {
     throw new Error("Workspace id is required.");
   }
+
+  const auth = await getServerAuthContext();
 
   await createSenderProfileForWorkspace({
     workspaceId,
@@ -66,6 +77,7 @@ export async function createSenderProfileAction(formData: FormData) {
       | "active"
       | "archived",
     isDefault: formData.get("isDefault") === "on",
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidatePath("/app/sender-profiles");
@@ -79,6 +91,8 @@ export async function updateSenderProfileAction(formData: FormData) {
   if (typeof workspaceId !== "string" || typeof senderProfileId !== "string") {
     throw new Error("Workspace id and sender profile id are required.");
   }
+
+  const auth = await getServerAuthContext();
 
   await updateSenderProfileForWorkspace({
     senderProfileId,
@@ -108,6 +122,7 @@ export async function updateSenderProfileAction(formData: FormData) {
       | "active"
       | "archived",
     isDefault: formData.get("isDefault") === "on",
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidatePath("/app/sender-profiles");

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { CreateUsageEventInput, UsageEvent } from "@ceg/validation";
 
 import type { UsageEventRepository } from "./usage-events.js";
-import { validateCreateUsageEventInput } from "./shared.js";
+import { validateCreateUsageEventInput, validateWorkspaceId } from "./shared.js";
 
 export function createInMemoryUsageEventRepository(
   initialEvents: UsageEvent[] = [],
@@ -35,6 +35,23 @@ export function createInMemoryUsageEventRepository(
 
       records.set(record.id, record);
       return record;
+    },
+    async listUsageEventsByWorkspace(workspaceId: string) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
+      return [...records.values()]
+        .filter((record) => record.workspaceId === validatedWorkspaceId)
+        .sort((left, right) => left.occurredAt.getTime() - right.occurredAt.getTime());
+    },
+    async listUsageEventsByWorkspaceAndOccurredAtRange(input) {
+      const validatedWorkspaceId = validateWorkspaceId(input.workspaceId);
+      return [...records.values()]
+        .filter(
+          (record) =>
+            record.workspaceId === validatedWorkspaceId &&
+            record.occurredAt >= input.occurredFrom &&
+            record.occurredAt < input.occurredTo,
+        )
+        .sort((left, right) => left.occurredAt.getTime() - right.occurredAt.getTime());
     },
   };
 }

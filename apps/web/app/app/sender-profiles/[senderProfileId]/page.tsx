@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
+import { getWorkspaceBillingState } from "../../../../lib/server/billing";
 import { getSenderProfileForWorkspace } from "../../../../lib/server/sender-profiles";
 import { updateSenderProfileAction } from "../actions";
 import { SenderProfileForm } from "../sender-profile-form";
@@ -26,6 +27,11 @@ export default async function SenderProfileDetailPage({
   if (context.workspace === null || context.needsWorkspaceSelection) {
     redirect("/app/workspaces");
   }
+
+  const billing = await getWorkspaceBillingState({
+    workspaceId: context.workspace.workspaceId,
+    workspacePlanCode: context.workspace.billingPlanCode,
+  });
 
   const profile = await getSenderProfileForWorkspace(
     context.workspace.workspaceId,
@@ -67,6 +73,7 @@ export default async function SenderProfileDetailPage({
           </p>
           <div className="pillRow">
             <span className="pill">{profile.status}</span>
+            <span className="pill">{billing.planLabel} plan</span>
             {profile.isDefault ? <span className="pill">Default</span> : null}
           </div>
         </div>
@@ -76,6 +83,8 @@ export default async function SenderProfileDetailPage({
           workspaceId={context.workspace.workspaceId}
           submitLabel="Save changes"
           profile={profile}
+          allowSenderAwareProfiles={billing.features.senderAwareProfiles.allowed}
+          planLabel={billing.planLabel}
         />
       </section>
     </main>

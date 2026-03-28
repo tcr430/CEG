@@ -1,11 +1,10 @@
 import {
   createInMemoryAuditEventRepository,
   createInMemorySequenceRepository,
-  createInMemoryUsageEventRepository,
   type AuditEventRepository,
   type SequenceRepository,
-  type UsageEventRepository,
 } from "@ceg/database";
+import { checkFeatureEntitlement, resolveBillingPlanCode } from "@ceg/billing";
 import { createConsoleLogger } from "@ceg/observability";
 import {
   compiledSequenceOutputSchema,
@@ -28,11 +27,15 @@ import {
 import { getCampaignForWorkspace, getProspectForCampaign } from "./campaigns";
 import { createOpenAiSequenceModelAdapter } from "./openai-sequence-provider";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
+import {
+  assertWorkspaceFeatureAccess,
+  assertWorkspaceUsageAccess,
+} from "./billing";
 import { getSenderProfileForWorkspace } from "./sender-profiles";
+import { getSharedUsageEventRepository } from "./usage-events";
 
 declare global {
   var __cegSequenceRepository: SequenceRepository | undefined;
-  var __cegSequenceUsageEventRepository: UsageEventRepository | undefined;
   var __cegSequenceAuditEventRepository: AuditEventRepository | undefined;
   var __cegSequenceEngineService: SequenceEngineService | undefined;
 }
@@ -43,14 +46,6 @@ function getSequenceRepository(): SequenceRepository {
   }
 
   return globalThis.__cegSequenceRepository;
-}
-
-function getUsageEventRepository(): UsageEventRepository {
-  if (globalThis.__cegSequenceUsageEventRepository === undefined) {
-    globalThis.__cegSequenceUsageEventRepository = createInMemoryUsageEventRepository();
-  }
-
-  return globalThis.__cegSequenceUsageEventRepository;
 }
 
 function getAuditEventRepository(): AuditEventRepository {
@@ -303,11 +298,28 @@ function buildFallbackCompanyProfile(input: {
   });
 }
 
-async function buildSenderContext(workspaceId: string, senderProfileId?: string | null): Promise<SenderContext> {
+async function buildSenderContext(
+  workspaceId: string,
+  workspacePlanCode?: string | null,
+  senderProfileId?: string | null,
+): Promise<SenderContext> {
   if (!senderProfileId) {
     return {
       mode: "basic",
       basicModeReason: "Campaign does not currently have a sender profile attached.",
+    };
+  }
+
+  const senderAwareAccess = checkFeatureEntitlement(
+    resolveBillingPlanCode(workspacePlanCode),
+    "sender_aware_profiles",
+  );
+
+  if (!senderAwareAccess.allowed) {
+    return {
+      mode: "basic",
+      basicModeReason:
+        "Current workspace plan does not include sender-aware profiles, so generation used basic mode.",
     };
   }
 
@@ -330,6 +342,7 @@ async function buildSequenceGenerationInput(input: {
   workspaceId: string;
   campaignId: string;
   prospectId: string;
+  workspacePlanCode?: string | null;
 }): Promise<SequenceGenerationInput> {
   const campaign = await getCampaignForWorkspace(input.workspaceId, input.campaignId);
   const prospect = await getProspectForCampaign(
@@ -343,7 +356,11 @@ async function buildSequenceGenerationInput(input: {
   }
 
   const [senderContext, researchSnapshot] = await Promise.all([
-    buildSenderContext(input.workspaceId, campaign.senderProfileId),
+    buildSenderContext(
+      input.workspaceId,
+      input.workspacePlanCode,
+      campaign.senderProfileId,
+    ),
     getLatestResearchSnapshotForProspect(
       input.workspaceId,
       input.campaignId,
@@ -569,7 +586,19 @@ export async function generateSequenceForProspect(input: {
   campaignId: string;
   prospectId: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<CompiledSequenceOutput> {
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "sequence_generation",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "sequenceGenerations",
+  });
+
   const sequenceInput = await buildSequenceGenerationInput(input);
   const existingSequences = await getSequenceRepository().listSequencesByProspect(
     input.workspaceId,
@@ -630,7 +659,7 @@ export async function generateSequenceForProspect(input: {
       createdByUserId: input.userId ?? null,
     });
 
-    await getUsageEventRepository().createUsageEvent({
+    await getSharedUsageEventRepository().createUsageEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       campaignId: input.campaignId,
@@ -648,6 +677,8 @@ export async function generateSequenceForProspect(input: {
         model: modelMetadata.model,
         promptVersion: modelMetadata.promptVersion,
         sequenceVersion: version,
+        meterKey: "sequenceGenerations",
+        workspacePlanCode: input.workspacePlanCode ?? "free",
       },
     });
 
@@ -707,7 +738,19 @@ export async function regenerateSequencePartForProspect(input: {
   targetStepNumber?: number;
   feedback: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<StoredCompiledSequence> {
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "sequence_regeneration",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "regenerations",
+  });
+
   const [sequenceInput, latestSequenceRecord, existingSequences] = await Promise.all([
     buildSequenceGenerationInput(input),
     getLatestStoredSequenceOrThrow(input),
@@ -767,7 +810,7 @@ export async function regenerateSequencePartForProspect(input: {
     },
   });
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,
@@ -785,6 +828,8 @@ export async function regenerateSequencePartForProspect(input: {
       targetStepNumber:
         target.targetPart === "follow_up_step" ? target.targetStepNumber : null,
       sequenceVersion: nextVersion,
+      meterKey: "regenerations",
+      workspacePlanCode: input.workspacePlanCode ?? "free",
     },
   });
 
@@ -880,7 +925,7 @@ export async function editSequenceStepForProspect(
     },
   });
 
-  await getUsageEventRepository().createUsageEvent({
+  await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
     campaignId: input.campaignId,

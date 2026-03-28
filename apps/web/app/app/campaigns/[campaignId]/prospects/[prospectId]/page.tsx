@@ -9,6 +9,7 @@ import type {
 } from "@ceg/validation";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
+import { getWorkspaceBillingState } from "../../../../../../lib/server/billing";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
 import { getLatestResearchSnapshotForProspect } from "../../../../../../lib/server/prospect-research";
 import { getReplyThreadStateForProspect } from "../../../../../../lib/server/replies";
@@ -71,6 +72,10 @@ function formatQualityScore(score: number) {
   return `${score}/100`;
 }
 
+function formatAllowance(value: number | null, label: string) {
+  return value === null ? `Unlimited ${label}` : `${value} ${label} left this month`;
+}
+
 function getFailedQualityChecks(report: SequenceQualityReport | DraftReplyQualityReport | null) {
   return report?.checks.filter((check) => !check.passed) ?? [];
 }
@@ -88,6 +93,10 @@ export default async function ProspectDetailPage({
   }
 
   const workspace = context.workspace;
+  const billing = await getWorkspaceBillingState({
+    workspaceId: workspace.workspaceId,
+    workspacePlanCode: workspace.billingPlanCode,
+  });
   const prospect = await getProspectForCampaign(
     workspace.workspaceId,
     resolvedParams.campaignId,
@@ -163,7 +172,43 @@ export default async function ProspectDetailPage({
                 <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
               ) : null}
               {replyState.thread ? <span className="pill">Thread active</span> : null}
+              <span className="pill">{billing.planLabel} plan</span>
             </div>
+          </div>
+
+
+          <div className="dashboardCard">
+            <p className="cardLabel">Plan guardrails</p>
+            <h2>Current workspace limits</h2>
+            <ul className="researchList compactResearchList">
+              <li>
+                <strong>Sender-aware profiles</strong>
+                <p>
+                  {billing.features.senderAwareProfiles.allowed
+                    ? "Included on this plan."
+                    : "Basic mode only on this plan."}
+                </p>
+              </li>
+              <li>
+                <strong>Website research</strong>
+                <p>{formatAllowance(billing.limits.websiteResearch.remaining, "research runs")}</p>
+              </li>
+              <li>
+                <strong>Sequence generation</strong>
+                <p>{formatAllowance(billing.limits.sequenceGeneration.remaining, "sequence runs")}</p>
+              </li>
+              <li>
+                <strong>Reply intelligence</strong>
+                <p>
+                  {formatAllowance(billing.limits.replyAnalysis.remaining, "reply analyses")} and {" "}
+                  {formatAllowance(billing.limits.replyDraftGeneration.remaining, "draft generations")}
+                </p>
+              </li>
+              <li>
+                <strong>Regenerations</strong>
+                <p>{formatAllowance(billing.limits.regenerations.remaining, "regenerations")}</p>
+              </li>
+            </ul>
           </div>
 
           <form action={runProspectResearchAction} className="panel prospectResearchForm">

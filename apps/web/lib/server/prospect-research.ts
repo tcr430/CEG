@@ -1,10 +1,8 @@
 import {
   createInMemoryAuditEventRepository,
   createInMemoryResearchSnapshotRepository,
-  createInMemoryUsageEventRepository,
   type AuditEventRepository,
   type ResearchSnapshotRepository,
-  type UsageEventRepository,
 } from "@ceg/database";
 import { createConsoleLogger } from "@ceg/observability";
 import {
@@ -12,16 +10,21 @@ import {
   type ResearchEngineService,
 } from "@ceg/research-engine";
 import { assertSafeUrl } from "@ceg/security";
+
+import {
+  assertWorkspaceFeatureAccess,
+  assertWorkspaceUsageAccess,
+} from "./billing";
 import type { Prospect, ResearchSnapshot } from "@ceg/validation";
 
 import {
   getProspectForCampaign,
   updateProspectForCampaign,
 } from "./campaigns";
+import { getSharedUsageEventRepository } from "./usage-events";
 
 declare global {
   var __cegResearchSnapshotRepository: ResearchSnapshotRepository | undefined;
-  var __cegUsageEventRepository: UsageEventRepository | undefined;
   var __cegAuditEventRepository: AuditEventRepository | undefined;
   var __cegResearchEngineService: ResearchEngineService | undefined;
 }
@@ -33,14 +36,6 @@ function getResearchSnapshotRepository(): ResearchSnapshotRepository {
   }
 
   return globalThis.__cegResearchSnapshotRepository;
-}
-
-function getUsageEventRepository(): UsageEventRepository {
-  if (globalThis.__cegUsageEventRepository === undefined) {
-    globalThis.__cegUsageEventRepository = createInMemoryUsageEventRepository();
-  }
-
-  return globalThis.__cegUsageEventRepository;
 }
 
 function getAuditEventRepository(): AuditEventRepository {
@@ -97,6 +92,7 @@ export async function runProspectResearchForCampaign(input: {
   prospectId: string;
   websiteUrl: string;
   userId?: string;
+  workspacePlanCode?: string | null;
 }): Promise<ResearchSnapshot> {
   const prospect = await getProspectForCampaign(
     input.workspaceId,
@@ -109,6 +105,17 @@ export async function runProspectResearchForCampaign(input: {
   }
 
   const normalizedUrl = assertSafeUrl(input.websiteUrl);
+
+  await assertWorkspaceFeatureAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    feature: "website_research",
+  });
+  await assertWorkspaceUsageAccess({
+    workspaceId: input.workspaceId,
+    workspacePlanCode: input.workspacePlanCode,
+    meterKey: "websiteResearchRuns",
+  });
   const runLogger = logger.child({
     workspaceId: input.workspaceId,
     campaignId: input.campaignId,
@@ -184,7 +191,7 @@ export async function runProspectResearchForCampaign(input: {
       metadata: mergeProspectMetadata(prospect, snapshot),
     });
 
-    await getUsageEventRepository().createUsageEvent({
+    await getSharedUsageEventRepository().createUsageEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
       campaignId: input.campaignId,
@@ -198,6 +205,8 @@ export async function runProspectResearchForCampaign(input: {
         sourceUrl: snapshot.sourceUrl,
         confidence: snapshot.structuredData.quality.overall.label,
         confidenceScore: snapshot.structuredData.quality.overall.score,
+        meterKey: "websiteResearchRuns",
+        workspacePlanCode: input.workspacePlanCode ?? "free",
       },
     });
 

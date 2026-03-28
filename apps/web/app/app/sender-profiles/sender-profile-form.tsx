@@ -5,6 +5,8 @@ type SenderProfileFormProps = {
   workspaceId: string;
   submitLabel: string;
   profile?: SenderProfile;
+  allowSenderAwareProfiles?: boolean;
+  planLabel?: string;
 };
 
 function joinLines(values: string[]) {
@@ -16,6 +18,8 @@ export function SenderProfileForm({
   workspaceId,
   submitLabel,
   profile,
+  allowSenderAwareProfiles = true,
+  planLabel,
 }: SenderProfileFormProps) {
   return (
     <form action={action} className="panel senderProfileForm">
@@ -24,13 +28,20 @@ export function SenderProfileForm({
         <input type="hidden" name="senderProfileId" value={profile.id} />
       ) : null}
 
+      {!allowSenderAwareProfiles ? (
+        <p className="statusMessage">
+          {planLabel ?? "Current plan"} currently supports basic mode only. Sender-aware SDR,
+          founder, and agency profiles unlock on a paid plan.
+        </p>
+      ) : null}
+
       <div className="formGrid">
         <label className="field">
           <span>Sender type</span>
           <select name="senderType" defaultValue={profile?.senderType ?? "basic"}>
-            <option value="sdr">SDR</option>
-            <option value="saas_founder">SaaS founder</option>
-            <option value="agency">Lead gen agency</option>
+            <option value="sdr" disabled={!allowSenderAwareProfiles}>SDR</option>
+            <option value="saas_founder" disabled={!allowSenderAwareProfiles}>SaaS founder</option>
+            <option value="agency" disabled={!allowSenderAwareProfiles}>Lead gen agency</option>
             <option value="basic">Basic mode fallback</option>
           </select>
         </label>

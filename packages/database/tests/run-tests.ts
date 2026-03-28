@@ -359,6 +359,13 @@ async function run(): Promise<void> {
       billable: false,
       metadata: {},
     });
+    const usageEventTwo = await usageRepository.createUsageEvent({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      eventName: "sequence_generated",
+      quantity: 2,
+      billable: false,
+      metadata: {},
+    });
 
     const auditEvent = await auditRepository.createAuditEvent({
       workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
@@ -368,7 +375,19 @@ async function run(): Promise<void> {
       metadata: {},
     });
 
+    const usageEvents = await usageRepository.listUsageEventsByWorkspace(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+    );
+    const rangedEvents = await usageRepository.listUsageEventsByWorkspaceAndOccurredAtRange({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      occurredFrom: new Date(Date.now() - 60_000),
+      occurredTo: new Date(Date.now() + 60_000),
+    });
+
     assert.equal(usageEvent.eventName, "prospect_research_completed");
+    assert.equal(usageEventTwo.quantity, 2);
+    assert.equal(usageEvents.length, 2);
+    assert.equal(rangedEvents.length, 2);
     assert.equal(auditEvent.action, "prospect.research.completed");
   }
 

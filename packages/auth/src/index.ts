@@ -10,6 +10,7 @@ export type WorkspaceMembership = {
   workspaceName?: string;
   role: WorkspaceRole;
   isDefault?: boolean;
+  billingPlanCode?: string;
 };
 
 export type AuthenticatedUser = {

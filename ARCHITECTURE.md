@@ -104,6 +104,12 @@ Phase 1 should keep room for:
 - usage tracking
 - sanitized external data handling
 
+Billing and usage gating should stay server-side:
+- centralized plan definitions and entitlement checks live in `@ceg/billing`
+- costly workflows enforce feature access and monthly usage limits before execution
+- `usage_events` remains the first aggregation spine for outcome-based pricing and cost controls
+- workspace auth metadata can carry the active plan for now, with room to swap to the `subscriptions` table later without changing UI components
+
 ## Auth Boundary
 
 Authentication should stay server-side and modular:

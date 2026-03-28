@@ -16,6 +16,7 @@ type SupabaseMetadataMembership = {
   name?: unknown;
   role?: unknown;
   is_default?: unknown;
+  plan_code?: unknown;
 };
 
 function parseMemberships(value: unknown): WorkspaceMembership[] {
@@ -51,6 +52,8 @@ function parseMemberships(value: unknown): WorkspaceMembership[] {
         workspaceName: typeof candidate.name === "string" ? candidate.name : undefined,
         role,
         isDefault: candidate.is_default === true,
+        billingPlanCode:
+          typeof candidate.plan_code === "string" ? candidate.plan_code : undefined,
       };
     })
     .filter((membership): membership is WorkspaceMembership => membership !== null);

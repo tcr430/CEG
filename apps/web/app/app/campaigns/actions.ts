@@ -55,6 +55,11 @@ function revalidateProspectPaths(workspaceId: string, campaignId: string, prospe
   redirect(`/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`);
 }
 
+function readWorkspacePlanCode(auth: Awaited<ReturnType<typeof getServerAuthContext>>, workspaceId: string) {
+  return auth.user?.memberships.find((membership) => membership.workspaceId === workspaceId)
+    ?.billingPlanCode;
+}
+
 export async function createCampaignAction(formData: FormData) {
   const workspaceId = formData.get("workspaceId");
 
@@ -178,6 +183,7 @@ export async function runProspectResearchAction(formData: FormData) {
     prospectId,
     websiteUrl,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);
@@ -203,6 +209,7 @@ export async function generateProspectSequenceAction(formData: FormData) {
     campaignId,
     prospectId,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);
@@ -311,6 +318,7 @@ export async function analyzeReplyAction(formData: FormData) {
     campaignId,
     prospectId,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);
@@ -336,6 +344,7 @@ export async function generateReplyDraftsAction(formData: FormData) {
     campaignId,
     prospectId,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);
@@ -367,6 +376,7 @@ export async function regenerateReplyDraftAction(formData: FormData) {
     targetSlotId,
     feedback,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);
@@ -405,6 +415,7 @@ export async function regenerateSequencePartAction(formData: FormData) {
     targetStepNumber,
     feedback,
     userId: auth.user?.userId,
+    workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
   });
 
   revalidateProspectPaths(workspaceId, campaignId, prospectId);

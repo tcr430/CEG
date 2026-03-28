@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ceg/auth": "workspace:*",
+    "@ceg/billing": "workspace:*",
     "@ceg/database": "workspace:*",
     "@ceg/observability": "workspace:*",
     "@ceg/reply-engine": "workspace:*",

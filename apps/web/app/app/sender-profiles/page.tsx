@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
+import { getWorkspaceBillingState } from "../../../lib/server/billing";
 import { listSenderProfilesForWorkspace } from "../../../lib/server/sender-profiles";
 
 type SenderProfilesPageProps = {
@@ -21,6 +22,10 @@ export default async function SenderProfilesPage({
   }
 
   const workspace = context.workspace;
+  const billing = await getWorkspaceBillingState({
+    workspaceId: workspace.workspaceId,
+    workspacePlanCode: workspace.billingPlanCode,
+  });
   const profiles = await listSenderProfilesForWorkspace(workspace.workspaceId);
 
   return (
@@ -45,6 +50,7 @@ export default async function SenderProfilesPage({
         >
           New sender profile
         </Link>
+        <span className="pill">{billing.planLabel} plan</span>
       </div>
 
       <section className="panel" aria-labelledby="sender-profiles-title">
@@ -54,6 +60,12 @@ export default async function SenderProfilesPage({
             Profiles are scoped to the current workspace and can later be linked
             to campaigns for higher-quality personalization.
           </p>
+          {!billing.features.senderAwareProfiles.allowed ? (
+            <p className="statusMessage">
+              Sender-aware SDR, founder, and agency profiles are gated on this plan.
+              Basic mode remains available.
+            </p>
+          ) : null}
         </div>
 
         <div className="profileList">

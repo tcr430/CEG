@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
+import { getWorkspaceBillingState } from "../../../../lib/server/billing";
 import { createSenderProfileAction } from "../actions";
 import { SenderProfileForm } from "../sender-profile-form";
 
@@ -20,6 +21,11 @@ export default async function NewSenderProfilePage({
   if (context.workspace === null || context.needsWorkspaceSelection) {
     redirect("/app/workspaces");
   }
+
+  const billing = await getWorkspaceBillingState({
+    workspaceId: context.workspace.workspaceId,
+    workspacePlanCode: context.workspace.billingPlanCode,
+  });
 
   return (
     <main className="shell">
@@ -46,6 +52,8 @@ export default async function NewSenderProfilePage({
         action={createSenderProfileAction}
         workspaceId={context.workspace.workspaceId}
         submitLabel="Create sender profile"
+        allowSenderAwareProfiles={billing.features.senderAwareProfiles.allowed}
+        planLabel={billing.planLabel}
       />
     </main>
   );

@@ -8,6 +8,8 @@ import type {
   UpdateSenderProfileInput,
 } from "@ceg/validation";
 
+import { assertWorkspaceFeatureAccess } from "./billing";
+
 declare global {
   var __cegSenderProfileRepository: SenderProfileRepository | undefined;
 }
@@ -42,13 +44,29 @@ export async function getSenderProfileForWorkspace(
 }
 
 export async function createSenderProfileForWorkspace(
-  input: CreateSenderProfileInput,
+  input: CreateSenderProfileInput & { workspacePlanCode?: string | null },
 ): Promise<SenderProfile> {
+  if (input.senderType !== "basic") {
+    await assertWorkspaceFeatureAccess({
+      workspaceId: input.workspaceId,
+      workspacePlanCode: input.workspacePlanCode,
+      feature: "sender_aware_profiles",
+    });
+  }
+
   return getSenderProfileRepository().createSenderProfile(input);
 }
 
 export async function updateSenderProfileForWorkspace(
-  input: UpdateSenderProfileInput,
+  input: UpdateSenderProfileInput & { workspacePlanCode?: string | null },
 ): Promise<SenderProfile> {
+  if (input.senderType !== "basic") {
+    await assertWorkspaceFeatureAccess({
+      workspaceId: input.workspaceId,
+      workspacePlanCode: input.workspacePlanCode,
+      feature: "sender_aware_profiles",
+    });
+  }
+
   return getSenderProfileRepository().updateSenderProfile(input);
 }
