@@ -14,6 +14,7 @@ import {
   type StripeBillingProvider,
 } from "@ceg/billing";
 import { getOptionalEnv, getRequiredEnv } from "@ceg/security";
+import { getRequiredAppOrigin } from "./runtime-origin";
 import type { Subscription } from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
@@ -66,7 +67,7 @@ function getStripeBillingProvider(): StripeBillingProvider {
     globalThis.__cegStripeBillingProvider = createStripeBillingProvider({
       secretKey: getRequiredEnv("STRIPE_SECRET_KEY"),
       webhookSecret: getRequiredEnv("STRIPE_WEBHOOK_SECRET"),
-      appUrl: getRequiredEnv("NEXT_PUBLIC_APP_URL"),
+      appUrl: getRequiredAppOrigin(),
       monthlyPriceIds: {
         pro: getRequiredEnv("STRIPE_PRICE_PRO_MONTHLY"),
         agency: getRequiredEnv("STRIPE_PRICE_AGENCY_MONTHLY"),
@@ -194,7 +195,7 @@ export async function createCheckoutSessionForWorkspace(input: {
     userId: input.userId ?? null,
   });
   const currentSubscription = await getWorkspaceCurrentSubscription(input.workspaceId);
-  const appUrl = getRequiredEnv("NEXT_PUBLIC_APP_URL");
+  const appUrl = getRequiredAppOrigin();
 
   const session = await getStripeBillingProvider().createCheckoutSession({
     workspaceId: input.workspaceId,
@@ -230,7 +231,7 @@ export async function createBillingPortalSessionForWorkspace(input: {
     throw new Error("No Stripe customer is synced for this workspace yet.");
   }
 
-  const appUrl = getRequiredEnv("NEXT_PUBLIC_APP_URL");
+  const appUrl = getRequiredAppOrigin();
   const session = await getStripeBillingProvider().createBillingPortalSession({
     customerId: currentSubscription.providerCustomerId,
     returnUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}`,

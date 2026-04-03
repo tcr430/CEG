@@ -7,6 +7,7 @@ import {
   createResearchSnapshotInputSchema,
   createSenderProfileInputSchema,
   createUsageEventInputSchema,
+  createWorkspaceRecordInputSchema,
   createWorkspaceInputSchema,
   conversationThreadIdSchema,
   prospectIdSchema,
@@ -16,6 +17,7 @@ import {
   updateCampaignInputSchema,
   updateProspectInputSchema,
   updateSenderProfileInputSchema,
+  updateWorkspaceSettingsInputSchema,
   workspaceIdSchema,
   type Campaign,
   type ConversationThread,
@@ -25,6 +27,7 @@ import {
   type CreateResearchSnapshotInput,
   type CreateSenderProfileInput,
   type CreateUsageEventInput,
+  type CreateWorkspaceRecordInput,
   type CreateWorkspaceInput,
   type DraftReply,
   type Message,
@@ -38,6 +41,7 @@ import {
   type UpdateCampaignInput,
   type UpdateProspectInput,
   type UpdateSenderProfileInput,
+  type UpdateWorkspaceSettingsInput,
   type Workspace,
   campaignSchema,
   conversationThreadSchema,
@@ -98,6 +102,18 @@ export function validateCreateWorkspaceInput(
   input: CreateWorkspaceInput,
 ): CreateWorkspaceInput {
   return createWorkspaceInputSchema.parse(input);
+}
+
+export function validateCreateWorkspaceRecordInput(
+  input: CreateWorkspaceRecordInput,
+): CreateWorkspaceRecordInput {
+  return createWorkspaceRecordInputSchema.parse(input);
+}
+
+export function validateUpdateWorkspaceSettingsInput(
+  input: UpdateWorkspaceSettingsInput,
+): UpdateWorkspaceSettingsInput {
+  return updateWorkspaceSettingsInputSchema.parse(input);
 }
 
 export function validateCreateSenderProfileInput(

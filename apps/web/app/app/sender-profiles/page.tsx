@@ -1,9 +1,12 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ActionEmptyState } from "../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../lib/server/billing";
+import { getSenderProfilesEmptyState } from "../../../lib/empty-state-guidance";
+import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { listSenderProfilesForWorkspace } from "../../../lib/server/sender-profiles";
 
 type SenderProfilesPageProps = {
@@ -29,7 +32,14 @@ export default async function SenderProfilesPage({
     workspaceId: workspace.workspaceId,
     workspacePlanCode: workspace.billingPlanCode,
   });
-  const profiles = await listSenderProfilesForWorkspace(workspace.workspaceId);
+  const [profiles, onboarding] = await Promise.all([
+    listSenderProfilesForWorkspace(workspace.workspaceId),
+    getWorkspaceOnboardingSummary({
+      membership: workspace,
+      userId: context.user.userId,
+    }),
+  ]);
+  const emptyState = getSenderProfilesEmptyState(onboarding.selectedUserType);
 
   return (
     <main className="shell">
@@ -97,15 +107,28 @@ export default async function SenderProfilesPage({
               </Link>
             ))
           ) : (
-            <div className="dashboardCard">
-              <p className="cardLabel">No sender profiles yet</p>
-              <h2>Start with a profile or use basic mode</h2>
-              <p>
-                Create a sender profile for richer outbound context, or keep
-                basic mode as your fallback when sender-aware details are not
-                ready yet.
-              </p>
-            </div>
+            <ActionEmptyState
+              label="No sender profiles yet"
+              title={emptyState.title}
+              description={emptyState.description}
+              nextAction={emptyState.nextAction}
+              actions={
+                <>
+                  <Link
+                    href={`/app/sender-profiles/new?workspace=${workspace.workspaceId}`}
+                    className="buttonPrimary"
+                  >
+                    Create sender profile
+                  </Link>
+                  <Link
+                    href={`/app/campaigns?workspace=${workspace.workspaceId}`}
+                    className="buttonSecondary"
+                  >
+                    Continue in basic mode
+                  </Link>
+                </>
+              }
+            />
           )}
         </div>
       </section>

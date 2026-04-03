@@ -1,8 +1,9 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 
 import {
   createInMemoryAuditEventRepository,
   createInMemoryCampaignRepository,
+  createInMemoryWorkspaceRepository,
   createInMemoryConversationThreadRepository,
   createInMemoryDraftReplyRepository,
   createInMemoryMessageRepository,
@@ -158,6 +159,35 @@ async function run(): Promise<void> {
 
     assert.equal(workspace.slug, "acme");
     assert.match(queries[0]?.statement ?? "", /INSERT INTO workspaces/);
+  }
+
+  {
+    const repository = createInMemoryWorkspaceRepository();
+    const created = await repository.createWorkspaceRecord({
+      id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      slug: "acme-seeded",
+      name: "Acme Seeded",
+      settings: {
+        onboarding: {
+          status: "not_started",
+        },
+      },
+    });
+    const updated = await repository.updateWorkspaceSettings({
+      workspaceId: created.id,
+      settings: {
+        onboarding: {
+          status: "in_progress",
+          selectedUserType: "sdr",
+        },
+      },
+    });
+
+    assert.equal(created.id, "5f07db2d-8abd-49db-a5ca-a877ef2fe53c");
+    assert.equal(
+      (updated.settings.onboarding as { status: string }).status,
+      "in_progress",
+    );
   }
 
   {
@@ -651,4 +681,6 @@ async function run(): Promise<void> {
 }
 
 await run();
+
+
 

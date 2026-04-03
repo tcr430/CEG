@@ -114,8 +114,11 @@ Billing and usage gating should stay server-side:
 - costly workflows enforce feature access and monthly usage limits before execution
 - `usage_events` remains the first aggregation spine for outcome-based pricing and cost controls
 - workspace auth metadata can carry the active plan for now, with room to swap to the `subscriptions` table later without changing UI components
+- first-run onboarding state is persisted server-side in `workspace.settings.onboarding`, while actual setup progress is reconciled from sender profiles, campaigns, and prospects
 - Stripe checkout, billing portal, and webhook normalization should stay behind the billing boundary
 - local `subscriptions` records become the workspace billing source of truth once synced from Stripe
+- internal admin and support views must stay allowlisted and restricted to trusted workspace admins; they should show operational summaries, not secrets or raw captures
+- development-only demo seed loading stays behind the internal admin route and must remain explicitly opt-in through `DEMO_SEED_ENABLED`
 
 ## Auth Boundary
 

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getServerAuthContext } from "../../../../lib/server/auth";
 import { createBillingPortalSessionForWorkspace } from "../../../../lib/server/billing";
 import { createOperationContext } from "../../../../lib/server/observability";
+import { assertTrustedAppRequest } from "../../../../lib/server/request-security";
 import { encodeUserFacingError } from "../../../../lib/server/user-facing-errors";
 
 export async function POST(request: Request) {
@@ -13,6 +14,22 @@ export async function POST(request: Request) {
     operation: "billing.portal.route",
     requestId,
   });
+
+  try {
+    assertTrustedAppRequest(request);
+  } catch (error) {
+    operation.logger.warn("Billing portal route blocked untrusted request", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return NextResponse.redirect(
+      new URL(
+        `/app/settings?billingError=${encodeUserFacingError(error, "We could not verify that billing request. Please refresh and try again.")}`,
+        request.url,
+      ),
+      303,
+    );
+  }
+
   const formData = await request.formData();
   const workspaceId = formData.get("workspaceId");
 

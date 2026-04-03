@@ -1,22 +1,17 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const nextConfigs = compat.extends("next/core-web-vitals").map((config) => ({
-  ...config,
+const nextCoreWebVitalsConfig = {
+  ...nextPlugin.flatConfig.coreWebVitals,
   files: ["apps/web/**/*.{js,jsx,ts,tsx}"],
-}));
+  settings: {
+    next: {
+      rootDir: "apps/web",
+    },
+  },
+};
 
 export default tseslint.config(
   {
@@ -33,7 +28,7 @@ export default tseslint.config(
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...nextConfigs,
+  nextCoreWebVitalsConfig,
   {
     files: ["**/*.cjs"],
     languageOptions: {

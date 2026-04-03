@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../lib/server/auth";
-import { listCampaignsForWorkspace } from "../../lib/server/campaigns";
-import { listSenderProfilesForWorkspace } from "../../lib/server/sender-profiles";
+import { getWorkspaceOnboardingSummary } from "../../lib/server/onboarding";
+import { getUserTypeLabel } from "../../lib/server/onboarding-state";
 
 type DashboardPageProps = {
   searchParams?: Promise<{
@@ -28,10 +28,14 @@ export default async function DashboardPage({
     redirect("/app/workspaces");
   }
 
-  const [senderProfiles, campaigns] = await Promise.all([
-    listSenderProfilesForWorkspace(context.workspace.workspaceId),
-    listCampaignsForWorkspace(context.workspace.workspaceId),
-  ]);
+  const onboarding = await getWorkspaceOnboardingSummary({
+    membership: context.workspace,
+    userId: context.user.userId,
+  });
+
+  if (onboarding.shouldRedirectToOnboarding) {
+    redirect(`/app/onboarding?workspace=${context.workspace.workspaceId}`);
+  }
 
   return (
     <main className="appShell">
@@ -39,8 +43,7 @@ export default async function DashboardPage({
         <p className="eyebrow">Protected App</p>
         <h1 className="appTitle">Dashboard shell</h1>
         <p className="sidebarText">
-          This area is only available to authenticated users and resolves a
-          workspace membership before loading product modules.
+          This area resolves workspace access on the server and now uses onboarding state to guide first-run users toward sender, campaign, and prospect setup.
         </p>
 
         <div className="workspaceBadge">
@@ -51,6 +54,12 @@ export default async function DashboardPage({
         <div className="inlineActions">
           <Link href="/app/workspaces" className="buttonSecondary">
             Switch workspace
+          </Link>
+          <Link
+            href={`/app/onboarding?workspace=${context.workspace.workspaceId}`}
+            className="buttonSecondary"
+          >
+            {onboarding.isComplete ? "Review onboarding" : onboarding.isSkipped ? "Resume onboarding" : "Continue onboarding"}
           </Link>
           <Link
             href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}
@@ -85,8 +94,7 @@ export default async function DashboardPage({
           <p className="cardLabel">Authenticated user</p>
           <h2>{context.user.email ?? "Signed-in user"}</h2>
           <p>
-            Workspace context is loaded on the server using auth metadata and
-            role-aware helpers from <code>@ceg/auth</code>.
+            Workspace context is loaded on the server using auth metadata and role-aware helpers from <code>@ceg/auth</code>.
           </p>
         </div>
 
@@ -94,28 +102,47 @@ export default async function DashboardPage({
           <p className="cardLabel">Current workspace</p>
           <h2>{context.workspace.workspaceSlug ?? context.workspace.workspaceId}</h2>
           <p>
-            Sender profiles and campaign records are now first-class concepts,
-            ready for future research, sequencing, and sender-aware outbound
-            quality improvements.
+            User type: {getUserTypeLabel(onboarding.selectedUserType)}. Plan: {onboarding.billing.planLabel}.
           </p>
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Sender profile coverage</p>
-          <h2>{senderProfiles.length} profile(s)</h2>
+          <p className="cardLabel">Onboarding status</p>
+          <h2>
+            {onboarding.isComplete
+              ? "Ready for production work"
+              : onboarding.isSkipped
+                ? "Onboarding paused"
+                : "Setup still in progress"}
+          </h2>
           <p>
-            {senderProfiles.length > 0
-              ? "Review or update sender context before wiring campaigns to specific profiles."
-              : "Create your first sender profile, or fall back to basic mode when sender-specific context is not ready yet."}
+            {onboarding.steps.filter((step) => step.status === "complete").length} of {onboarding.steps.length} setup steps are complete for this workspace.
+          </p>
+          <div className="pillRow">
+            {onboarding.steps.map((step) => (
+              <span key={step.id} className="pill">
+                {step.label}: {step.status}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="dashboardCard">
+          <p className="cardLabel">Sender profile coverage</p>
+          <h2>{onboarding.senderProfileCount} profile(s)</h2>
+          <p>
+            {onboarding.senderProfileCount > 0
+              ? "Sender-aware context is ready for campaign selection and future generation quality improvements."
+              : "Create a sender profile, or stay in basic mode when sender-specific context is not ready yet."}
           </p>
         </div>
 
         <div className="dashboardCard">
           <p className="cardLabel">Campaign coverage</p>
-          <h2>{campaigns.length} campaign(s)</h2>
+          <h2>{onboarding.campaignCount} campaign(s)</h2>
           <p>
-            {campaigns.length > 0
-              ? "Refine campaign briefs and add prospects before wiring in research or generation."
+            {onboarding.campaignCount > 0
+              ? `Prospects added so far: ${onboarding.prospectCount}.`
               : "Create a campaign to capture offer, ICP, tone, and optional sender-profile selection in one workspace-scoped record."}
           </p>
         </div>

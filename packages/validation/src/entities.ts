@@ -206,6 +206,30 @@ export const workspaceSchema = z.object({
   updatedAt: timestampSchema,
 });
 
+export const onboardingStepIdSchema = z.enum([
+  "workspace",
+  "user_type",
+  "sender_profile",
+  "campaign",
+  "prospect",
+]);
+
+export const onboardingStatusSchema = z.enum([
+  "not_started",
+  "in_progress",
+  "skipped",
+  "completed",
+]);
+
+export const workspaceOnboardingStateSchema = z.object({
+  status: onboardingStatusSchema.default("not_started"),
+  workspaceConfirmedAt: timestampSchema.nullable().optional(),
+  selectedUserType: senderProfileTypeSchema.nullable().optional(),
+  skippedAt: timestampSchema.nullable().optional(),
+  completedAt: timestampSchema.nullable().optional(),
+  updatedAt: timestampSchema.nullable().optional(),
+});
+
 export const senderProfileSchema = z.object({
   id: senderProfileIdSchema,
   workspaceId: workspaceIdSchema,
@@ -601,6 +625,15 @@ export const createWorkspaceInputSchema = z.object({
   settings: metadataSchema,
 });
 
+export const createWorkspaceRecordInputSchema = createWorkspaceInputSchema.extend({
+  id: workspaceIdSchema,
+});
+
+export const updateWorkspaceSettingsInputSchema = z.object({
+  workspaceId: workspaceIdSchema,
+  settings: metadataSchema,
+});
+
 export const createSenderProfileInputSchema = z.object({
   workspaceId: workspaceIdSchema,
   name: z.string().trim().min(1).max(160),
@@ -816,6 +849,11 @@ export const createAuditEventInputSchema = z.object({
 });
 
 export type Workspace = z.infer<typeof workspaceSchema>;
+export type WorkspaceOnboardingState = z.infer<
+  typeof workspaceOnboardingStateSchema
+>;
+export type OnboardingStepId = z.infer<typeof onboardingStepIdSchema>;
+export type OnboardingStatus = z.infer<typeof onboardingStatusSchema>;
 export type SenderProfile = z.infer<typeof senderProfileSchema>;
 export type Campaign = z.infer<typeof campaignSchema>;
 export type Prospect = z.infer<typeof prospectSchema>;
@@ -850,6 +888,12 @@ export type TrainingSignalPayload = z.infer<typeof trainingSignalPayloadSchema>;
 export type UsageEvent = z.infer<typeof usageEventSchema>;
 export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceInputSchema>;
+export type CreateWorkspaceRecordInput = z.infer<
+  typeof createWorkspaceRecordInputSchema
+>;
+export type UpdateWorkspaceSettingsInput = z.infer<
+  typeof updateWorkspaceSettingsInputSchema
+>;
 export type CreateSenderProfileInput = z.infer<
   typeof createSenderProfileInputSchema
 >;

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 
 import { createOperationContext } from "../../../lib/server/observability";
+import { assertTrustedAppRequest } from "../../../lib/server/request-security";
 import {
   createRedirectUrl,
   createSupabaseServerClient,
@@ -14,6 +15,22 @@ export async function POST(request: Request) {
     operation: "auth.sign_in.start",
     requestId,
   });
+
+  try {
+    assertTrustedAppRequest(request);
+  } catch (error) {
+    operation.logger.warn("Sign-in route blocked untrusted request", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return NextResponse.redirect(
+      new URL(
+        `/sign-in?error=${encodeUserFacingError(error, "We could not verify that request. Refresh the page and try again.")}`,
+        request.url,
+      ),
+      303,
+    );
+  }
+
   const formData = await request.formData();
   const email = formData.get("email");
 
@@ -40,10 +57,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const emailRedirectTo =
+    createRedirectUrl("/auth/callback") ??
+    new URL("/auth/callback", request.url).toString();
+
   const { error } = await supabase.auth.signInWithOtp({
     email: normalizedEmail,
     options: {
-      emailRedirectTo: createRedirectUrl("/auth/callback"),
+      emailRedirectTo,
     },
   });
 
@@ -63,6 +84,7 @@ export async function POST(request: Request) {
 
   operation.logger.info("Supabase sign-in started", {
     emailDomain: normalizedEmail.split("@")[1] ?? null,
+    emailRedirectHost: new URL(emailRedirectTo).host,
   });
   return NextResponse.redirect(new URL("/sign-in?check-email=1", request.url), 303);
 }

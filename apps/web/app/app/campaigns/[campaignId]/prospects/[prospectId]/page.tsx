@@ -8,12 +8,19 @@ import type {
   SequenceQualityReport,
 } from "@ceg/validation";
 
+import { ActionEmptyState } from "../../../../../../components/action-empty-state";
 import { ArtifactActionButtons } from "../../../../../../components/artifact-action-buttons";
 import { FeedbackBanner } from "../../../../../../components/feedback-banner";
 import { SubmitButton } from "../../../../../../components/submit-button";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../../../../lib/server/billing";
+import {
+  getReplyDraftsEmptyState,
+  getResearchEmptyState,
+  getSequenceEmptyState,
+} from "../../../../../../lib/empty-state-guidance";
+import { getWorkspaceOnboardingSummary } from "../../../../../../lib/server/onboarding";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
 import { getLatestResearchSnapshotForProspect } from "../../../../../../lib/server/prospect-research";
 import { getReplyThreadStateForProspect } from "../../../../../../lib/server/replies";
@@ -113,7 +120,7 @@ export default async function ProspectDetailPage({
     notFound();
   }
 
-  const [latestSnapshot, latestSequence, replyState] = await Promise.all([
+  const [latestSnapshot, latestSequence, replyState, onboarding] = await Promise.all([
     getLatestResearchSnapshotForProspect(
       workspace.workspaceId,
       resolvedParams.campaignId,
@@ -129,6 +136,10 @@ export default async function ProspectDetailPage({
       resolvedParams.campaignId,
       prospect.id,
     ),
+    getWorkspaceOnboardingSummary({
+      membership: workspace,
+      userId: context.user.userId,
+    }),
   ]);
 
   const companyProfile = latestSnapshot?.structuredData.companyProfile;
@@ -140,6 +151,24 @@ export default async function ProspectDetailPage({
   const hooks = companyProfile?.personalizationHooks ?? [];
   const sequenceQualityReport = latestSequence?.qualityReport ?? null;
   const sequenceFailedChecks = getFailedQualityChecks(sequenceQualityReport);
+  const hasDraftBundles = replyState.timeline.some((entry) => entry.draftBundles.length > 0);
+  const replyDraftState = !replyState.latestInboundMessage
+    ? "needs_inbound"
+    : !replyState.latestAnalysis
+      ? "needs_analysis"
+      : "needs_drafts";
+  const researchEmptyState = getResearchEmptyState({
+    userType: onboarding.selectedUserType,
+    hasWebsite: Boolean(prospect.companyWebsite),
+  });
+  const sequenceEmptyState = getSequenceEmptyState({
+    userType: onboarding.selectedUserType,
+    hasResearch: latestSnapshot !== null,
+  });
+  const replyDraftEmptyState = getReplyDraftsEmptyState({
+    userType: onboarding.selectedUserType,
+    state: replyDraftState,
+  });
 
   return (
     <main className="shell">
@@ -219,7 +248,7 @@ export default async function ProspectDetailPage({
             </ul>
           </div>
 
-          <form action={runProspectResearchAction} className="panel prospectResearchForm">
+          <form id="research-form" action={runProspectResearchAction} className="panel prospectResearchForm">
             <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
             <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
             <input type="hidden" name="prospectId" value={prospect.id} />
@@ -247,7 +276,7 @@ export default async function ProspectDetailPage({
             </div>
           </form>
 
-          <form action={generateProspectSequenceAction} className="panel prospectResearchForm">
+          <form id="sequence-form" action={generateProspectSequenceAction} className="panel prospectResearchForm">
             <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
             <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
             <input type="hidden" name="prospectId" value={prospect.id} />
@@ -274,7 +303,7 @@ export default async function ProspectDetailPage({
             </p>
 
             <div className="threadComposerGrid">
-              <form action={createInboundReplyAction} className="panel threadComposerCard">
+              <form id="inbound-reply-form" action={createInboundReplyAction} className="panel threadComposerCard">
                 <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                 <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                 <input type="hidden" name="prospectId" value={prospect.id} />
@@ -357,6 +386,36 @@ export default async function ProspectDetailPage({
                 </form>
               ) : null}
             </div>
+
+            {!hasDraftBundles ? (
+              <ActionEmptyState
+                label="No reply drafts yet"
+                title={replyDraftEmptyState.title}
+                description={replyDraftEmptyState.description}
+                nextAction={replyDraftEmptyState.nextAction}
+                actions={
+                  replyDraftState === "needs_inbound" ? (
+                    <a href="#inbound-reply-form" className="buttonPrimary">
+                      Save inbound reply
+                    </a>
+                  ) : replyDraftState === "needs_analysis" ? (
+                    <form action={analyzeReplyAction}>
+                      <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                      <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                      <input type="hidden" name="prospectId" value={prospect.id} />
+                      <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Analyze latest reply</SubmitButton>
+                    </form>
+                  ) : (
+                    <form action={generateReplyDraftsAction}>
+                      <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                      <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                      <input type="hidden" name="prospectId" value={prospect.id} />
+                      <SubmitButton className="buttonPrimary" pendingLabel="Generating drafts...">Generate reply drafts</SubmitButton>
+                    </form>
+                  )
+                }
+              />
+            ) : null}
 
             {replyState.timeline.length > 0 ? (
               <div className="threadTimeline">
@@ -597,13 +656,27 @@ export default async function ProspectDetailPage({
                 })}
               </div>
             ) : (
-              <div className="researchSection">
-                <h3>No thread activity yet</h3>
-                <p>
-                  Save an inbound reply, add a manual outbound message, or attach the latest
-                  generated sequence to start building the thread timeline.
-                </p>
-              </div>
+              <ActionEmptyState
+                label="No thread activity yet"
+                title="Start the first prospect thread"
+                description="Store the first inbound or outbound message so analysis, draft replies, and future inbox sync all attach to a clean timeline."
+                nextAction="Save the first message, then use analysis and drafting from the stored thread history."
+                actions={
+                  <>
+                    <a href="#inbound-reply-form" className="buttonPrimary">
+                      Save inbound reply
+                    </a>
+                    {latestSequence ? (
+                      <form action={appendGeneratedSequenceMessagesAction}>
+                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                        <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                        <input type="hidden" name="prospectId" value={prospect.id} />
+                        <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence to thread</SubmitButton>
+                      </form>
+                    ) : null}
+                  </>
+                }
+              />
             )}
           </div>
 
@@ -675,14 +748,17 @@ export default async function ProspectDetailPage({
               </div>
             </div>
           ) : (
-            <div className="dashboardCard">
-              <p className="cardLabel">No research snapshot yet</p>
-              <h2>Run the first website pass</h2>
-              <p>
-                Once research runs, the latest structured company profile, evidence,
-                and confidence signals will show up here.
-              </p>
-            </div>
+            <ActionEmptyState
+              label="No research snapshot yet"
+              title={researchEmptyState.title}
+              description={researchEmptyState.description}
+              nextAction={researchEmptyState.nextAction}
+              actions={
+                <a href="#research-form" className="buttonPrimary">
+                  Run research
+                </a>
+              }
+            />
           )}
 
           {latestSequence ? (
@@ -968,14 +1044,17 @@ export default async function ProspectDetailPage({
               ) : null}
             </div>
           ) : (
-            <div className="dashboardCard">
-              <p className="cardLabel">No sequence yet</p>
-              <h2>Generate the first sequence</h2>
-              <p>
-                The first run will create multiple subject lines, opener options,
-                the initial email, two follow-ups, and a final soft-close email.
-              </p>
-            </div>
+            <ActionEmptyState
+              label="No sequence yet"
+              title={sequenceEmptyState.title}
+              description={sequenceEmptyState.description}
+              nextAction={sequenceEmptyState.nextAction}
+              actions={
+                <a href="#sequence-form" className="buttonPrimary">
+                  Generate sequence
+                </a>
+              }
+            />
           )}
         </div>
 

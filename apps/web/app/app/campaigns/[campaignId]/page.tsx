@@ -1,12 +1,15 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { ActionEmptyState } from "../../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import {
   getCampaignForWorkspace,
   listProspectsForCampaign,
 } from "../../../../lib/server/campaigns";
+import { getProspectsEmptyState } from "../../../../lib/empty-state-guidance";
+import { getWorkspaceOnboardingSummary } from "../../../../lib/server/onboarding";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
 import { createProspectAction, updateCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
@@ -45,10 +48,15 @@ export default async function CampaignDetailPage({
     notFound();
   }
 
-  const [senderProfiles, prospects] = await Promise.all([
+  const [senderProfiles, prospects, onboarding] = await Promise.all([
     listSenderProfilesForWorkspace(workspace.workspaceId),
     listProspectsForCampaign(workspace.workspaceId, campaign.id),
+    getWorkspaceOnboardingSummary({
+      membership: workspace,
+      userId: context.user.userId,
+    }),
   ]);
+  const emptyState = getProspectsEmptyState(onboarding.selectedUserType);
 
   return (
     <main className="shell">
@@ -104,11 +112,13 @@ export default async function CampaignDetailPage({
             </p>
           </div>
 
-          <ProspectForm
-            action={createProspectAction}
-            workspaceId={workspace.workspaceId}
-            campaignId={campaign.id}
-          />
+          <div id="prospect-form">
+            <ProspectForm
+              action={createProspectAction}
+              workspaceId={workspace.workspaceId}
+              campaignId={campaign.id}
+            />
+          </div>
 
           <div className="profileList">
             {prospects.length > 0 ? (
@@ -137,14 +147,17 @@ export default async function CampaignDetailPage({
                 </Link>
               ))
             ) : (
-              <div className="dashboardCard">
-                <p className="cardLabel">No prospects yet</p>
-                <h2>Add the first prospect</h2>
-                <p>
-                  Prospect records stay attached to this campaign and will feed
-                  later research and sequencing workflows.
-                </p>
-              </div>
+              <ActionEmptyState
+                label="No prospects yet"
+                title={emptyState.title}
+                description={emptyState.description}
+                nextAction={emptyState.nextAction}
+                actions={
+                  <a href="#prospect-form" className="buttonPrimary">
+                    Add prospect
+                  </a>
+                }
+              />
             )}
           </div>
         </div>

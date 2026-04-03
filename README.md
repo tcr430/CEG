@@ -67,6 +67,16 @@ pnpm install
 pnpm dev
 ```
 
+For local demos, trusted internal admins can opt into development-only sample data by setting `DEMO_SEED_ENABLED=true` in [`.env.local`](D:/Project/CEG/.env.local) and then loading demo data from [page.tsx](D:/Project/CEG/apps/web/app/app/settings/debug/page.tsx). The loader stays disabled in production.
+
+## Vercel Deployment Notes
+
+The app is designed to stay portable, but it is ready for Vercel deployment with a few explicit expectations:
+- set `NEXT_PUBLIC_APP_URL` to the canonical public app origin in production
+- set Supabase, Stripe, and OpenAI variables only for the features you actually enable
+- keep server-only secrets in server modules; secret-bearing integrations live under [server](D:/Project/CEG/apps/web/lib/server)
+- Vercel preview deployments can fall back to `VERCEL_URL` when `NEXT_PUBLIC_APP_URL` is omitted, but production should use an explicit canonical origin
+
 ## Validation Commands
 
 ```bash
@@ -87,6 +97,7 @@ For compatibility with repository guidance in `AGENTS.md`, the same template val
 
 ## Documentation
 
+- [DEPLOYMENT.md](D:/Project/CEG/DEPLOYMENT.md)
 - [ARCHITECTURE.md](D:/Project/CEG/ARCHITECTURE.md)
 - [DATA_STRATEGY.md](D:/Project/CEG/DATA_STRATEGY.md)
 - [AGENTS.md](D:/Project/CEG/AGENTS.md)

@@ -1,4 +1,4 @@
-const DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again.";
+﻿const DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again.";
 
 const USER_FACING_ERROR_MAP: Array<{
   pattern: RegExp;
@@ -59,6 +59,11 @@ const USER_FACING_ERROR_MAP: Array<{
     pattern: /unsafe url|invalid url|private host|localhost|blocked port/i,
     code: "invalid-website-url",
     message: "Use a valid public website URL. Private or local addresses are not allowed.",
+  },
+  {
+    pattern: /request origin could not be verified|trusted origin/i,
+    code: "request-not-verified",
+    message: "We could not verify that request. Refresh the page and try again.",
   },
   {
     pattern: /sequence before/i,

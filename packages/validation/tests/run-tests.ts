@@ -2,11 +2,15 @@ import assert from "node:assert/strict";
 
 import {
   companyProfileSchema,
+  createWorkspaceRecordInputSchema,
   createResearchSnapshotInputSchema,
   createCampaignInputSchema,
   createProspectInputSchema,
   createSenderProfileInputSchema,
+  createWorkspaceInputSchema,
   draftReplyOutputSchema,
+  onboardingStatusSchema,
+  onboardingStepIdSchema,
   prospectStatusSchema,
   recommendedActionSchema,
   replyAnalysisInputSchema,
@@ -15,9 +19,11 @@ import {
   senderProfileTypeSchema,
   trainingSignalActionTypeSchema,
   trainingSignalPayloadSchema,
+  updateWorkspaceSettingsInputSchema,
   updateCampaignInputSchema,
   updateProspectInputSchema,
   updateSenderProfileInputSchema,
+  workspaceOnboardingStateSchema,
 } from "../dist/index.js";
 
 const createResult = createSenderProfileInputSchema.parse({
@@ -42,6 +48,46 @@ const createResult = createSenderProfileInputSchema.parse({
 assert.equal(createResult.senderType, "saas_founder");
 assert.equal(createResult.tonePreferences.do[0], "Lead with clarity");
 assert.equal(senderProfileTypeSchema.parse("basic"), "basic");
+
+const workspaceCreateResult = createWorkspaceInputSchema.parse({
+  slug: "acme-labs",
+  name: "Acme Labs",
+  settings: {},
+});
+
+assert.equal(workspaceCreateResult.slug, "acme-labs");
+
+const workspaceRecordCreateResult = createWorkspaceRecordInputSchema.parse({
+  id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+  slug: "acme-labs",
+  name: "Acme Labs",
+  settings: {},
+});
+
+assert.equal(workspaceRecordCreateResult.id, "5f07db2d-8abd-49db-a5ca-a877ef2fe53c");
+
+const onboardingStateResult = workspaceOnboardingStateSchema.parse({
+  status: "in_progress",
+  workspaceConfirmedAt: "2026-04-02T10:00:00.000Z",
+  selectedUserType: "agency",
+  updatedAt: "2026-04-02T10:05:00.000Z",
+});
+
+assert.equal(onboardingStateResult.selectedUserType, "agency");
+assert.equal(onboardingStatusSchema.parse("completed"), "completed");
+assert.equal(onboardingStepIdSchema.parse("prospect"), "prospect");
+
+const workspaceSettingsUpdateResult = updateWorkspaceSettingsInputSchema.parse({
+  workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+  settings: {
+    onboarding: onboardingStateResult,
+  },
+});
+
+assert.equal(
+  typeof workspaceSettingsUpdateResult.settings.onboarding,
+  "object",
+);
 
 assert.throws(
   () =>

@@ -1,8 +1,11 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { ActionEmptyState } from "../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../components/feedback-banner";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
+import { getCampaignsEmptyState } from "../../../lib/empty-state-guidance";
+import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { listCampaignsForWorkspace } from "../../../lib/server/campaigns";
 
 type CampaignsPageProps = {
@@ -22,7 +25,14 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
   }
 
   const workspace = context.workspace;
-  const campaigns = await listCampaignsForWorkspace(workspace.workspaceId);
+  const [campaigns, onboarding] = await Promise.all([
+    listCampaignsForWorkspace(workspace.workspaceId),
+    getWorkspaceOnboardingSummary({
+      membership: workspace,
+      userId: context.user.userId,
+    }),
+  ]);
+  const emptyState = getCampaignsEmptyState(onboarding.selectedUserType);
 
   return (
     <main className="shell">
@@ -85,15 +95,28 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
               </Link>
             ))
           ) : (
-            <div className="dashboardCard">
-              <p className="cardLabel">No campaigns yet</p>
-              <h2>Create the first outbound motion</h2>
-              <p>
-                Start with the campaign brief. You can leave sender profile
-                selection empty and run in basic mode until richer sender
-                context is ready.
-              </p>
-            </div>
+            <ActionEmptyState
+              label="No campaigns yet"
+              title={emptyState.title}
+              description={emptyState.description}
+              nextAction={emptyState.nextAction}
+              actions={
+                <>
+                  <Link
+                    href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
+                    className="buttonPrimary"
+                  >
+                    Create campaign
+                  </Link>
+                  <Link
+                    href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}
+                    className="buttonSecondary"
+                  >
+                    Review sender profiles
+                  </Link>
+                </>
+              }
+            />
           )}
         </div>
       </section>

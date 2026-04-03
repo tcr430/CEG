@@ -1,8 +1,10 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+﻿import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 import { getOptionalEnv } from "@ceg/security";
+
+import { createAppUrl } from "./runtime-origin";
 
 export type SupabaseServerClient = SupabaseClient;
 
@@ -21,6 +23,8 @@ export function getSupabaseConfig() {
 }
 
 export async function createSupabaseServerClient(): Promise<SupabaseServerClient | null> {
+  // Intentionally use the anon key here. The service role key must stay server-only
+  // and out of request/session-scoped auth flows so it never crosses a client boundary.
   const config = getSupabaseConfig();
 
   if (config === null) {
@@ -58,13 +62,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseServerClient
 }
 
 export function createRedirectUrl(pathname: string): string | undefined {
-  const appUrl = getOptionalEnv("NEXT_PUBLIC_APP_URL");
-
-  if (appUrl === undefined) {
-    return undefined;
-  }
-
-  return new URL(pathname, appUrl).toString();
+  return createAppUrl(pathname);
 }
 
 export type AuthCookieOptions = CookieOptions;

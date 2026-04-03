@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   --background: #f4efe6;
   --foreground: #1f1b16;
@@ -592,4 +592,403 @@ h2 {
 
 .artifactActionRow {
   flex-wrap: wrap;
+}
+
+.onboardingHero,
+.onboardingProgressPanel {
+  width: min(1080px, 100%);
+}
+
+.onboardingStepGrid {
+  width: min(1080px, 100%);
+}
+
+.onboardingProgressStrip,
+.onboardingChoiceGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.onboardingProgressStrip {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.onboardingProgressItem {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.onboardingProgressItem strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.onboardingProgressItem p {
+  margin-bottom: 0;
+}
+
+.onboardingProgressDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.onboardingProgressDot-complete,
+.onboardingStatusPill-complete {
+  background: rgba(26, 82, 64, 0.12);
+  border-color: rgba(26, 82, 64, 0.24);
+  color: #1a5240;
+}
+
+.onboardingProgressDot-current,
+.onboardingStatusPill-current {
+  background: rgba(166, 93, 36, 0.14);
+  border-color: rgba(166, 93, 36, 0.24);
+}
+
+.onboardingProgressDot-upcoming,
+.onboardingStatusPill-upcoming {
+  background: rgba(31, 27, 22, 0.04);
+}
+
+.onboardingStepCard {
+  gap: 18px;
+}
+
+.onboardingChoiceGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.onboardingChoiceButton {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .onboardingProgressStrip,
+  .onboardingChoiceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.emptyStateCard {
+  gap: 14px;
+}
+
+.emptyStateHint {
+  background: rgba(168, 99, 53, 0.14);
+}
+
+.emptyStateActions {
+  padding-top: 4px;
+}
+
+body {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+.landingShell {
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.landingHero,
+.landingSection,
+.landingCtaPanel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.landingHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 24px;
+  align-items: stretch;
+  padding: 36px 0 12px;
+}
+
+.landingHeroCopy,
+.landingHeroPanel,
+.landingSignalCard,
+.landingMetricGrid,
+.landingSectionIntro,
+.landingCtaPanel {
+  display: grid;
+  gap: 18px;
+}
+
+.landingHeroCopy {
+  padding: 18px 0;
+}
+
+.landingHeroCopy h1 {
+  max-width: 12ch;
+}
+
+.landingLead {
+  max-width: 42rem;
+  margin: 0;
+  font-size: 1.14rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.landingHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.landingProofRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.landingHeroPanel {
+  align-content: start;
+}
+
+.landingSignalCard {
+  padding: 28px;
+  border: 1px solid rgba(31, 27, 22, 0.1);
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.48)),
+    radial-gradient(circle at top right, rgba(166, 93, 36, 0.14), transparent 42%);
+  box-shadow: var(--shadow);
+}
+
+.landingSignalCard h2,
+.landingAudienceCard h3,
+.landingWorkflowCard h3,
+.landingCapabilityCard h3,
+.pricingCard h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.landingSignalList {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.landingMetricGrid,
+.landingGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.landingMetricGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landingMetricCard,
+.landingAudienceCard,
+.landingCapabilityCard {
+  gap: 12px;
+}
+
+.landingMetricCard h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.05;
+}
+
+.landingSection {
+  padding: 34px 0;
+}
+
+.landingSectionIntro {
+  margin-bottom: 18px;
+  max-width: 48rem;
+}
+
+.landingSectionIntro p:last-child {
+  margin-bottom: 0;
+}
+
+.landingAudienceGrid,
+.landingCapabilitiesGrid,
+.landingWorkflowGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landingExample {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.landingWorkflowCard {
+  min-height: 100%;
+}
+
+.landingSplitSection {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.landingDifferentiationPanel {
+  min-height: 100%;
+}
+
+.landingDifferentiationList {
+  gap: 14px;
+}
+
+.landingCtaSection {
+  padding-bottom: 42px;
+}
+
+.landingCtaPanel {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+@media (max-width: 1100px) {
+  .landingHero,
+  .landingSplitSection,
+  .landingCtaPanel,
+  .landingAudienceGrid,
+  .landingCapabilitiesGrid,
+  .landingWorkflowGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .landingShell {
+    padding: 20px;
+  }
+
+  .landingHero {
+    padding-top: 16px;
+  }
+
+  .landingMetricGrid,
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .landingHeroActions,
+  .landingProofRow {
+    align-items: stretch;
+  }
+
+  .landingHeroActions .buttonPrimary,
+  .landingHeroActions .buttonSecondary,
+  .landingCtaPanel .buttonPrimary,
+  .landingCtaPanel .buttonSecondary {
+    width: 100%;
+  }
+}
+
+.pricingPageShell {
+  gap: 0;
+}
+
+.pricingHero {
+  padding-bottom: 20px;
+}
+
+.pricingPlanGrid {
+  align-items: start;
+}
+
+.pricingCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.activePricingCard {
+  border-color: rgba(26, 82, 64, 0.28);
+  box-shadow: 0 16px 38px rgba(26, 82, 64, 0.1);
+}
+
+.pricingAudience,
+.pricingFootnote {
+  color: var(--foreground);
+}
+
+.pricingBulletList {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.pricingActionRow {
+  padding-top: 6px;
+}
+
+.pricingSettingsStack {
+  align-content: start;
+}
+
+.pricingComparisonPanel {
+  width: min(1080px, 100%);
+}
+
+.pricingComparisonHeader,
+.pricingComparisonRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.pricingComparisonHeader {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.pricingComparisonRow {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(31, 27, 22, 0.08);
+  color: var(--muted);
+}
+
+.pricingComparisonRow strong {
+  color: var(--foreground);
+}
+
+@media (max-width: 900px) {
+  .pricingComparisonHeader {
+    display: none;
+  }
+
+  .pricingComparisonRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.52);
+  }
 }

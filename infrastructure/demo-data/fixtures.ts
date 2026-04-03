@@ -1,0 +1,969 @@
+export const demoSeedVersion = "20260402140000";
+
+export const demoSenderProfiles = [
+  {
+    key: "sdr",
+    name: "Enterprise SDR profile",
+    senderType: "sdr",
+    companyName: "Northstar Data",
+    companyWebsite: "https://northstardata.example",
+    productDescription:
+      "Structured outbound workflow software for SDR teams that need faster personalization without losing message quality.",
+    targetCustomer:
+      "Revenue operations leaders and SDR managers at scaling B2B SaaS companies.",
+    valueProposition:
+      "Cut research and review time while keeping outbound messaging specific and credible.",
+    differentiation:
+      "Evidence-backed messaging controls instead of generic AI-generated copy.",
+    proofPoints: [
+      "Used by revenue teams running multi-rep outbound motions.",
+      "Built to keep review criteria consistent across distributed SDR pods.",
+    ],
+    goals: ["Book qualified intro meetings.", "Reduce manual research overhead."],
+    tonePreferences: {
+      style: "Direct and commercially literate",
+      do: ["Lead with a real observation", "Keep CTAs light"],
+      avoid: ["Hype", "Vague claims"],
+      notes: "Should sound credible to revenue operators.",
+    },
+    isDefault: true,
+  },
+  {
+    key: "saas_founder",
+    name: "Founder-led outbound",
+    senderType: "saas_founder",
+    companyName: "Acme",
+    companyWebsite: "https://acme.example",
+    productDescription:
+      "Outbound copilot for lean B2B SaaS teams who need better research and more reviewable AI-assisted messaging.",
+    targetCustomer:
+      "Founders and early go-to-market leaders building outbound without a large operations team.",
+    valueProposition:
+      "Help founder-led outreach stay sharp, specific, and repeatable without turning research into a manual chore.",
+    differentiation:
+      "Structured prospect context and schema-validated outputs instead of one-shot prompt drafting.",
+    proofPoints: [
+      "Designed for small teams that still care about message quality.",
+      "Keeps prospect context attached to generated output.",
+    ],
+    goals: ["Book discovery calls.", "Keep founder outreach high-context."],
+    tonePreferences: {
+      style: "Observant, calm, and low-ego",
+      do: ["Reference one real signal", "Sound personally written"],
+      avoid: ["Startup cliches", "Overpromising"],
+      notes: "Feels like a thoughtful founder email.",
+    },
+    isDefault: false,
+  },
+  {
+    key: "agency",
+    name: "Agency operator profile",
+    senderType: "agency",
+    companyName: "Signal Lane",
+    companyWebsite: "https://signallane.example",
+    productDescription:
+      "Lead generation agency workflow for launching client outbound programs with stronger research and cleaner message governance.",
+    targetCustomer:
+      "Growth-stage SaaS teams outsourcing outbound execution to an external partner.",
+    valueProposition:
+      "Launch client campaigns faster without sacrificing consistency, specificity, or auditability.",
+    differentiation:
+      "Workspace-based operating model that fits multi-client campaign delivery.",
+    proofPoints: [
+      "Supports multi-client outbound operating workflows.",
+      "Built for teams balancing quality control with campaign throughput.",
+    ],
+    goals: ["Increase booked meetings for client accounts.", "Keep client delivery consistent."],
+    tonePreferences: {
+      style: "Professional and consultative",
+      do: ["Sound accountable", "Stay measured"],
+      avoid: ["Agency fluff", "Aggressive urgency"],
+      notes: "Should feel polished but not salesy.",
+    },
+    isDefault: false,
+  },
+] as const;
+
+export const demoCampaigns = [
+  {
+    key: "sdr_campaign",
+    senderProfileKey: "sdr",
+    name: "Enterprise SDR - RevOps leaders",
+    objective: "Book intro calls with RevOps leaders and SDR managers.",
+    offerSummary:
+      "Reduce manual prospect research and message review time while keeping outbound quality steady.",
+    targetIcp: "Series B to pre-IPO B2B SaaS companies with active outbound teams.",
+    targetPersona: "RevOps leaders and SDR managers.",
+    targetIndustries: ["B2B SaaS", "Revenue operations"],
+    tonePreferences: {
+      style: "Direct and operationally fluent",
+      do: ["Stay concrete", "Anchor on workflow friction"],
+      avoid: ["Empty compliments", "Overhyped language"],
+      notes: null,
+    },
+    frameworkPreferences: ["signal -> friction -> proof -> CTA"],
+  },
+  {
+    key: "founder_campaign",
+    senderProfileKey: "saas_founder",
+    name: "Founder outbound - finance workflow teams",
+    objective: "Open thoughtful conversations with lean operators modernizing finance workflows.",
+    offerSummary:
+      "Help small teams research and personalize outbound faster without losing trust or clarity.",
+    targetIcp: "Lean B2B SaaS and fintech teams with founder-led outbound.",
+    targetPersona: "Founders, heads of growth, and finance operators.",
+    targetIndustries: ["Fintech", "B2B SaaS"],
+    tonePreferences: {
+      style: "Founder-led and observant",
+      do: ["Use one grounded insight", "Keep the ask narrow"],
+      avoid: ["Boasting", "Generic AI language"],
+      notes: null,
+    },
+    frameworkPreferences: ["observation -> implication -> soft CTA"],
+  },
+  {
+    key: "agency_campaign",
+    senderProfileKey: "agency",
+    name: "Agency client launch - pipeline efficiency",
+    objective: "Generate qualified pipeline for outsourced outbound clients.",
+    offerSummary:
+      "Standardize prospect research and message quality across client accounts.",
+    targetIcp: "Growth-stage SaaS teams outsourcing outbound execution.",
+    targetPersona: "Growth leads and revenue operators.",
+    targetIndustries: ["SaaS", "Agencies"],
+    tonePreferences: {
+      style: "Professional and consultative",
+      do: ["Sound accountable", "Be specific"],
+      avoid: ["Agency jargon", "Pressure tactics"],
+      notes: null,
+    },
+    frameworkPreferences: ["pain point -> operating model -> CTA"],
+  },
+  {
+    key: "basic_campaign",
+    senderProfileKey: null,
+    name: "Basic mode fallback",
+    objective: "Demonstrate useful outbound without sender-aware context.",
+    offerSummary:
+      "Use public website research and careful language when sender context is not yet available.",
+    targetIcp: "Small teams still setting up their sender profile system.",
+    targetPersona: "General business operators.",
+    targetIndustries: ["Professional services", "SaaS"],
+    tonePreferences: {
+      style: "Neutral and careful",
+      do: ["Stay factual", "Use soft CTAs"],
+      avoid: ["Assumptions", "Unsupported specifics"],
+      notes: "Basic mode fallback for demos.",
+    },
+    frameworkPreferences: ["observation -> relevance -> careful CTA"],
+  },
+] as const;
+export const demoProspects = [
+  {
+    key: "apex_ops",
+    campaignKey: "sdr_campaign",
+    companyName: "ApexOps",
+    companyDomain: "apexops.example",
+    companyWebsite: "https://apexops.example",
+    contactName: "Jordan Lee",
+    contactEmail: "jordan.lee@apexops.example",
+    title: "Director of Revenue Operations",
+    status: "replied",
+    notes: "Strong fit for SDR workflow automation demos.",
+  },
+  {
+    key: "ledgerloop",
+    campaignKey: "founder_campaign",
+    companyName: "LedgerLoop",
+    companyDomain: "ledgerloop.example",
+    companyWebsite: "https://ledgerloop.example",
+    contactName: "Maya Singh",
+    contactEmail: "maya@ledgerloop.example",
+    title: "Co-founder",
+    status: "sequenced",
+    notes: "Good founder-led outbound example.",
+  },
+  {
+    key: "pipelinepilot",
+    campaignKey: "agency_campaign",
+    companyName: "PipelinePilot",
+    companyDomain: "pipelinepilot.example",
+    companyWebsite: "https://pipelinepilot.example",
+    contactName: "Chris Morgan",
+    contactEmail: "chris@pipelinepilot.example",
+    title: "VP Growth",
+    status: "researched",
+    notes: "Agency-managed workflow example.",
+  },
+  {
+    key: "northwind_security",
+    campaignKey: "basic_campaign",
+    companyName: "Northwind Security",
+    companyDomain: "northwindsecurity.example",
+    companyWebsite: "https://northwindsecurity.example",
+    contactName: "Sam Carter",
+    contactEmail: "sam@northwindsecurity.example",
+    title: "Operations Manager",
+    status: "replied",
+    notes: "Basic mode plus hard-no reply handling example.",
+  },
+] as const;
+
+export const demoResearchSnapshots = [
+  {
+    prospectKey: "apex_ops",
+    sourceUrl: "https://apexops.example",
+    sourceType: "website",
+    fetchStatus: "captured",
+    evidence: [
+      {
+        snippet: "Standardize routing, reporting, and outbound execution for distributed revenue teams.",
+        sourceUrl: "https://apexops.example",
+        title: "ApexOps homepage",
+        selectorHint: "hero",
+        confidence: {
+          score: 0.84,
+          label: "high",
+          reasons: ["Direct website copy."],
+        },
+        supports: ["company_summary", "value_propositions"],
+      },
+    ],
+    structuredData: {
+      companyProfile: {
+        domain: "apexops.example",
+        websiteUrl: "https://apexops.example",
+        canonicalUrl: "https://apexops.example",
+        companyName: "ApexOps",
+        headline: "Revenue workflow software for distributed outbound teams.",
+        summary:
+          "ApexOps helps revenue teams standardize routing, reporting, and outbound execution across distributed SDR pods.",
+        productDescription:
+          "Workflow software for revenue teams managing high-volume outbound motions.",
+        likelyTargetCustomer: "RevOps teams and SDR leaders at scaling B2B SaaS companies.",
+        targetCustomers: ["RevOps leaders", "SDR managers"],
+        industries: ["B2B SaaS", "Revenue operations"],
+        valuePropositions: [
+          "Reduce manual outbound work",
+          "Keep SDR process standards more consistent",
+        ],
+        proofPoints: ["Built for distributed revenue teams"],
+        differentiators: ["Structured workflow governance"],
+        likelyPainPoints: [
+          "Manual personalization review takes too long",
+          "Outbound quality slips as teams scale",
+        ],
+        personalizationHooks: ["distributed revenue teams", "workflow governance"],
+        callsToAction: ["Book a demo"],
+        sourceEvidence: [
+          {
+            snippet: "Standardize routing, reporting, and outbound execution for distributed revenue teams.",
+            sourceUrl: "https://apexops.example",
+            title: "ApexOps homepage",
+            selectorHint: "hero",
+            confidence: {
+              score: 0.84,
+              label: "high",
+              reasons: ["Direct website copy."],
+            },
+            supports: ["company_summary", "value_propositions"],
+          },
+        ],
+        confidence: {
+          score: 0.8,
+          label: "medium",
+          reasons: ["Public website evidence is strong for positioning, but some specifics remain inferred."],
+        },
+        flags: [],
+        metadata: {
+          source: "demo-seed",
+          demoSeedVersion,
+        },
+      },
+      quality: {
+        overall: {
+          score: 0.8,
+          label: "medium",
+          reasons: ["Strong public website evidence for messaging and positioning."],
+        },
+        dimensions: [
+          {
+            dimension: "company_summary",
+            confidence: {
+              score: 0.84,
+              label: "high",
+              reasons: ["Direct site copy supports the summary."],
+            },
+          },
+        ],
+        flags: [],
+      },
+    },
+    rawCapture: {
+      title: "ApexOps homepage",
+      extractedText:
+        "Standardize routing, reporting, and outbound execution for distributed revenue teams.",
+      source: "demo-seed",
+      demoSeedVersion,
+    },
+  },
+  {
+    prospectKey: "ledgerloop",
+    sourceUrl: "https://ledgerloop.example",
+    sourceType: "website",
+    fetchStatus: "captured",
+    evidence: [
+      {
+        snippet: "Automate reporting and approval workflows for finance teams without extra admin overhead.",
+        sourceUrl: "https://ledgerloop.example",
+        title: "LedgerLoop homepage",
+        selectorHint: "hero",
+        confidence: {
+          score: 0.78,
+          label: "medium",
+          reasons: ["Direct website copy."],
+        },
+        supports: ["company_summary", "pain_points"],
+      },
+    ],
+    structuredData: {
+      companyProfile: {
+        domain: "ledgerloop.example",
+        websiteUrl: "https://ledgerloop.example",
+        canonicalUrl: "https://ledgerloop.example",
+        companyName: "LedgerLoop",
+        headline: "Finance workflow automation for lean operators.",
+        summary:
+          "LedgerLoop helps finance teams automate reporting and approval workflows without expanding headcount.",
+        productDescription:
+          "Workflow software for finance operators who want a cleaner month-end process.",
+        likelyTargetCustomer: "Lean finance leaders at scaling SaaS and fintech teams.",
+        targetCustomers: ["Finance leaders", "Finance operators"],
+        industries: ["Fintech", "B2B SaaS"],
+        valuePropositions: [
+          "Reduce spreadsheet-heavy reporting",
+          "Speed up finance operations with workflow automation",
+        ],
+        proofPoints: ["Built for lean operators"],
+        differentiators: ["Workflow-centric finance operations"],
+        likelyPainPoints: ["Manual month-end reporting", "Approval bottlenecks"],
+        personalizationHooks: ["finance workflow automation", "lean operators"],
+        callsToAction: ["Book a walkthrough"],
+        sourceEvidence: [
+          {
+            snippet: "Automate reporting and approval workflows for finance teams without extra admin overhead.",
+            sourceUrl: "https://ledgerloop.example",
+            title: "LedgerLoop homepage",
+            selectorHint: "hero",
+            confidence: {
+              score: 0.78,
+              label: "medium",
+              reasons: ["Direct website copy."],
+            },
+            supports: ["company_summary", "pain_points"],
+          },
+        ],
+        confidence: {
+          score: 0.67,
+          label: "medium",
+          reasons: ["Good positioning signal, but detailed proof is limited."],
+        },
+        flags: [],
+        metadata: {
+          source: "demo-seed",
+          demoSeedVersion,
+        },
+      },
+      quality: {
+        overall: {
+          score: 0.67,
+          label: "medium",
+          reasons: ["Moderate coverage from public website copy."],
+        },
+        dimensions: [],
+        flags: [],
+      },
+    },
+    rawCapture: {
+      title: "LedgerLoop homepage",
+      extractedText:
+        "Automate reporting and approval workflows for finance teams without extra admin overhead.",
+      source: "demo-seed",
+      demoSeedVersion,
+    },
+  },
+  {
+    prospectKey: "pipelinepilot",
+    sourceUrl: "https://pipelinepilot.example",
+    sourceType: "website",
+    fetchStatus: "captured",
+    evidence: [
+      {
+        snippet: "Launch outbound programs with clearer operating visibility.",
+        sourceUrl: "https://pipelinepilot.example",
+        title: "PipelinePilot homepage",
+        selectorHint: "hero",
+        confidence: {
+          score: 0.73,
+          label: "medium",
+          reasons: ["Direct website copy."],
+        },
+        supports: ["company_summary", "value_propositions"],
+      },
+    ],
+    structuredData: {
+      companyProfile: {
+        domain: "pipelinepilot.example",
+        websiteUrl: "https://pipelinepilot.example",
+        canonicalUrl: "https://pipelinepilot.example",
+        companyName: "PipelinePilot",
+        headline: "Outbound operating system for client-facing teams.",
+        summary:
+          "PipelinePilot helps revenue teams plan, approve, and measure outsourced outbound programs in one place.",
+        productDescription:
+          "Visibility and workflow software for outbound teams working across clients and operators.",
+        likelyTargetCustomer: "Growth teams outsourcing outbound execution to an agency partner.",
+        targetCustomers: ["Growth leaders", "Revenue operators"],
+        industries: ["SaaS", "Agencies"],
+        valuePropositions: [
+          "Improve visibility into outsourced outbound delivery",
+          "Standardize approvals across stakeholders",
+        ],
+        proofPoints: ["Built for client-service operating models"],
+        differentiators: ["Shared workflow visibility for internal and external teams"],
+        likelyPainPoints: ["Limited delivery visibility", "Slow approval loops"],
+        personalizationHooks: ["outsourced outbound visibility", "approval workflows"],
+        callsToAction: ["See the workflow"],
+        sourceEvidence: [
+          {
+            snippet: "Launch outbound programs with clearer operating visibility.",
+            sourceUrl: "https://pipelinepilot.example",
+            title: "PipelinePilot homepage",
+            selectorHint: "hero",
+            confidence: {
+              score: 0.73,
+              label: "medium",
+              reasons: ["Direct website copy."],
+            },
+            supports: ["company_summary", "value_propositions"],
+          },
+        ],
+        confidence: {
+          score: 0.69,
+          label: "medium",
+          reasons: ["Public evidence clearly supports the positioning, with moderate depth."],
+        },
+        flags: [],
+        metadata: {
+          source: "demo-seed",
+          demoSeedVersion,
+        },
+      },
+      quality: {
+        overall: {
+          score: 0.69,
+          label: "medium",
+          reasons: ["Clear positioning signal from the homepage."],
+        },
+        dimensions: [],
+        flags: [],
+      },
+    },
+    rawCapture: {
+      title: "PipelinePilot homepage",
+      extractedText:
+        "Launch outbound programs with clearer operating visibility.",
+      source: "demo-seed",
+      demoSeedVersion,
+    },
+  },
+] as const;
+
+export const demoSequences = [
+  {
+    key: "apex_ops_sequence",
+    prospectKey: "apex_ops",
+    generationMode: "sender_aware",
+    status: "draft",
+    content: {
+      subjectLineSet: {
+        subjectLines: [
+          { text: "ApexOps outbound quality at scale", rationale: "Ties directly to distributed SDR workflow quality." },
+          { text: "Reducing manual review for SDR teams", rationale: "Anchors on a likely operations pain point." },
+        ],
+        rationale: "Balanced set for operationally focused SDR outreach.",
+        qualityChecks: [{ name: "no_generic_fluff", passed: true, details: "Subject lines stay concrete." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:00:00.000Z"),
+        },
+      },
+      openerSet: {
+        openerOptions: [
+          {
+            text: "Noticed ApexOps is positioning around distributed revenue operations and cleaner workflow governance.",
+            rationale: "Grounded in the homepage positioning.",
+            evidenceSupport: ["workflow governance"],
+          },
+          {
+            text: "Saw ApexOps is emphasizing more consistent outbound execution across distributed teams.",
+            rationale: "Connects to the strongest public signal.",
+            evidenceSupport: ["distributed revenue teams"],
+          },
+        ],
+        rationale: "Openers stay tied to public evidence.",
+        qualityChecks: [{ name: "tone_fit", passed: true, details: "Direct and commercially literate." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:00:00.000Z"),
+        },
+      },
+      initialEmail: {
+        email: {
+          subject: "ApexOps outbound quality at scale",
+          opener: "Noticed ApexOps is positioning around distributed revenue operations and cleaner workflow governance.",
+          body: "Teams in that stage usually feel a squeeze between faster outbound volume and keeping message quality consistent. Northstar Data shortens the research and review loop without turning personalization into guesswork. If useful, I can send a short example of how teams are keeping message quality steady as headcount grows.",
+          cta: "Open to that?",
+          rationale: "Frames a familiar workflow problem, then offers a low-friction next step.",
+          qualityChecks: [{ name: "cta_presence", passed: true, details: "Ends with a soft CTA." }],
+        },
+        rationale: "Specific to workflow governance without unsupported claims.",
+        qualityChecks: [{ name: "no_unsupported_claims", passed: true, details: "No benchmark or ROI claim appears." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:00:00.000Z"),
+        },
+      },
+      followUpSequence: {
+        sequenceSteps: [
+          {
+            stepNumber: 1,
+            waitDays: 3,
+            subject: "Keeping outbound review light",
+            opener: "Following up because workflow review usually becomes the drag point before tooling does.",
+            body: "If helpful, I can share the shortlist of checks teams are using to keep SDR personalization reviewable without slowing reps down.",
+            cta: "Would that be useful?",
+            rationale: "Adds value without changing the ask too aggressively.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 2,
+            waitDays: 5,
+            subject: "Another angle on ApexOps",
+            opener: "A different angle here is the governance side of outbound quality.",
+            body: "When teams spread across pods or regions, even strong reps drift into inconsistent messaging. Structured review criteria usually help more than another generic enablement playbook.",
+            cta: "Happy to send an example if useful.",
+            rationale: "Keeps the message practical and credible.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 3,
+            waitDays: 7,
+            subject: "Close the loop?",
+            opener: "I can close the loop after this if the timing is off.",
+            body: "If outbound workflow quality is already under control, no need to force it. If it becomes active later this quarter, I am happy to reconnect with something more specific.",
+            cta: "Either way is fine.",
+            rationale: "Ends respectfully with a soft close.",
+            qualityChecks: [],
+          },
+        ],
+        rationale: "The sequence moves from value add to respectful close.",
+        qualityChecks: [{ name: "max_length_targets", passed: true, details: "Each step stays within target length." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:00:00.000Z"),
+        },
+      },
+      sequenceVersion: 1,
+      generatedForMode: "sender_aware",
+    },
+    qualityChecksJson: {
+      generatedAt: new Date("2026-04-02T14:00:00.000Z"),
+      summary: { score: 0.84, label: "strong", blocked: false, needsReview: false },
+      dimensions: [
+        { name: "personalization", score: 0.83, label: "strong", details: "Anchored in public workflow signals." },
+        { name: "clarity", score: 0.86, label: "strong", details: "Clear structure and ask." },
+        { name: "cta_quality", score: 0.82, label: "strong", details: "Soft CTA language is consistent." },
+        { name: "fluff_risk", score: 0.14, label: "low_risk", details: "Little generic language." },
+        { name: "unsupported_claim_risk", score: 0.08, label: "low_risk", details: "No invented proof points." },
+        { name: "tone_fit", score: 0.85, label: "strong", details: "Operationally fluent tone." },
+      ],
+      checks: [{ code: "cta_present", status: "pass", message: "Each step contains a CTA." }],
+      notes: ["Demo SDR sequence."],
+    },
+  },
+  {
+    key: "basic_sequence",
+    prospectKey: "northwind_security",
+    generationMode: "basic",
+    status: "draft",
+    content: {
+      subjectLineSet: {
+        subjectLines: [
+          { text: "A careful note on Northwind Security", rationale: "Signals basic-mode caution." },
+          { text: "Question on security coverage workflows", rationale: "Grounded in the prospect website." },
+        ],
+        rationale: "Basic mode subjects stay careful and factual.",
+        qualityChecks: [],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:10:00.000Z"),
+        },
+      },
+      openerSet: {
+        openerOptions: [
+          {
+            text: "Saw Northwind Security is positioned around managed coverage and compliance support for regional operators.",
+            rationale: "Reflects the clearest public signal available.",
+            evidenceSupport: ["managed compliance support"],
+          },
+        ],
+        rationale: "Uses only what the public website supports.",
+        qualityChecks: [],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:10:00.000Z"),
+        },
+      },
+      initialEmail: {
+        email: {
+          subject: "Question on security coverage workflows",
+          opener: "Saw Northwind Security is positioned around managed coverage and compliance support for regional operators.",
+          body: "If keeping coverage dependable without adding internal admin is a recurring issue, we can help teams structure research and follow-up more carefully. If that is not relevant, no problem.",
+          cta: "Would a short summary be useful?",
+          rationale: "Uses cautious wording because sender context is intentionally limited.",
+          qualityChecks: [],
+        },
+        rationale: "Basic mode preserves relevance without pretending to know more than the public site shows.",
+        qualityChecks: [],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:10:00.000Z"),
+        },
+      },
+      followUpSequence: {
+        sequenceSteps: [
+          {
+            stepNumber: 1,
+            waitDays: 4,
+            subject: "Following up carefully",
+            opener: "Keeping this brief in case the timing is off.",
+            body: "Happy to share a short example of how teams are using structured research before outreach if that would be useful.",
+            cta: "Want me to send that?",
+            rationale: "Soft follow-up for the basic fallback path.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 2,
+            waitDays: 6,
+            subject: "Close the loop",
+            opener: "I can close this out after this note.",
+            body: "If this is not relevant, I will leave it here. If later you want a cleaner way to frame prospect research and follow-up, I am happy to reconnect.",
+            cta: "Either way is fine.",
+            rationale: "Ends cleanly and avoids pressure.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 3,
+            waitDays: 8,
+            subject: "Leaving this here",
+            opener: "Final note from me.",
+            body: "No need to respond if this is not a priority. I am leaving the context here in case a lighter-touch outbound process becomes useful later on.",
+            cta: "Wishing the team a smooth quarter.",
+            rationale: "Soft breakup-style close.",
+            qualityChecks: [],
+          },
+        ],
+        rationale: "Basic mode follow-ups are intentionally conservative.",
+        qualityChecks: [],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:10:00.000Z"),
+        },
+      },
+      sequenceVersion: 1,
+      generatedForMode: "basic",
+    },
+    qualityChecksJson: {
+      generatedAt: new Date("2026-04-02T14:10:00.000Z"),
+      summary: { score: 0.78, label: "strong", blocked: false, needsReview: false },
+      dimensions: [
+        { name: "personalization", score: 0.61, label: "adequate", details: "Basic mode is intentionally lighter." },
+        { name: "clarity", score: 0.82, label: "strong", details: "The sequence is clear and cautious." },
+        { name: "cta_quality", score: 0.79, label: "strong", details: "CTAs stay low-pressure." },
+        { name: "fluff_risk", score: 0.11, label: "low_risk", details: "Little generic language." },
+        { name: "unsupported_claim_risk", score: 0.04, label: "low_risk", details: "No invented proof points." },
+        { name: "tone_fit", score: 0.8, label: "strong", details: "Neutral and professional basic-mode tone." },
+      ],
+      checks: [{ code: "soft_language_used", status: "pass", message: "Low-context sequence uses softer phrasing." }],
+      notes: ["Demo basic-mode sequence."],
+    },
+  },
+] as const;
+
+export const demoReplyThreads = [
+  {
+    prospectKey: "apex_ops",
+    messages: [
+      {
+        key: "inbound_reply",
+        direction: "inbound",
+        subject: "Re: ApexOps outbound quality at scale",
+        bodyText:
+          "Potentially relevant, but timing is tight this month. If you have a concise example of what teams are doing differently, send it over and I can take a look in May.",
+      },
+    ],
+    analysis: {
+      classification: "neutral",
+      sentiment: "neutral",
+      urgency: "medium",
+      intent: "needs_more_info",
+      confidence: 0.88,
+      analysisOutput: {
+        analysis: {
+          intent: "needs_more_info",
+          objectionType: "timing",
+          classification: "needs_more_info",
+          confidence: {
+            score: 0.88,
+            label: "high",
+            reasons: ["The reply requests more detail and names a future timing window."],
+          },
+          recommendedAction: "send_more_info",
+          rationale: "The prospect did not reject the outreach. They asked for a concise example and suggested revisiting later.",
+          keySignals: ["Potentially relevant", "timing is tight", "send it over"],
+          cautionFlags: ["Keep the response concise and avoid pushing for a meeting immediately."],
+        },
+        rationale: "This reply combines mild interest with a timing objection and a request for more context.",
+        qualityChecks: [{ name: "respect_hard_no", passed: true, details: "No hard-no rule is implicated." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:00:00.000Z"),
+        },
+      },
+      strategyOutput: {
+        strategy: {
+          recommendedAction: "send_more_info",
+          draftingStrategy: "Acknowledge timing, share one practical example, and keep the next step optional.",
+          guardrails: ["Do not push for a meeting immediately.", "Stay concise and specific."],
+          toneGuidance: ["Helpful", "Calm", "Low-pressure"],
+          escalationNeeded: false,
+        },
+        rationale: "A short, useful follow-up fits the prospect's ask better than a call push.",
+        qualityChecks: [{ name: "confidence_language_fit", passed: true, details: "The strategy fits a confident but careful interpretation." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:00:00.000Z"),
+        },
+      },
+    },
+    draftBundle: {
+      version: 1,
+      output: {
+        recommendedAction: "send_more_info",
+        draftingStrategy: "Acknowledge timing, provide one concrete example, and keep the next step optional.",
+        confidence: {
+          score: 0.86,
+          label: "high",
+          reasons: ["The prospect explicitly asked for more detail."],
+        },
+        drafts: [
+          {
+            slotId: "example-1",
+            label: "Concise example",
+            subject: "Re: ApexOps outbound quality at scale",
+            bodyText: "Makes sense. One simple example: teams are using structured research checkpoints before a rep sends, so managers are not manually reviewing every message from scratch. If useful, I can send the short version now and you can revisit it when timing opens up in May.",
+            strategyNote: "Helpful and low-pressure.",
+          },
+          {
+            slotId: "example-2",
+            label: "Workflow angle",
+            subject: "Re: ApexOps outbound quality at scale",
+            bodyText: "Understood on timing. The pattern we keep seeing is that teams tighten the research and approval loop first, which helps outbound quality hold up as volume grows. Happy to send a concise example for you to review later this quarter if useful.",
+            strategyNote: "Connects to workflow pain point.",
+          },
+          {
+            slotId: "example-3",
+            label: "Soft handoff",
+            subject: "Re: ApexOps outbound quality at scale",
+            bodyText: "Absolutely. I can send one brief example and leave it with you for May rather than forcing a meeting now. If it is relevant then, we can pick it up when your timing is better.",
+            strategyNote: "Most deferential option.",
+          },
+        ],
+        guardrails: ["Avoid pushing for a meeting now.", "Do not introduce unsupported proof points."],
+      },
+    },
+  },
+  {
+    prospectKey: "northwind_security",
+    messages: [
+      {
+        key: "inbound_reply",
+        direction: "inbound",
+        subject: "Re: Question on security coverage workflows",
+        bodyText: "Please take me off this list. We are not interested and do not want more follow-up.",
+      },
+    ],
+    analysis: {
+      classification: "unsubscribe",
+      sentiment: "negative",
+      urgency: "high",
+      intent: "hard_no",
+      confidence: 0.94,
+      analysisOutput: {
+        analysis: {
+          intent: "hard_no",
+          objectionType: "none",
+          classification: "hard_no",
+          confidence: {
+            score: 0.94,
+            label: "high",
+            reasons: ["The prospect explicitly requested no more outreach."],
+          },
+          recommendedAction: "stop_outreach",
+          rationale: "The prospect explicitly requested removal and further follow-up would be inappropriate.",
+          keySignals: ["take me off this list", "do not want more follow-up"],
+          cautionFlags: ["Do not continue pitching after a hard no."],
+        },
+        rationale: "The message is a clear unsubscribe-style hard negative reply.",
+        qualityChecks: [{ name: "respect_hard_no", passed: true, details: "The analysis correctly identifies a hard no." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T10:00:00.000Z"),
+        },
+      },
+      strategyOutput: {
+        strategy: {
+          recommendedAction: "stop_outreach",
+          draftingStrategy: "Confirm the prospect will not receive more outreach and close the loop respectfully.",
+          guardrails: ["Do not pitch again.", "Do not ask for another chance or better timing."],
+          toneGuidance: ["Brief", "Respectful", "Final"],
+          escalationNeeded: false,
+        },
+        rationale: "The only safe response is a concise confirmation and close.",
+        qualityChecks: [{ name: "respect_hard_no", passed: true, details: "The strategy avoids any continued persuasion." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T10:00:00.000Z"),
+        },
+      },
+    },
+    draftBundle: {
+      version: 1,
+      output: {
+        recommendedAction: "stop_outreach",
+        draftingStrategy: "Confirm the opt-out, stay respectful, and do not continue the sales conversation.",
+        confidence: {
+          score: 0.94,
+          label: "high",
+          reasons: ["The prospect issued a direct stop request."],
+        },
+        drafts: [
+          {
+            slotId: "hard-no-1",
+            label: "Respectful confirmation",
+            subject: "Understood",
+            bodyText: "Understood. I will close the loop here and make sure no further outreach is sent.",
+            strategyNote: "Best default option after a hard no.",
+          },
+          {
+            slotId: "hard-no-2",
+            label: "Brief apology",
+            subject: "Apologies for the interruption",
+            bodyText: "Apologies for the interruption. I will remove you from further follow-up and leave it there.",
+            strategyNote: "Slightly warmer close while still final.",
+          },
+          {
+            slotId: "hard-no-3",
+            label: "Simple close",
+            subject: null,
+            bodyText: "Understood. I will make sure no further outreach is sent.",
+            strategyNote: "Shortest and most direct option.",
+          },
+        ],
+        guardrails: ["Do not continue pitching after a hard no.", "Do not ask for a referral or next quarter timing."],
+      },
+    },
+  },
+] as const;
+
+export const demoSeedSummary = {
+  senderProfileCount: demoSenderProfiles.length,
+  campaignCount: demoCampaigns.length,
+  prospectCount: demoProspects.length,
+  researchSnapshotCount: demoResearchSnapshots.length,
+  sequenceCount: demoSequences.length,
+  replyThreadCount: demoReplyThreads.length,
+} as const;
