@@ -1,10 +1,4 @@
-import {
-  createInMemoryCampaignRepository,
-  createInMemoryProspectRepository,
-  type CampaignRepository,
-  type ProspectRepository,
-} from "@ceg/database";
-import type {
+﻿import type {
   Campaign,
   CreateCampaignInput,
   CreateProspectInput,
@@ -14,34 +8,15 @@ import type {
 } from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
+import { getCampaignRepository, getProspectRepository } from "./database";
 import { createOperationContext } from "./observability";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import { getSenderProfileForWorkspace } from "./sender-profiles";
-
-declare global {
-  var __cegCampaignRepository: CampaignRepository | undefined;
-  var __cegProspectRepository: ProspectRepository | undefined;
-}
 
 type CampaignMutationContext = {
   userId?: string;
   requestId?: string;
 };
-
-function getCampaignRepository(): CampaignRepository {
-  if (globalThis.__cegCampaignRepository === undefined) {
-    globalThis.__cegCampaignRepository = createInMemoryCampaignRepository();
-  }
-
-  return globalThis.__cegCampaignRepository;
-}
-
-function getProspectRepository(): ProspectRepository {
-  if (globalThis.__cegProspectRepository === undefined) {
-    globalThis.__cegProspectRepository = createInMemoryProspectRepository();
-  }
-
-  return globalThis.__cegProspectRepository;
-}
 
 async function assertSenderProfileAccess(
   workspaceId: string,
@@ -113,6 +88,19 @@ export async function createCampaignForWorkspace(
     senderProfileAttached: created.senderProfileId !== null,
   });
 
+  await trackProductAnalyticsEvent({
+    event: "campaign_created",
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? input.createdByUserId ?? null,
+    entityType: "campaign",
+    entityId: created.id,
+    requestId: operation.requestId,
+    metadata: {
+      status: created.status,
+      senderProfileAttached: created.senderProfileId !== null,
+    },
+  });
+
   return created;
 }
 
@@ -177,8 +165,12 @@ export async function deleteCampaignForWorkspace(
 
   const prospects = await getProspectRepository().listProspectsByCampaign(campaignId);
 
-  await Promise.all(prospects.map((prospect) => getProspectRepository().deleteProspect(prospect.id)));
-  await getCampaignRepository().deleteCampaign(campaignId);
+  await Promise.all(
+    prospects.map((prospect) =>
+      getProspectRepository().deleteProspect(workspaceId, prospect.id),
+    ),
+  );
+  await getCampaignRepository().deleteCampaign(workspaceId, campaignId);
 }
 
 export async function listProspectsForCampaign(
@@ -265,6 +257,20 @@ export async function createProspectForCampaign(
     status: created.status,
   });
 
+  await trackProductAnalyticsEvent({
+    event: "prospect_created",
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? input.createdByUserId ?? null,
+    campaignId: input.campaignId,
+    prospectId: created.id,
+    entityType: "prospect",
+    entityId: created.id,
+    requestId: operation.requestId,
+    metadata: {
+      status: created.status,
+    },
+  });
+
   return created;
 }
 
@@ -341,5 +347,8 @@ export async function deleteProspectForCampaign(
     throw new Error("Prospect not found for workspace campaign.");
   }
 
-  await getProspectRepository().deleteProspect(prospectId);
+  await getProspectRepository().deleteProspect(workspaceId, prospectId);
 }
+
+
+

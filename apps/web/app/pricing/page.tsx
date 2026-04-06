@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getDefaultWorkspaceMembership } from "@ceg/auth";
@@ -11,6 +12,11 @@ import {
   pricingFeatureRows,
   pricingPlans,
 } from "../../lib/pricing-content";
+
+export const metadata: Metadata = {
+  title: "Pricing",
+  description: "Compare Free, Pro, and Agency plans for Outbound Copilot.",
+};
 
 type PricingPageProps = {
   searchParams?: Promise<{
@@ -184,3 +190,5 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
     </main>
   );
 }
+
+

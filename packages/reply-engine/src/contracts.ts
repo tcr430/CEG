@@ -1,16 +1,20 @@
 import { z } from "zod";
 
 import {
+  aiOperationMetadataSchema,
   campaignSchema,
   companyProfileSchema,
   draftReplyOutputSchema,
+  generationPerformanceHintsSchema,
   replyAnalysisInputSchema,
   replyClassificationOutputSchema,
   replyIntentSchema,
   responseStrategyRecommendationSchema,
   senderProfileSchema,
+  type AiOperationMetadata,
   type Campaign,
   type CompanyProfile,
+  type GenerationPerformanceHints,
   type ReplyAnalysisInput,
   type ReplyClassificationOutput,
   type ResponseStrategyRecommendation,
@@ -49,6 +53,7 @@ export const replyPromptContextSchema = z.object({
   }),
   productCredibility: z.enum(["low_context", "grounded", "high_conviction"]).default("grounded"),
   constraints: replyConstraintsSchema,
+  performanceHints: generationPerformanceHintsSchema.optional(),
 });
 
 export const replyAnalysisRequestSchema = z.object({
@@ -59,16 +64,7 @@ export const replyAnalysisRequestSchema = z.object({
   promptContext: replyPromptContextSchema,
 });
 
-export const replyOperationMetadataSchema = z.object({
-  provider: z.string().trim().min(1),
-  model: z.string().trim().min(1),
-  promptVersion: z.string().trim().min(1),
-  inputTokens: z.number().int().nonnegative().nullable().optional(),
-  outputTokens: z.number().int().nonnegative().nullable().optional(),
-  totalTokens: z.number().int().nonnegative().nullable().optional(),
-  costUsd: z.number().nonnegative().nullable().optional(),
-  generatedAt: z.coerce.date(),
-});
+export const replyOperationMetadataSchema = aiOperationMetadataSchema;
 
 export const replyQualityCheckNameSchema = z.enum([
   "respect_hard_no",
@@ -127,7 +123,7 @@ export const regenerateDraftReplyOutputSchema = z.object({
 
 export type ReplySenderContext = z.infer<typeof replySenderContextSchema>;
 export type ReplyAnalysisRequest = z.infer<typeof replyAnalysisRequestSchema>;
-export type ReplyOperationMetadata = z.infer<typeof replyOperationMetadataSchema>;
+export type ReplyOperationMetadata = AiOperationMetadata;
 export type ReplyQualityCheck = z.infer<typeof replyQualityCheckSchema>;
 export type ReplyAnalysisOutput = z.infer<typeof replyAnalysisOutputSchema>;
 export type ResponseStrategyRecommendationOutput = z.infer<
@@ -187,5 +183,6 @@ export type ReplyValidationContext = {
   analysis: ReplyClassificationOutput;
   strategy?: ResponseStrategyRecommendation;
 };
+export type ReplyPerformanceHints = GenerationPerformanceHints;
 
 export const replyAllowedRegenerateIntents = new Set(replyIntentSchema.options);

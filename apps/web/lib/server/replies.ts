@@ -1,13 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import {
-  createInMemoryConversationThreadRepository,
   createInMemoryDraftReplyRepository,
-  createInMemoryMessageRepository,
-  createInMemoryReplyAnalysisRepository,
-  type ConversationThreadRepository,
   type DraftReplyRepository,
-  type MessageRepository,
   type ReplyAnalysisRepository,
 } from "@ceg/database";
 import { checkFeatureEntitlement, resolveBillingPlanCode } from "@ceg/billing";
@@ -25,19 +20,35 @@ import {
 import { compiledSequenceOutputSchema } from "@ceg/sequence-engine";
 import {
   artifactEditRecordSchema,
+  trainingSignalOutcomeSchema,
   draftReplyOutputSchema,
   type ArtifactEditRecord,
   type ConversationThread,
   type DraftReply,
   type Message,
   type Prospect,
+  type ReplyAnalysis,
+  type TrainingSignalOutcome,
 } from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
+import {
+  getConversationThreadRepository,
+  getMessageRepository,
+} from "./database";
 import { getCampaignForWorkspace, getProspectForCampaign, updateProspectForCampaign } from "./campaigns";
-import { createOpenAiReplyModelAdapter } from "./openai-reply-provider";
+import { getReplyModelAdapter } from "./model-providers";
+import { getSharedReplyAnalysisRepository } from "./reply-analysis-store";
 import { createOperationContext } from "./observability";
+import { refreshCampaignPerformanceMetrics } from "./campaign-performance";
+import {
+  beginProspectAsyncOperation,
+  completeProspectAsyncOperation,
+  failProspectAsyncOperation,
+} from "./prospect-job-runs";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
+import { buildReplyPerformanceHints } from "./generation-performance-hints";
 import {
   assertWorkspaceFeatureAccess,
   assertWorkspaceUsageAccess,
@@ -46,6 +57,10 @@ import { getSenderProfileForWorkspace } from "./sender-profiles";
 import { getLatestStoredSequenceForProspect } from "./sequences";
 import { getSharedUsageEventRepository } from "./usage-events";
 import { recordTrainingSignal } from "./training-signals";
+import {
+  classifyReplyOutcome,
+  resolveGeneratedArtifactForSentMessage,
+} from "../reply-outcomes";
 
 type PersistedReplyAnalysisRecord = {
   analysisVersion: number;
@@ -191,44 +206,18 @@ type AppendProspectThreadMessageInput = {
   generatedFrom?: NonNullable<Message["metadata"]["generatedFrom"]> | null;
   importedFrom?: string | null;
   timelineLabel?: string | null;
+  metadata?: Record<string, unknown>;
   sentAt?: Date | null;
   receivedAt?: Date | null;
   userId?: string;
 };
 
 declare global {
-  var __cegConversationThreadRepository: ConversationThreadRepository | undefined;
-  var __cegMessageRepository: MessageRepository | undefined;
-  var __cegReplyAnalysisRepository: ReplyAnalysisRepository | undefined;
   var __cegDraftReplyRepository: DraftReplyRepository | undefined;
   var __cegReplyEngineService: ReplyEngineService | undefined;
 }
 
 const REPLY_PROMPT_TEMPLATE_ID = "reply.v1";
-
-function getConversationThreadRepository(): ConversationThreadRepository {
-  if (globalThis.__cegConversationThreadRepository === undefined) {
-    globalThis.__cegConversationThreadRepository = createInMemoryConversationThreadRepository();
-  }
-
-  return globalThis.__cegConversationThreadRepository;
-}
-
-function getMessageRepository(): MessageRepository {
-  if (globalThis.__cegMessageRepository === undefined) {
-    globalThis.__cegMessageRepository = createInMemoryMessageRepository();
-  }
-
-  return globalThis.__cegMessageRepository;
-}
-
-function getReplyAnalysisRepository(): ReplyAnalysisRepository {
-  if (globalThis.__cegReplyAnalysisRepository === undefined) {
-    globalThis.__cegReplyAnalysisRepository = createInMemoryReplyAnalysisRepository();
-  }
-
-  return globalThis.__cegReplyAnalysisRepository;
-}
 
 function getDraftReplyRepository(): DraftReplyRepository {
   if (globalThis.__cegDraftReplyRepository === undefined) {
@@ -242,7 +231,7 @@ function getDraftReplyRepository(): DraftReplyRepository {
 function getReplyEngine(): ReplyEngineService {
   if (globalThis.__cegReplyEngineService === undefined) {
     globalThis.__cegReplyEngineService = createReplyEngineService(
-      createOpenAiReplyModelAdapter(),
+      getReplyModelAdapter(),
     );
   }
 
@@ -404,6 +393,165 @@ function mapReplyClassification(
   }
 }
 
+function readReplyOutcomeHistory(message: Message): TrainingSignalOutcome[] {
+  const candidate = message.metadata.outcomeHistory;
+
+  if (!Array.isArray(candidate)) {
+    return [];
+  }
+
+  return candidate.flatMap((item) => {
+    const parsed = trainingSignalOutcomeSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function findLatestReplyTargetMessage(messages: Message[]): Message | null {
+  const sentMessage = [...messages]
+    .reverse()
+    .find(
+      (message) =>
+        message.direction === "outbound" &&
+        (message.status === "sent" || message.status === "delivered"),
+    );
+
+  if (sentMessage) {
+    return sentMessage;
+  }
+
+  return (
+    [...messages]
+      .reverse()
+      .find((message) => message.direction === "outbound") ?? null
+  );
+}
+
+async function recordReplyOutcomeForLinkedMessage(input: {
+  workspaceId: string;
+  campaignId: string;
+  prospectId: string;
+  replyMessage: Message;
+  analysisRecord: ReplyAnalysis;
+  analysisOutput: ReplyAnalysisOutput;
+  strategyOutput: ResponseStrategyRecommendationOutput;
+  userId?: string;
+  requestId?: string;
+}) {
+  if (!input.replyMessage.replyToMessageId) {
+    return;
+  }
+
+  const sentMessage = await getMessageRepository().getMessageById(
+    input.workspaceId,
+    input.replyMessage.replyToMessageId,
+  );
+
+  if (sentMessage === null || sentMessage.direction !== "outbound") {
+    return;
+  }
+
+  const outcomeLabel = classifyReplyOutcome(input.analysisOutput.analysis.intent);
+
+  if (outcomeLabel === null) {
+    return;
+  }
+
+  const outcomeSignal = trainingSignalOutcomeSchema.parse({
+    label: outcomeLabel,
+    sentMessageId: sentMessage.id,
+    replyMessageId: input.replyMessage.id,
+    replyAnalysisId: input.analysisRecord.id,
+    replyIntent: input.analysisOutput.analysis.intent,
+    replyClassification: input.analysisRecord.classification,
+    recommendedAction: input.strategyOutput.strategy.recommendedAction,
+    recordedAt: new Date(),
+  });
+
+  const priorHistory = readReplyOutcomeHistory(sentMessage).filter(
+    (item) => item.replyMessageId !== input.replyMessage.id,
+  );
+
+  await Promise.all([
+    getMessageRepository().updateMessage({
+      workspaceId: input.workspaceId,
+      messageId: sentMessage.id,
+      metadata: {
+        ...sentMessage.metadata,
+        latestOutcome: outcomeSignal,
+        outcomeHistory: [...priorHistory, outcomeSignal],
+      },
+    }),
+    getMessageRepository().updateMessage({
+      workspaceId: input.workspaceId,
+      messageId: input.replyMessage.id,
+      metadata: {
+        ...input.replyMessage.metadata,
+        linkedOutcome: outcomeSignal,
+      },
+    }),
+  ]);
+
+  await getSharedUsageEventRepository().createUsageEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    eventName: `reply_outcome_${outcomeLabel}`,
+    entityType: "message",
+    entityId: sentMessage.id,
+    quantity: 1,
+    billable: false,
+    metadata: {
+      sentMessageId: sentMessage.id,
+      replyMessageId: input.replyMessage.id,
+      replyAnalysisId: input.analysisRecord.id,
+      replyIntent: input.analysisOutput.analysis.intent,
+      replyClassification: input.analysisRecord.classification,
+      recommendedAction: input.strategyOutput.strategy.recommendedAction,
+      outcomeSignal,
+    },
+  });
+
+  await getSharedAuditEventRepository().createAuditEvent({
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    actorType: input.userId ? "user" : "system",
+    action: "reply.outcome.linked",
+    entityType: "message",
+    entityId: sentMessage.id,
+    requestId: input.requestId,
+    changes: outcomeSignal,
+    metadata: {
+      replyMessageId: input.replyMessage.id,
+      replyAnalysisId: input.analysisRecord.id,
+    },
+  });
+
+  const generatedArtifact = resolveGeneratedArtifactForSentMessage(sentMessage);
+
+  if (generatedArtifact !== null) {
+    await recordTrainingSignal({
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      senderProfileId: null,
+      artifactType: generatedArtifact.artifactType,
+      artifactId: generatedArtifact.artifactId,
+      actionType:
+        outcomeLabel === "positive" ? "positive_outcome" : "negative_outcome",
+      afterText: sentMessage.bodyText ?? sentMessage.subject ?? null,
+      outcomeSignal,
+      metadata: {
+        sentMessageId: sentMessage.id,
+        replyMessageId: input.replyMessage.id,
+        replyAnalysisId: input.analysisRecord.id,
+      },
+      requestId: input.requestId,
+    });
+  }
+}
+
 async function getProspectForWorkspaceCampaign(input: {
   workspaceId: string;
   campaignId: string;
@@ -444,7 +592,10 @@ export async function appendMessageToProspectThread(
     getProspectForWorkspaceCampaign(input),
     ensureThreadForProspect(input),
   ]);
-  const existingMessages = await getMessageRepository().listMessagesByThread(thread.id);
+  const existingMessages = await getMessageRepository().listMessagesByThread(
+    input.workspaceId,
+    thread.id,
+  );
   const messageVersion = existingMessages.length + 1;
 
   const message = await getMessageRepository().createMessage({
@@ -470,6 +621,7 @@ export async function appendMessageToProspectThread(
       sequenceVersion: input.sequenceVersion ?? undefined,
       importedFrom: input.importedFrom ?? null,
       timelineLabel: input.timelineLabel ?? null,
+      ...(input.metadata ?? {}),
     },
     sentAt: input.sentAt ?? null,
     receivedAt:
@@ -493,6 +645,8 @@ export async function appendMessageToProspectThread(
   if (input.direction === "inbound") {
     await setProspectStatusToReplied(prospect, input.campaignId);
   }
+
+  await refreshCampaignPerformanceMetrics(input.workspaceId, input.campaignId);
 
   await getSharedUsageEventRepository().createUsageEvent({
     workspaceId: input.workspaceId,
@@ -583,11 +737,17 @@ async function buildReplyAnalysisRequest(input: {
         credibilityLevel: "cautious" as const,
       };
 
-  const researchSnapshot = await getLatestResearchSnapshotForProspect(
-    input.workspaceId,
-    input.campaignId,
-    input.prospectId,
-  );
+  const [researchSnapshot, performanceHints] = await Promise.all([
+    getLatestResearchSnapshotForProspect(
+      input.workspaceId,
+      input.campaignId,
+      input.prospectId,
+    ),
+    buildReplyPerformanceHints({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+    }),
+  ]);
 
   return {
     senderContext,
@@ -657,6 +817,7 @@ async function buildReplyAnalysisRequest(input: {
         maxDraftReplyLength: 900,
         maxDraftOptions: 3,
       },
+      performanceHints,
     },
   };
 }
@@ -709,9 +870,9 @@ export async function loadFullThreadHistoryForProspect(
   }
 
   const [messages, analyses, draftRecords] = await Promise.all([
-    getMessageRepository().listMessagesByThread(thread.id),
-    getReplyAnalysisRepository().listReplyAnalysesByThread(thread.id),
-    getDraftReplyRepository().listDraftRepliesByThread(thread.id),
+    getMessageRepository().listMessagesByThread(workspaceId, thread.id),
+    getSharedReplyAnalysisRepository().listReplyAnalysesByThread(workspaceId, thread.id),
+    getDraftReplyRepository().listDraftRepliesByThread(workspaceId, thread.id),
   ]);
   const timeline = buildReplyTimeline({
     messages,
@@ -749,8 +910,17 @@ export async function createInboundReplyForProspect(input: {
   subject?: string | null;
   bodyText: string;
   userId?: string;
+  workspacePlanCode?: string | null;
+  requestId?: string;
+  autoAnalyze?: boolean;
 }): Promise<Message> {
-  return appendMessageToProspectThread({
+  const state = await getReplyThreadStateForProspect(
+    input.workspaceId,
+    input.campaignId,
+    input.prospectId,
+  );
+  const replyTargetMessage = findLatestReplyTargetMessage(state.messages);
+  const message = await appendMessageToProspectThread({
     workspaceId: input.workspaceId,
     campaignId: input.campaignId,
     prospectId: input.prospectId,
@@ -759,10 +929,51 @@ export async function createInboundReplyForProspect(input: {
     status: "received",
     subject: input.subject ?? null,
     bodyText: input.bodyText,
+    replyToMessageId: replyTargetMessage?.id ?? null,
     source: "manual",
     timelineLabel: "Inbound reply",
     userId: input.userId,
+    metadata: {
+      replyAttribution: replyTargetMessage
+        ? {
+            linkedOutboundMessageId: replyTargetMessage.id,
+            attributionMode:
+              replyTargetMessage.status === "sent" || replyTargetMessage.status === "delivered"
+                ? "latest_sent_outbound"
+                : "latest_outbound_fallback",
+          }
+        : undefined,
+    },
   });
+
+  if (input.autoAnalyze !== false) {
+    const operation = createOperationContext({
+      operation: "reply.analysis.auto_on_inbound",
+      requestId: input.requestId,
+      workspaceId: input.workspaceId,
+      userId: input.userId ?? null,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+    });
+
+    try {
+      await analyzeLatestReplyForProspect({
+        workspaceId: input.workspaceId,
+        campaignId: input.campaignId,
+        prospectId: input.prospectId,
+        userId: input.userId,
+        workspacePlanCode: input.workspacePlanCode ?? null,
+        requestId: input.requestId,
+      });
+    } catch (error) {
+      operation.logger.error("Automatic reply analysis after inbound message save failed", {
+        messageId: message.id,
+        error: error instanceof Error ? error.message : "Unknown automatic reply analysis error",
+      });
+    }
+  }
+
+  return message;
 }
 
 export async function createManualOutboundMessageForProspect(input: {
@@ -808,7 +1019,10 @@ export async function appendLatestSequenceMessagesToProspectThread(input: {
   }
 
   const compiled = compiledSequenceOutputSchema.parse(latestSequenceRecord.content);
-  const existingMessages = await getMessageRepository().listMessagesByThread(thread.id);
+  const existingMessages = await getMessageRepository().listMessagesByThread(
+    input.workspaceId,
+    thread.id,
+  );
   const sequenceVersion = compiled.sequenceVersion;
   const alreadyAppendedCount = existingMessages.filter(
     (message) =>
@@ -914,16 +1128,31 @@ export async function analyzeLatestReplyForProspect(input: {
     messageId: state.latestInboundMessage.id,
   });
 
-  const analysisOutput = await getReplyEngine().analyzeReply(request);
-  const strategyOutput = await getReplyEngine().recommendResponseStrategy({
-    request,
-    analysis: analysisOutput.analysis,
+  const asyncRun = await beginProspectAsyncOperation({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    kind: "reply_analysis",
+    idempotencyKey: `reply_analysis:${state.latestInboundMessage.id}`,
+    requestId: operation.requestId,
   });
 
-  const nextVersion = (state.latestAnalysis?.analysisVersion ?? 0) + 1;
-  const mapped = mapReplyClassification(analysisOutput.analysis.intent);
+  if (asyncRun.status === "already_running") {
+    runLogger.info("Reply analysis already running");
+    throw new Error("Reply analysis is already running for this prospect.");
+  }
 
-  await getReplyAnalysisRepository().upsertReplyAnalysis({
+  try {
+    const analysisOutput = await getReplyEngine().analyzeReply(request);
+    const strategyOutput = await getReplyEngine().recommendResponseStrategy({
+      request,
+      analysis: analysisOutput.analysis,
+    });
+
+    const nextVersion = (state.latestAnalysis?.analysisVersion ?? 0) + 1;
+    const mapped = mapReplyClassification(analysisOutput.analysis.intent);
+
+    const persistedAnalysis = await getSharedReplyAnalysisRepository().upsertReplyAnalysis({
     workspaceId: input.workspaceId,
     threadId: state.latestInboundMessage.threadId,
     messageId: state.latestInboundMessage.id,
@@ -981,6 +1210,22 @@ export async function analyzeLatestReplyForProspect(input: {
     },
   });
 
+  await trackProductAnalyticsEvent({
+    event: "reply_analysis_completed",
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    entityType: "message",
+    entityId: state.latestInboundMessage.id,
+    requestId: operation.requestId,
+    metadata: {
+      analysisVersion: nextVersion,
+      intent: analysisOutput.analysis.intent,
+      recommendedAction: strategyOutput.strategy.recommendedAction,
+    },
+  });
+
   await getSharedAuditEventRepository().createAuditEvent({
     workspaceId: input.workspaceId,
     userId: input.userId,
@@ -998,16 +1243,75 @@ export async function analyzeLatestReplyForProspect(input: {
     },
   });
 
-  runLogger.info("Reply analysis completed", {
-    analysisVersion: nextVersion,
-    intent: analysisOutput.analysis.intent,
-  });
+    await recordReplyOutcomeForLinkedMessage({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      replyMessage: state.latestInboundMessage,
+      analysisRecord: persistedAnalysis,
+      analysisOutput,
+      strategyOutput,
+      userId: input.userId,
+      requestId: operation.requestId,
+    });
 
-  return {
-    analysisVersion: nextVersion,
-    analysisOutput,
-    strategyOutput,
-  };
+    await refreshCampaignPerformanceMetrics(input.workspaceId, input.campaignId);
+
+    await completeProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "reply_analysis",
+      requestId: operation.requestId,
+      resultSummary: {
+        analysisVersion: nextVersion,
+        intent: analysisOutput.analysis.intent,
+        recommendedAction: strategyOutput.strategy.recommendedAction,
+      },
+    });
+
+    runLogger.info("Reply analysis completed", {
+      analysisVersion: nextVersion,
+      intent: analysisOutput.analysis.intent,
+    });
+
+    return {
+      analysisVersion: nextVersion,
+      analysisOutput,
+      strategyOutput,
+    };
+  } catch (error) {
+    await failProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "reply_analysis",
+      requestId: operation.requestId,
+      errorSummary: error instanceof Error ? error.message : "Unknown reply analysis error",
+      resultSummary: {
+        messageId: state.latestInboundMessage.id,
+      },
+    });
+
+    await getSharedAuditEventRepository().createAuditEvent({
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      actorType: input.userId ? "user" : "system",
+      action: "reply.analysis.failed",
+      entityType: "message",
+      entityId: state.latestInboundMessage.id,
+      changes: {},
+      metadata: {
+        error: error instanceof Error ? error.message : "Unknown reply analysis error",
+      },
+    });
+
+    runLogger.error("Reply analysis failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+
+    throw error;
+  }
 }
 
 export async function generateDraftRepliesForProspect(input: {
@@ -1016,6 +1320,7 @@ export async function generateDraftRepliesForProspect(input: {
   prospectId: string;
   userId?: string;
   workspacePlanCode?: string | null;
+  requestId?: string;
 }): Promise<DraftReplyGenerationOutput["output"]> {
   await assertWorkspaceFeatureAccess({
     workspaceId: input.workspaceId,
@@ -1026,6 +1331,15 @@ export async function generateDraftRepliesForProspect(input: {
     workspaceId: input.workspaceId,
     workspacePlanCode: input.workspacePlanCode,
     meterKey: "replyDraftGenerations",
+  });
+
+  const operation = createOperationContext({
+    operation: "reply.draft_generation",
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
   });
 
   const state = await getReplyThreadStateForProspect(
@@ -1040,6 +1354,24 @@ export async function generateDraftRepliesForProspect(input: {
 
   const latestInboundMessage = state.latestInboundMessage;
   const latestAnalysis = state.latestAnalysis;
+  const runLogger = operation.logger.child({
+    area: "reply_drafting",
+    messageId: latestInboundMessage.id,
+  });
+
+  const asyncRun = await beginProspectAsyncOperation({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    kind: "reply_drafting",
+    idempotencyKey: `reply_drafting:${latestInboundMessage.id}:${latestAnalysis.analysisVersion}`,
+    requestId: operation.requestId,
+  });
+
+  if (asyncRun.status === "already_running") {
+    runLogger.info("Reply draft generation already running");
+    throw new Error("Reply draft generation is already running for this prospect.");
+  }
 
   const request = await buildReplyAnalysisRequest({
     workspaceId: input.workspaceId,
@@ -1050,16 +1382,17 @@ export async function generateDraftRepliesForProspect(input: {
     workspacePlanCode: input.workspacePlanCode,
   });
 
-  const generated = await getReplyEngine().generateDraftReplies({
-    request,
-    analysis: latestAnalysis.analysisOutput.analysis,
-    strategy: latestAnalysis.strategyOutput.strategy,
-  });
+  try {
+    const generated = await getReplyEngine().generateDraftReplies({
+      request,
+      analysis: latestAnalysis.analysisOutput.analysis,
+      strategy: latestAnalysis.strategyOutput.strategy,
+    });
 
-  const nextDraftVersion = (state.latestDrafts?.version ?? 0) + 1;
-  const bundleId = randomUUID();
+    const nextDraftVersion = (state.latestDrafts?.version ?? 0) + 1;
+    const bundleId = randomUUID();
 
-  await Promise.all(
+    await Promise.all(
     generated.output.drafts.map((draft) =>
       getDraftReplyRepository().createDraftReply({
         workspaceId: input.workspaceId,
@@ -1128,28 +1461,79 @@ export async function generateDraftRepliesForProspect(input: {
     },
   });
 
-  await recordReplyTrainingSignal({
-    workspaceId: input.workspaceId,
-    campaignId: input.campaignId,
-    prospectId: input.prospectId,
-    userId: input.userId,
-    senderProfileId:
-      request.senderContext.mode === "sender_aware"
-        ? request.senderContext.senderProfile.id
-        : null,
-    artifactType: "draft_reply_bundle",
-    artifactId: bundleId,
-    actionType: "generated",
-    providerMetadata: generated.generationMetadata,
-    afterText: JSON.stringify(generated.output, null, 2),
-    metadata: {
-      messageId: latestInboundMessage.id,
+    await recordReplyTrainingSignal({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      userId: input.userId,
+      senderProfileId:
+        request.senderContext.mode === "sender_aware"
+          ? request.senderContext.senderProfile.id
+          : null,
+      artifactType: "draft_reply_bundle",
+      artifactId: bundleId,
+      actionType: "generated",
+      providerMetadata: generated.generationMetadata,
+      afterText: JSON.stringify(generated.output, null, 2),
+      metadata: {
+        messageId: latestInboundMessage.id,
+        draftVersion: nextDraftVersion,
+        optionCount: generated.output.drafts.length,
+      },
+      requestId: operation.requestId,
+    });
+
+    await completeProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "reply_drafting",
+      requestId: operation.requestId,
+      resultSummary: {
+        draftVersion: nextDraftVersion,
+        optionCount: generated.output.drafts.length,
+        messageId: latestInboundMessage.id,
+      },
+    });
+
+    runLogger.info("Reply drafts generated", {
       draftVersion: nextDraftVersion,
       optionCount: generated.output.drafts.length,
-    },
-  });
+    });
 
-  return generated.output;
+    return generated.output;
+  } catch (error) {
+    await failProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "reply_drafting",
+      requestId: operation.requestId,
+      errorSummary: error instanceof Error ? error.message : "Unknown reply drafting error",
+      resultSummary: {
+        messageId: latestInboundMessage.id,
+      },
+    });
+
+    await getSharedAuditEventRepository().createAuditEvent({
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      actorType: input.userId ? "user" : "system",
+      action: "reply.drafts.failed",
+      entityType: "message",
+      entityId: latestInboundMessage.id,
+      changes: {},
+      metadata: {
+        error: error instanceof Error ? error.message : "Unknown reply drafting error",
+      },
+    });
+
+    runLogger.error("Reply draft generation failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+
+    throw error;
+  }
 }
 
 export async function regenerateDraftReplyForProspect(input: {
@@ -1582,3 +1966,15 @@ export async function recordReplyDraftDistributionSignalForProspect(input: {
     requestId: input.requestId,
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+

@@ -6,6 +6,7 @@ This guide covers the practical path to running the product in production on Ver
 - Supabase for auth and Postgres
 - Stripe for subscriptions
 - OpenAI for generation
+- Google OAuth for Gmail inbox imports and draft creation when inbox sync is enabled
 
 It is written for a solo founder who needs a reliable checklist, not a platform playbook.
 
@@ -17,6 +18,7 @@ Before deploying, make sure local development is working:
 - Supabase project created
 - Stripe account and products created if billing is enabled
 - OpenAI API key if sequence/reply features are enabled
+- Google Cloud project if Gmail inbox import or draft creation is enabled
 
 Recommended local checks:
 
@@ -43,7 +45,7 @@ Environment variables:
 
 Auth setup notes:
 - the current app uses Supabase server-side session handling
-- workspace membership is resolved from auth metadata, so production users need valid workspace metadata in Supabase
+- workspace membership is now resolved from local `workspace_members` records first; auth metadata is only used to bootstrap memberships during sign-in sync when needed
 - `SUPABASE_SERVICE_ROLE_KEY` is reserved for future admin/server flows and is not required for the current sign-in path
 
 ## Stripe Setup
@@ -68,19 +70,52 @@ Current billing scope:
 - webhook verification
 - syncing Stripe subscription state into local `subscriptions`
 
-## OpenAI Provider Setup
+## Gmail Inbox Setup
 
-OpenAI is only required if research-backed sequence generation or reply intelligence is enabled.
+Gmail is only required if inbox connection and thread import are enabled.
+
+Required:
+- create a Google Cloud project
+- enable the Gmail API
+- configure an OAuth client for the deployed app origin
+- add the callback URL for the app
+- generate a base64-encoded 32-byte encryption key for inbox OAuth credentials
 
 Environment variables:
+- `GOOGLE_GMAIL_CLIENT_ID`
+- `GOOGLE_GMAIL_CLIENT_SECRET`
+- `GOOGLE_GMAIL_REDIRECT_URI` (optional if `NEXT_PUBLIC_APP_URL` is already correct)
+- `INBOX_CREDENTIALS_ENCRYPTION_KEY`
+
+Current Gmail scopes:
+- read-only Gmail thread and message import
+- Gmail draft creation for selected sequence steps and generated reply drafts
+
+## AI Provider Setup
+
+OpenAI is the default provider today, and Anthropic can be enabled internally for evaluation or selective routing.
+
+Environment variables for the default OpenAI path:
 - `OPENAI_API_KEY`
+- `OPENAI_RESEARCH_MODEL`
 - `OPENAI_SEQUENCE_MODEL`
 - `OPENAI_REPLY_MODEL`
+
+Optional internal multi-provider variables:
+- `AI_DEFAULT_PROVIDER`
+- `AI_RESEARCH_PROVIDER`
+- `AI_SEQUENCE_PROVIDER`
+- `AI_REPLY_PROVIDER`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_RESEARCH_MODEL`
+- `ANTHROPIC_SEQUENCE_MODEL`
+- `ANTHROPIC_REPLY_MODEL`
 
 Current implementation notes:
 - provider calls stay server-side
 - outputs are schema-validated before persistence
 - cost/token metadata is logged where available
+- provider selection is internal and capability-specific, so research, sequence, and reply flows can be routed independently without changing user-facing behavior
 
 ## Vercel Environment Variables
 
@@ -94,10 +129,27 @@ Required for auth:
 Required for database operations:
 - `DATABASE_URL`
 
+Required only if Gmail inbox import is enabled:
+- `GOOGLE_GMAIL_CLIENT_ID`
+- `GOOGLE_GMAIL_CLIENT_SECRET`
+- `INBOX_CREDENTIALS_ENCRYPTION_KEY`
+- `GOOGLE_GMAIL_REDIRECT_URI` (optional when `NEXT_PUBLIC_APP_URL` is correct)
+
 Required only if AI features are enabled:
 - `OPENAI_API_KEY`
+- `OPENAI_RESEARCH_MODEL`
 - `OPENAI_SEQUENCE_MODEL`
 - `OPENAI_REPLY_MODEL`
+
+Optional if you want internal multi-provider routing:
+- `AI_DEFAULT_PROVIDER`
+- `AI_RESEARCH_PROVIDER`
+- `AI_SEQUENCE_PROVIDER`
+- `AI_REPLY_PROVIDER`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_RESEARCH_MODEL`
+- `ANTHROPIC_SEQUENCE_MODEL`
+- `ANTHROPIC_REPLY_MODEL`
 
 Required only if Stripe billing is enabled:
 - `STRIPE_SECRET_KEY`
@@ -149,8 +201,9 @@ Production auth depends on the public app origin resolving correctly.
 Set:
 - `NEXT_PUBLIC_APP_URL=https://your-domain.com`
 
-Also configure the same domain in Supabase auth redirect settings for:
-- `https://your-domain.com/auth/callback`
+Also configure these redirect URLs:
+- Supabase magic-link callback: `https://your-domain.com/auth/callback`
+- Google OAuth callback for Gmail import: `https://your-domain.com/api/inbox/gmail/callback`
 
 If you use Vercel preview deployments, preview sign-in can fall back to the deployment URL, but production should always use the canonical domain.
 
@@ -159,6 +212,7 @@ If you use Vercel preview deployments, preview sign-in can fall back to the depl
 Before first deploy:
 - database migrations applied
 - Supabase redirect URL configured
+- Google OAuth callback URL configured if Gmail import is enabled
 - production env vars set in Vercel
 - Stripe webhook endpoint created if billing is enabled
 - Stripe price ids mapped correctly
@@ -190,6 +244,10 @@ After deploy:
   - `reply_analyses`
   - `draft_replies`
   - `subscriptions`
+  - `inbox_accounts`
+  - `inbox_sync_runs`
+  - `imported_thread_refs`
+  - `imported_message_refs`
 - confirm the deployed app can read/write expected records
 
 ### Verify Auth
@@ -208,6 +266,15 @@ After deploy:
 - confirm local `subscriptions` record updates
 - confirm billing portal opens for a synced customer
 
+### Verify Inbox Import
+
+- connect Gmail from `/app/settings`
+- confirm callback returns to `/app/settings`
+- import recent threads
+- confirm matched prospect threads receive imported messages
+- create one draft in Gmail from a generated sequence step or reply draft
+- confirm inbox sync failures are visible in settings and logs
+
 ### Verify Provider Configuration
 
 - trigger one sequence generation
@@ -218,5 +285,23 @@ After deploy:
 ## Notes
 
 - Keep secret-bearing integrations in server modules only.
-- Do not import Stripe or OpenAI secret-handling code into client components.
+- Do not import Stripe, Gmail, or OpenAI secret-handling code into client components.
 - Keep `NEXT_PUBLIC_*` variables limited to values that are safe to expose to the browser.
+
+## Access Control Notes
+
+- Workspace membership now resolves from local `workspace_members` records first, with auth metadata only used as a bootstrap fallback when needed.
+- The migration set now includes a workspace-scoped Supabase/Postgres RLS foundation in [0003_workspace_rls.sql](D:/Project/CEG/packages/database/migrations/0003_workspace_rls.sql).
+- `SUPABASE_SERVICE_ROLE_KEY` is reserved for trusted server/admin flows only and must never be exposed through `NEXT_PUBLIC_*` variables or client imports.
+
+### Verify RLS / Access Control
+
+- confirm `0003_workspace_rls.sql` and `0004_workspace_integrity.sql` have been applied
+- verify an authenticated user can only read data for their own workspace
+- verify a non-member cannot read another workspace's records
+- verify owner/admin access is required for sensitive workspace-operational tables like `subscriptions`, `usage_events`, and `audit_events`
+- verify service-role operations remain server-only
+
+
+
+

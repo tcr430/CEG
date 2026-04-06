@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+﻿import { randomUUID } from "node:crypto";
 
 import type {
   CreateProspectInput,
@@ -12,6 +12,7 @@ import {
   validateCreateProspectInput,
   validateProspectId,
   validateUpdateProspectInput,
+  validateWorkspaceId,
 } from "./shared.js";
 
 function toProspectRecord(
@@ -65,6 +66,17 @@ export function createInMemoryProspectRepository(
       const validatedProspectId = validateProspectId(prospectId);
       return records.get(validatedProspectId) ?? null;
     },
+    async getProspectByEmail(workspaceId, email) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
+      return (
+        [...records.values()].find(
+          (prospect) =>
+            prospect.workspaceId === validatedWorkspaceId &&
+            typeof prospect.email === "string" &&
+            prospect.email.toLowerCase() === email.toLowerCase(),
+        ) ?? null
+      );
+    },
     async listProspectsByCampaign(campaignId) {
       const validatedCampaignId = validateCampaignId(campaignId);
       return [...records.values()]
@@ -89,9 +101,15 @@ export function createInMemoryProspectRepository(
       records.set(updated.id, updated);
       return updated;
     },
-    async deleteProspect(prospectId) {
+    async deleteProspect(workspaceId, prospectId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedProspectId = validateProspectId(prospectId);
-      records.delete(validatedProspectId);
+      const existing = records.get(validatedProspectId);
+      if (existing?.workspaceId === validatedWorkspaceId) {
+        records.delete(validatedProspectId);
+      }
     },
   };
 }
+
+

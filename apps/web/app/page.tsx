@@ -273,3 +273,4 @@ View pricing
     </main>
   );
 }
+

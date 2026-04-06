@@ -51,16 +51,26 @@ export function createInMemoryDraftReplyRepository(
       records.set(record.id, record);
       return record;
     },
-    async listDraftRepliesByMessage(messageId) {
+    async listDraftRepliesByMessage(workspaceId, messageId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedMessageId = validateMessageId(messageId);
       return [...records.values()]
-        .filter((draft) => draft.messageId === validatedMessageId)
+        .filter(
+          (draft) =>
+            draft.workspaceId === validatedWorkspaceId &&
+            draft.messageId === validatedMessageId,
+        )
         .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
     },
-    async listDraftRepliesByThread(threadId) {
+    async listDraftRepliesByThread(workspaceId, threadId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedThreadId = validateConversationThreadId(threadId);
       return [...records.values()]
-        .filter((draft) => draft.threadId === validatedThreadId)
+        .filter(
+          (draft) =>
+            draft.workspaceId === validatedWorkspaceId &&
+            draft.threadId === validatedThreadId,
+        )
         .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
     },
   };

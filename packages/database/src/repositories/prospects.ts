@@ -12,14 +12,19 @@ import {
   validateCreateProspectInput,
   validateProspectId,
   validateUpdateProspectInput,
+  validateWorkspaceId,
 } from "./shared.js";
 
 export type ProspectRepository = {
   createProspect(input: CreateProspectInput): Promise<Prospect>;
   getProspectById(prospectId: string): Promise<Prospect | null>;
+  getProspectByEmail(
+    workspaceId: string,
+    email: string,
+  ): Promise<Prospect | null>;
   listProspectsByCampaign(campaignId: string): Promise<Prospect[]>;
   updateProspect(input: UpdateProspectInput): Promise<Prospect>;
-  deleteProspect(prospectId: string): Promise<void>;
+  deleteProspect(workspaceId: string, prospectId: string): Promise<void>;
 };
 
 export function createProspectRepository(
@@ -126,6 +131,40 @@ export function createProspectRepository(
       const row = result.rows[0];
       return row === undefined ? null : mapProspectRow(row);
     },
+    async getProspectByEmail(workspaceId, email) {
+      const result = await client.query<Parameters<typeof mapProspectRow>[0]>({
+        statement: `
+          SELECT
+            id,
+            workspace_id,
+            campaign_id,
+            full_name,
+            first_name,
+            last_name,
+            email,
+            title,
+            company_name,
+            company_domain,
+            company_website,
+            linkedin_url,
+            location,
+            source,
+            status,
+            metadata,
+            created_by_user_id,
+            created_at,
+            updated_at
+          FROM prospects
+          WHERE workspace_id = $1
+            AND LOWER(email) = LOWER($2)
+          LIMIT 1
+        `,
+        params: [workspaceId, email],
+      });
+
+      const row = result.rows[0];
+      return row === undefined ? null : mapProspectRow(row);
+    },
     async listProspectsByCampaign(campaignId) {
       const validatedCampaignId = validateCampaignId(campaignId);
       const result = await client.query<Parameters<typeof mapProspectRow>[0]>({
@@ -225,14 +264,16 @@ export function createProspectRepository(
 
       return mapProspectRow(getFirstRowOrThrow(result.rows, "prospect"));
     },
-    async deleteProspect(prospectId) {
+    async deleteProspect(workspaceId, prospectId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedProspectId = validateProspectId(prospectId);
       await client.query({
         statement: `
           DELETE FROM prospects
-          WHERE id = $1
+          WHERE workspace_id = $1
+            AND id = $2
         `,
-        params: [validatedProspectId],
+        params: [validatedWorkspaceId, validatedProspectId],
       });
     },
   };

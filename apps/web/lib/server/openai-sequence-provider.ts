@@ -12,17 +12,15 @@ import {
 } from "@ceg/sequence-engine";
 import { getRequiredEnv } from "@ceg/security";
 
+import { createAiOperationMetadata, type OpenAiUsage } from "./ai-provider-metadata";
+
 type OpenAiChatCompletionResponse = {
   choices?: Array<{
     message?: {
       content?: string | null;
     };
   }>;
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  };
+  usage?: OpenAiUsage;
 };
 
 const DEFAULT_OPENAI_SEQUENCE_MODEL = "gpt-4.1-mini";
@@ -97,6 +95,30 @@ function getProspectEvidenceSummary(input: SequenceGenerationInput): string {
     .join("\n");
 }
 
+function getPerformanceHintsDirective(input: SequenceGenerationInput): string | null {
+  const hints = input.promptContext.performanceHints;
+
+  if (!hints?.available) {
+    return null;
+  }
+
+  return [
+    `Performance hint confidence: ${hints.confidence}`,
+    hints.preferredToneStyle
+      ? `Preferred tone from better-performing history: ${hints.preferredToneStyle}`
+      : null,
+    hints.effectivePatterns.length > 0
+      ? `Patterns that performed better: ${hints.effectivePatterns.map((pattern) => pattern.guidance).join(" | ")}`
+      : null,
+    hints.cautionPatterns.length > 0
+      ? `Patterns to use cautiously: ${hints.cautionPatterns.map((pattern) => pattern.guidance).join(" | ")}`
+      : null,
+    hints.notes.length > 0 ? `Hint notes: ${hints.notes.join(" | ")}` : null,
+    "Use these only as gentle historical bias. Current sender, prospect evidence, and safety constraints take priority.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 function getSharedSystemPrompt(input: SequenceGenerationInput): string {
   return [
     "You generate institutional-grade outbound email sequences.",
@@ -106,6 +128,7 @@ function getSharedSystemPrompt(input: SequenceGenerationInput): string {
     "Avoid generic fluff like hope you are well or just checking in.",
     "Every email must include a concrete CTA.",
     getConfidenceDirective(input),
+    getPerformanceHintsDirective(input),
     `Framework: ${input.promptContext.framework}`,
     `Tone style: ${input.promptContext.tone.style}`,
     `Tone do: ${input.promptContext.tone.do.join(" | ") || "none"}`,
@@ -118,17 +141,15 @@ function getSharedSystemPrompt(input: SequenceGenerationInput): string {
 
 function createMetadata(
   usage: OpenAiChatCompletionResponse["usage"],
+  startedAt: number,
 ): SequenceGenerationMetadata {
-  return {
+  return createAiOperationMetadata({
     provider: "openai",
     model: getModelName(),
     promptVersion: PROMPT_VERSION,
-    inputTokens: usage?.prompt_tokens ?? null,
-    outputTokens: usage?.completion_tokens ?? null,
-    totalTokens: usage?.total_tokens ?? null,
-    costUsd: null,
-    generatedAt: new Date(),
-  };
+    startedAt,
+    usage,
+  });
 }
 
 async function callOpenAiJson<TOutput>(input: {
@@ -139,6 +160,7 @@ async function callOpenAiJson<TOutput>(input: {
 }): Promise<TOutput> {
   const apiKey = getRequiredEnv("OPENAI_API_KEY");
   const model = getModelName();
+  const startedAt = Date.now();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -181,7 +203,7 @@ async function callOpenAiJson<TOutput>(input: {
   }
 
   const parsed = JSON.parse(messageContent) as Record<string, unknown>;
-  parsed.generationMetadata = createMetadata(payload.usage);
+  parsed.generationMetadata = createMetadata(payload.usage, startedAt);
 
   return input.validate(parsed);
 }
@@ -257,3 +279,9 @@ export function createOpenAiSequenceModelAdapter(): SequenceGenerationModelAdapt
     },
   };
 }
+
+
+
+
+
+

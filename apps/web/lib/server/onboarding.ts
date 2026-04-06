@@ -15,6 +15,7 @@ import {
   type OnboardingStepView,
 } from "./onboarding-state";
 import { listSenderProfilesForWorkspace } from "./sender-profiles";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import {
   ensureWorkspaceRecordForMembership,
   updateWorkspaceSettings,
@@ -127,6 +128,31 @@ export async function getWorkspaceOnboardingSummary(input: {
   };
 }
 
+
+async function trackOnboardingCompletionIfNeeded(input: {
+  membership: WorkspaceMembership;
+  userId?: string | null;
+  previousSummary: WorkspaceOnboardingSummary;
+  nextSummary: WorkspaceOnboardingSummary;
+}) {
+  if (input.previousSummary.isComplete || !input.nextSummary.isComplete) {
+    return;
+  }
+
+  await trackProductAnalyticsEvent({
+    event: "onboarding_completed",
+    workspaceId: input.membership.workspaceId,
+    userId: input.userId ?? null,
+    entityType: "workspace",
+    entityId: input.membership.workspaceId,
+    metadata: {
+      selectedUserType: input.nextSummary.selectedUserType,
+      senderProfileCount: input.nextSummary.senderProfileCount,
+      campaignCount: input.nextSummary.campaignCount,
+      prospectCount: input.nextSummary.prospectCount,
+    },
+  });
+}
 export async function persistWorkspaceOnboardingState(input: {
   membership: WorkspaceMembership;
   patch: Partial<WorkspaceOnboardingState>;
@@ -154,7 +180,15 @@ export async function persistWorkspaceOnboardingState(input: {
     },
   });
 
-  return getWorkspaceOnboardingSummary(input);
+  const nextSummary = await getWorkspaceOnboardingSummary(input);
+  await trackOnboardingCompletionIfNeeded({
+    membership: input.membership,
+    userId: input.userId,
+    previousSummary: currentSummary,
+    nextSummary,
+  });
+
+  return nextSummary;
 }
 
 export async function reconcileWorkspaceOnboardingState(input: {
@@ -187,5 +221,18 @@ export async function reconcileWorkspaceOnboardingState(input: {
     },
   });
 
-  return getWorkspaceOnboardingSummary(input);
+  const nextSummary = await getWorkspaceOnboardingSummary(input);
+  await trackOnboardingCompletionIfNeeded({
+    membership: input.membership,
+    userId: input.userId,
+    previousSummary: summary,
+    nextSummary,
+  });
+
+  return nextSummary;
 }
+
+
+
+
+

@@ -63,16 +63,21 @@ export function createResearchEngineService(
         companyProfile: summary.companyProfile,
         evidence: summary.evidence,
         quality: scoring.quality,
+        operationMetadata: {
+          summarization: summary.operationMetadata,
+        },
         trainingRecord: {
           sourceUrl: fetch.finalUrl,
           extractionVersion: "extract.v1",
           summarizerVersion:
-            summary.companyProfile.metadata.summarizer === "fallback-heuristic"
+            summary.operationMetadata?.provider === "internal"
               ? "summarizer.heuristic.v1"
               : "summarizer.adapter.v1",
           scoringVersion: "score.v1",
           metadata: {
             flags: summary.flags.map((flag) => flag.code),
+            summarizationProvider: summary.operationMetadata?.provider ?? null,
+            summarizationModel: summary.operationMetadata?.model ?? null,
           },
         },
       });

@@ -1,11 +1,15 @@
 import { z } from "zod";
 
 import {
+  aiOperationMetadataSchema,
   campaignSchema,
   companyProfileSchema,
+  generationPerformanceHintsSchema,
   senderProfileSchema,
+  type AiOperationMetadata,
   type Campaign,
   type CompanyProfile,
+  type GenerationPerformanceHints,
 } from "@ceg/validation";
 
 export const sequenceToneFitSchema = z.enum([
@@ -57,6 +61,7 @@ export const sequencePromptContextSchema = z.object({
     fit: sequenceToneFitSchema.default("balanced"),
   }),
   constraints: sequenceConstraintsSchema,
+  performanceHints: generationPerformanceHintsSchema.optional(),
 });
 
 export const sequenceGenerationInputSchema = z.object({
@@ -67,16 +72,7 @@ export const sequenceGenerationInputSchema = z.object({
   objective: z.string().trim().min(1),
 });
 
-export const sequenceGenerationMetadataSchema = z.object({
-  provider: z.string().trim().min(1),
-  model: z.string().trim().min(1),
-  promptVersion: z.string().trim().min(1),
-  inputTokens: z.number().int().nonnegative().nullable().optional(),
-  outputTokens: z.number().int().nonnegative().nullable().optional(),
-  totalTokens: z.number().int().nonnegative().nullable().optional(),
-  costUsd: z.number().nonnegative().nullable().optional(),
-  generatedAt: z.coerce.date(),
-});
+export const sequenceGenerationMetadataSchema = aiOperationMetadataSchema;
 
 export const subjectLineCandidateSchema = z.object({
   text: z.string().trim().min(1).max(120),
@@ -205,9 +201,7 @@ export type SequenceQualityCheck = z.infer<typeof sequenceQualityCheckSchema>;
 export type SequenceStep = z.infer<typeof sequenceStepSchema>;
 export type EmailDraft = z.infer<typeof emailDraftSchema>;
 export type SenderContext = z.infer<typeof senderContextSchema>;
-export type SequenceGenerationMetadata = z.infer<
-  typeof sequenceGenerationMetadataSchema
->;
+export type SequenceGenerationMetadata = AiOperationMetadata;
 export type CompiledSequenceOutput = z.infer<
   typeof compiledSequenceOutputSchema
 >;
@@ -254,4 +248,5 @@ export type SequenceValidationContext = {
   prospectCompanyProfile: CompanyProfile;
   promptContext: z.infer<typeof sequencePromptContextSchema>;
 };
+export type SequencePerformanceHints = GenerationPerformanceHints;
 

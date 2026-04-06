@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { randomUUID } from "node:crypto";
 
@@ -12,6 +12,11 @@ import {
 } from "../../../lib/server/campaigns";
 import { getServerAuthContext } from "../../../lib/server/auth";
 import { runProspectResearchForCampaign } from "../../../lib/server/prospect-research";
+import {
+  createReplyDraftInInbox,
+  createSequenceDraftInInbox,
+  markProspectThreadMessageSent,
+} from "../../../lib/server/inbox-drafts";
 import {
   analyzeLatestReplyForProspect,
   appendLatestSequenceMessagesToProspectThread,
@@ -75,6 +80,8 @@ export async function createCampaignAction(formData: FormData) {
     throw new Error("Workspace id is required.");
   }
 
+  const auth = await getServerAuthContext();
+
   try {
     await createCampaignForWorkspace({
       workspaceId,
@@ -91,6 +98,7 @@ export async function createCampaignAction(formData: FormData) {
       },
       frameworkPreferences: readList(formData, "frameworkPreferences"),
       settings: {},
+      userId: auth.user?.userId,
       status: String(formData.get("status") ?? "draft") as
         | "draft"
         | "active"
@@ -119,6 +127,8 @@ export async function updateCampaignAction(formData: FormData) {
     throw new Error("Workspace id and campaign id are required.");
   }
 
+  const auth = await getServerAuthContext();
+
   try {
     await updateCampaignForWorkspace({
       campaignId,
@@ -136,6 +146,7 @@ export async function updateCampaignAction(formData: FormData) {
       },
       frameworkPreferences: readList(formData, "frameworkPreferences"),
       settings: {},
+      userId: auth.user?.userId,
       status: String(formData.get("status") ?? "draft") as
         | "draft"
         | "active"
@@ -164,6 +175,8 @@ export async function createProspectAction(formData: FormData) {
     throw new Error("Workspace id and campaign id are required.");
   }
 
+  const auth = await getServerAuthContext();
+
   try {
     await createProspectForCampaign({
       workspaceId,
@@ -181,6 +194,7 @@ export async function createProspectAction(formData: FormData) {
         | "closed"
         | "archived",
       metadata: {},
+      userId: auth.user?.userId,
       requestId: randomUUID(),
     });
   } catch (error) {
@@ -293,6 +307,9 @@ export async function createInboundReplyAction(formData: FormData) {
       subject: readOptionalText(formData, "subject") ?? null,
       bodyText,
       userId: auth.user?.userId,
+      workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
+      autoAnalyze: true,
     });
   } catch (error) {
     redirectWithError(
@@ -302,7 +319,7 @@ export async function createInboundReplyAction(formData: FormData) {
     );
   }
 
-  redirectToProspect(workspaceId, campaignId, prospectId, "Inbound reply saved.");
+  redirectToProspect(workspaceId, campaignId, prospectId, "Inbound reply saved and analyzed.");
 }
 
 export async function createManualOutboundMessageAction(formData: FormData) {
@@ -432,6 +449,7 @@ export async function generateReplyDraftsAction(formData: FormData) {
       prospectId,
       userId: auth.user?.userId,
       workspacePlanCode: readWorkspacePlanCode(auth, workspaceId),
+      requestId: randomUUID(),
     });
   } catch (error) {
     redirectWithError(
@@ -630,4 +648,140 @@ export async function editReplyDraftAction(formData: FormData) {
   }
 
   redirectToProspect(workspaceId, campaignId, prospectId, "Reply draft saved.");
+}
+
+
+export async function createSequenceInboxDraftAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const artifactType = formData.get("artifactType");
+  const targetStepNumberValue = formData.get("targetStepNumber");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof artifactType !== "string"
+  ) {
+    throw new Error("Workspace, campaign, prospect, and artifact are required.");
+  }
+
+  const auth = await getServerAuthContext();
+  const targetStepNumber =
+    typeof targetStepNumberValue === "string" && targetStepNumberValue.trim() !== ""
+      ? Number(targetStepNumberValue)
+      : undefined;
+
+  let successMessage = "Draft created in Gmail.";
+
+  try {
+    const result = await createSequenceDraftInInbox({
+      workspaceId,
+      campaignId,
+      prospectId,
+      artifactType: artifactType as "sequence_initial_email" | "sequence_follow_up_step",
+      targetStepNumber,
+      userId: auth.user?.userId,
+      requestId: randomUUID(),
+    });
+
+    successMessage =
+      result.status === "existing" ? "Draft already available in Gmail." : "Draft created in Gmail.";
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not create that Gmail draft.",
+    );
+  }
+
+  redirectToProspect(workspaceId, campaignId, prospectId, successMessage);
+}
+
+export async function createReplyInboxDraftAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const targetSlotId = formData.get("targetSlotId");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof targetSlotId !== "string"
+  ) {
+    throw new Error("Workspace, campaign, prospect, and target slot are required.");
+  }
+
+  const auth = await getServerAuthContext();
+
+  let successMessage = "Draft reply created in Gmail.";
+
+  try {
+    const result = await createReplyDraftInInbox({
+      workspaceId,
+      campaignId,
+      prospectId,
+      targetSlotId,
+      userId: auth.user?.userId,
+      requestId: randomUUID(),
+    });
+
+    successMessage =
+      result.status === "existing" ? "Draft already available in Gmail." : "Draft reply created in Gmail.";
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not create that Gmail draft reply.",
+    );
+  }
+
+  redirectToProspect(workspaceId, campaignId, prospectId, successMessage);
+}
+
+
+export async function markOutboundMessageSentAction(formData: FormData) {
+  const workspaceId = formData.get("workspaceId");
+  const campaignId = formData.get("campaignId");
+  const prospectId = formData.get("prospectId");
+  const messageId = formData.get("messageId");
+  const sendMode = formData.get("sendMode");
+
+  if (
+    typeof workspaceId !== "string" ||
+    typeof campaignId !== "string" ||
+    typeof prospectId !== "string" ||
+    typeof messageId !== "string"
+  ) {
+    throw new Error("Workspace, campaign, prospect, and message are required.");
+  }
+
+  const auth = await getServerAuthContext();
+
+  try {
+    await markProspectThreadMessageSent({
+      workspaceId,
+      campaignId,
+      prospectId,
+      messageId,
+      mode:
+        sendMode === "manual" || sendMode === "inferred"
+          ? sendMode
+          : undefined,
+      providerMessageId: readOptionalText(formData, "providerMessageId") ?? null,
+      providerThreadId: readOptionalText(formData, "providerThreadId") ?? null,
+      userId: auth.user?.userId,
+      requestId: randomUUID(),
+    });
+  } catch (error) {
+    redirectWithError(
+      `/app/campaigns/${campaignId}/prospects/${prospectId}?workspace=${workspaceId}`,
+      error,
+      "We could not update that send state.",
+    );
+  }
+
+  redirectToProspect(workspaceId, campaignId, prospectId, "Message marked as sent.");
 }

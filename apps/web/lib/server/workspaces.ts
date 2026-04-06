@@ -1,24 +1,13 @@
-﻿import {
-  createInMemoryWorkspaceRepository,
-  type WorkspaceRepository,
-} from "@ceg/database";
 import type { WorkspaceMembership } from "@ceg/auth";
-import type { CreateWorkspaceInput, Workspace } from "@ceg/validation";
+import type {
+  CreateWorkspaceInput,
+  Workspace,
+  WorkspaceProfileSettings,
+} from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
+import { getWorkspaceRepository } from "./database";
 import { createOperationContext } from "./observability";
-
-declare global {
-  var __cegWorkspaceRepository: WorkspaceRepository | undefined;
-}
-
-function getWorkspaceRepository(): WorkspaceRepository {
-  if (globalThis.__cegWorkspaceRepository === undefined) {
-    globalThis.__cegWorkspaceRepository = createInMemoryWorkspaceRepository();
-  }
-
-  return globalThis.__cegWorkspaceRepository;
-}
 
 function normalizeWorkspaceSlug(membership: WorkspaceMembership): string {
   const source =
@@ -147,3 +136,17 @@ export async function updateWorkspaceSettings(input: {
     settings: input.settings,
   });
 }
+
+export async function updateWorkspaceProfile(input: {
+  workspaceId: string;
+  name: string;
+  profile: WorkspaceProfileSettings;
+}): Promise<Workspace> {
+  return getWorkspaceRepository().updateWorkspaceProfile({
+    workspaceId: input.workspaceId,
+    name: input.name,
+    profile: input.profile,
+  });
+}
+
+

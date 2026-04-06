@@ -1,6 +1,7 @@
 import { companyProfileSchema } from "@ceg/validation";
 
 import {
+  researchOperationMetadataSchema,
   researchConfidenceSchema,
   researchEvidenceFlagSchema,
   researchEvidenceSnippetSchema,
@@ -118,6 +119,7 @@ function buildFallbackSummary(
     }),
     evidence,
     flags,
+    operationMetadata: null,
   };
 }
 
@@ -126,14 +128,33 @@ export function createCompanyProfileSummarizer(
 ): CompanyProfileSummarizer {
   return {
     async summarize({ request, extracted }) {
+      const startedAt = Date.now();
+      const evidence = buildEvidence(request, extracted);
+
       if (options.modelAdapter !== undefined) {
         return options.modelAdapter.summarizeCompanyProfile({
+          request,
           extracted,
-          evidence: buildEvidence(request, extracted),
+          evidence,
         });
       }
 
-      return buildFallbackSummary(request, extracted);
+      const summary = buildFallbackSummary(request, extracted);
+
+      return {
+        ...summary,
+        operationMetadata: researchOperationMetadataSchema.shape.summarization.parse({
+          provider: "internal",
+          model: "heuristic-company-profile",
+          promptVersion: "research.heuristic.v1",
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          inputTokens: null,
+          outputTokens: null,
+          totalTokens: null,
+          costUsd: null,
+          generatedAt: new Date(),
+        }),
+      };
     },
   };
 }

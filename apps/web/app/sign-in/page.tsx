@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
 import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Access your Outbound Copilot workspace with a secure magic-link flow.",
+};
 
 type SignInPageProps = {
   searchParams?: Promise<{
@@ -42,9 +48,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <p className="eyebrow">Sign In</p>
         <h1>Access your workspace</h1>
         <p className="lede">
-          Use a Supabase-backed magic link to sign in. Authentication stays on
-          the server and the protected app area resolves workspace access after
-          login.
+          Use a secure magic link to open the protected workspace area. Once signed in,
+          the app resolves workspace scope on the server before loading product data.
         </p>
       </section>
 
@@ -52,7 +57,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <div>
           <h2 id="sign-in-title">Continue with email</h2>
           <p>
-            This is a minimal placeholder flow for the authenticated app shell.
+            Keep this simple for launch: enter your work email and continue straight into the app.
           </p>
         </div>
 

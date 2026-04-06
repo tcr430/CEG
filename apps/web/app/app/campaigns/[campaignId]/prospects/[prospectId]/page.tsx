@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type {
+  AsyncOperationRunState,
   DraftReplyQualityReport,
   EvidenceFlag,
   EvidenceSnippet,
@@ -15,13 +16,24 @@ import { SubmitButton } from "../../../../../../components/submit-button";
 
 import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../../../../../lib/server/billing";
+import { getUpgradePrompt } from "../../../../../../lib/upgrade-prompts";
+import { UpgradePromptCard } from "../../../../../../components/upgrade-prompt-card";
 import {
   getReplyDraftsEmptyState,
   getResearchEmptyState,
   getSequenceEmptyState,
 } from "../../../../../../lib/empty-state-guidance";
-import { getWorkspaceOnboardingSummary } from "../../../../../../lib/server/onboarding";
+import {
+  buildReplyInboxDraftArtifactId,
+  buildSequenceInboxDraftArtifactId,
+  indexInboxDraftsByArtifact,
+  readInboxDraftLinkFromMessage,
+} from "../../../../../../lib/inbox-draft-links";
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
+import { getWorkspaceInboxState } from "../../../../../../lib/server/inbox/service";
+import { getReplyAnalysisGuidance } from "../../../../../../lib/reply-analysis-guidance";
+import { getWorkspaceOnboardingSummary } from "../../../../../../lib/server/onboarding";
+import { listProspectAsyncOperations } from "../../../../../../lib/server/prospect-job-runs";
 import { getLatestResearchSnapshotForProspect } from "../../../../../../lib/server/prospect-research";
 import { getReplyThreadStateForProspect } from "../../../../../../lib/server/replies";
 import { getLatestSequenceForProspect } from "../../../../../../lib/server/sequences";
@@ -30,7 +42,10 @@ import {
   appendGeneratedSequenceMessagesAction,
   createInboundReplyAction,
   createManualOutboundMessageAction,
+  createReplyInboxDraftAction,
+  createSequenceInboxDraftAction,
   editReplyDraftAction,
+  markOutboundMessageSentAction,
   editSequenceStepAction,
   generateProspectSequenceAction,
   generateReplyDraftsAction,
@@ -89,8 +104,50 @@ function formatAllowance(value: number | null, label: string) {
   return value === null ? `Unlimited ${label}` : `${value} ${label} left this month`;
 }
 
+function formatInboxDraftStatus(status: "created" | "updated" | "sent") {
+  if (status === "sent") {
+    return "Sent";
+  }
+
+  return status === "created" ? "Draft in Gmail" : "Draft refreshed in Gmail";
+}
+
+function formatMessageStatus(status: string) {
+  return status.replaceAll("_", " ");
+}
+
 function getFailedQualityChecks(report: SequenceQualityReport | DraftReplyQualityReport | null) {
   return report?.checks.filter((check) => !check.passed) ?? [];
+}
+
+function formatAsyncOperationLabel(kind: AsyncOperationRunState["kind"]) {
+  switch (kind) {
+    case "prospect_research":
+      return "Research";
+    case "sequence_generation":
+      return "Sequence generation";
+    case "reply_analysis":
+      return "Reply analysis";
+    case "reply_drafting":
+      return "Reply drafting";
+  }
+}
+
+function formatAsyncOperationStatus(status: AsyncOperationRunState["status"]) {
+  switch (status) {
+    case "idle":
+      return "Ready";
+    case "running":
+      return "Running";
+    case "succeeded":
+      return "Ready";
+    case "failed":
+      return "Needs review";
+  }
+}
+
+function formatAsyncOperationTimestamp(value: Date | null | undefined) {
+  return value ? value.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : null;
 }
 
 export default async function ProspectDetailPage({
@@ -106,21 +163,23 @@ export default async function ProspectDetailPage({
   }
 
   const workspace = context.workspace;
-  const billing = await getWorkspaceBillingState({
-    workspaceId: workspace.workspaceId,
-    workspacePlanCode: workspace.billingPlanCode,
-  });
-  const prospect = await getProspectForCampaign(
-    workspace.workspaceId,
-    resolvedParams.campaignId,
-    resolvedParams.prospectId,
-  );
+  const [billing, prospect] = await Promise.all([
+    getWorkspaceBillingState({
+      workspaceId: workspace.workspaceId,
+      workspacePlanCode: workspace.billingPlanCode,
+    }),
+    getProspectForCampaign(
+      workspace.workspaceId,
+      resolvedParams.campaignId,
+      resolvedParams.prospectId,
+    ),
+  ]);
 
   if (prospect === null) {
     notFound();
   }
 
-  const [latestSnapshot, latestSequence, replyState, onboarding] = await Promise.all([
+  const [latestSnapshot, latestSequence, replyState, onboarding, inboxState] = await Promise.all([
     getLatestResearchSnapshotForProspect(
       workspace.workspaceId,
       resolvedParams.campaignId,
@@ -140,6 +199,7 @@ export default async function ProspectDetailPage({
       membership: workspace,
       userId: context.user.userId,
     }),
+    getWorkspaceInboxState(workspace.workspaceId),
   ]);
 
   const companyProfile = latestSnapshot?.structuredData.companyProfile;
@@ -151,6 +211,11 @@ export default async function ProspectDetailPage({
   const hooks = companyProfile?.personalizationHooks ?? [];
   const sequenceQualityReport = latestSequence?.qualityReport ?? null;
   const sequenceFailedChecks = getFailedQualityChecks(sequenceQualityReport);
+  const activeInboxAccount =
+    inboxState.accounts.find(
+      ({ account }) => account.provider === "gmail" && account.status === "active",
+    )?.account ?? null;
+  const inboxDraftsByArtifact = indexInboxDraftsByArtifact(replyState.messages);
   const hasDraftBundles = replyState.timeline.some((entry) => entry.draftBundles.length > 0);
   const replyDraftState = !replyState.latestInboundMessage
     ? "needs_inbound"
@@ -168,6 +233,12 @@ export default async function ProspectDetailPage({
   const replyDraftEmptyState = getReplyDraftsEmptyState({
     userType: onboarding.selectedUserType,
     state: replyDraftState,
+  });
+  const asyncOperations = listProspectAsyncOperations(prospect);
+  const workflowUpgradePrompt = getUpgradePrompt({
+    surface: "prospect_workflow",
+    billing,
+    performance: null,
   });
 
   return (
@@ -212,7 +283,35 @@ export default async function ProspectDetailPage({
               <span className="pill">{billing.planLabel} plan</span>
             </div>
           </div>
+          <div className="dashboardCard">
+            <p className="cardLabel">Operation status</p>
+            <h2>Slow workflow readiness</h2>
+            <p>
+              Research and generation still complete inline today, but each run now records durable state so retries and future queue workers can resume safely.
+            </p>
+            <ul className="researchList compactResearchList">
+              {asyncOperations.map((job) => {
+                const lastTimestamp =
+                  formatAsyncOperationTimestamp(job.lastTriggeredAt) ??
+                  formatAsyncOperationTimestamp(job.lastSucceededAt) ??
+                  formatAsyncOperationTimestamp(job.updatedAt);
 
+                return (
+                  <li key={job.kind}>
+                    <strong>{formatAsyncOperationLabel(job.kind)}</strong>
+                    <p>
+                      {formatAsyncOperationStatus(job.status)}
+                      {lastTimestamp ? ` | ${lastTimestamp}` : ""}
+                    </p>
+                    {job.status === "failed" && job.errorSummary ? <p>{job.errorSummary}</p> : null}
+                    {job.status === "running" ? (
+                      <p>Duplicate triggers are blocked while the current run is still fresh.</p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
           <div className="dashboardCard">
             <p className="cardLabel">Plan guardrails</p>
@@ -248,6 +347,13 @@ export default async function ProspectDetailPage({
             </ul>
           </div>
 
+          {workflowUpgradePrompt ? (
+            <UpgradePromptCard
+              workspaceId={workspace.workspaceId}
+              prompt={workflowUpgradePrompt}
+            />
+          ) : null}
+
           <form id="research-form" action={runProspectResearchAction} className="panel prospectResearchForm">
             <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
             <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
@@ -270,9 +376,7 @@ export default async function ProspectDetailPage({
             </p>
 
             <div className="inlineActions">
-              <button type="submit" className="buttonPrimary">
-                Run website research
-              </button>
+              <SubmitButton className="buttonPrimary" pendingLabel="Running research...">Run website research</SubmitButton>
             </div>
           </form>
 
@@ -288,9 +392,7 @@ export default async function ProspectDetailPage({
             </p>
 
             <div className="inlineActions">
-              <button type="submit" className="buttonPrimary">
-                Generate email sequence
-              </button>
+              <SubmitButton className="buttonPrimary" pendingLabel="Generating sequence...">Generate email sequence</SubmitButton>
             </div>
           </form>
 
@@ -324,9 +426,9 @@ export default async function ProspectDetailPage({
                 </label>
 
                 <div className="inlineActions">
-                  <button type="submit" className="buttonPrimary">
+                  <SubmitButton className="buttonPrimary" pendingLabel="Saving inbound reply...">
                     Save inbound reply
-                  </button>
+                  </SubmitButton>
                 </div>
               </form>
 
@@ -351,9 +453,9 @@ export default async function ProspectDetailPage({
                 </label>
 
                 <div className="inlineActions">
-                  <button type="submit" className="buttonSecondary">
+                  <SubmitButton className="buttonSecondary" pendingLabel="Saving outbound note...">
                     Add manual outbound
-                  </button>
+                  </SubmitButton>
                 </div>
               </form>
             </div>
@@ -419,6 +521,7 @@ export default async function ProspectDetailPage({
 
             {replyState.timeline.length > 0 ? (
               <div className="threadTimeline">
+                {/* If thread volume grows substantially, move this timeline to paginated server slices. */}
                 {replyState.timeline.map((entry) => {
                   const messageSource = readMessageMetaString(
                     entry.message.metadata.source,
@@ -431,6 +534,20 @@ export default async function ProspectDetailPage({
                   const sequenceVersion = readMessageMetaNumber(
                     entry.message.metadata.sequenceVersion,
                   );
+                  const inboxDraft = readInboxDraftLinkFromMessage(entry.message);
+                  const sentTimestamp = entry.message.sentAt
+                    ? entry.message.sentAt.toLocaleString("en-GB", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })
+                    : null;
+
+                  const analysisGuidance = entry.analysis
+                    ? getReplyAnalysisGuidance({
+                        intent: entry.analysis.analysisOutput.analysis.intent,
+                        confidenceLabel: entry.analysis.analysisOutput.analysis.confidence.label,
+                      })
+                    : null;
 
                   return (
                     <article key={entry.message.id} className="threadTimelineItem">
@@ -451,6 +568,9 @@ export default async function ProspectDetailPage({
                               {formatMessageBadge(entry.message.direction, messageSource)}
                             </span>
                             <span className="pill">
+                              {formatMessageStatus(entry.message.status)}
+                            </span>
+                            <span className="pill">
                               Message v{String(entry.message.metadata.messageVersion ?? 1)}
                             </span>
                             {sequenceVersion ? (
@@ -462,6 +582,47 @@ export default async function ProspectDetailPage({
                         <p className="threadMessageBody">
                           {entry.message.bodyText ?? "No text captured."}
                         </p>
+
+                        {entry.message.direction === "outbound" ? (
+                          <div className="inlineActions compactInlineActions">
+                            {inboxDraft ? (
+                              <p className="statusMessage compactStatusMessage">
+                                {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                                {sentTimestamp ? ` | ${sentTimestamp}` : ""}
+                              </p>
+                            ) : sentTimestamp ? (
+                              <p className="statusMessage compactStatusMessage">
+                                Sent {sentTimestamp}
+                              </p>
+                            ) : null}
+                            {entry.message.providerMessageId ? (
+                              <p className="statusMessage compactStatusMessage">
+                                Provider message id: {entry.message.providerMessageId}
+                              </p>
+                            ) : null}
+                            {entry.message.status !== "sent" && entry.message.status !== "delivered" ? (
+                              <form action={markOutboundMessageSentAction} className="inlineActions compactInlineActions">
+                                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                <input type="hidden" name="prospectId" value={prospect.id} />
+                                <input type="hidden" name="messageId" value={entry.message.id} />
+                                <input type="hidden" name="sendMode" value={inboxDraft ? "inferred" : "manual"} />
+                                {inboxDraft?.providerMessageId ? (
+                                  <input type="hidden" name="providerMessageId" value={inboxDraft.providerMessageId} />
+                                ) : null}
+                                {inboxDraft?.providerThreadId ? (
+                                  <input type="hidden" name="providerThreadId" value={inboxDraft.providerThreadId} />
+                                ) : null}
+                                <SubmitButton
+                                  className="buttonSecondary"
+                                  pendingLabel="Updating send state..."
+                                >
+                                  {inboxDraft ? "Mark sent from inbox" : "Mark as sent"}
+                                </SubmitButton>
+                              </form>
+                            ) : null}
+                          </div>
+                        ) : null}
 
                         {entry.analysis ? (
                           <div className="threadInsightCard">
@@ -493,11 +654,8 @@ export default async function ProspectDetailPage({
                               <strong>Drafting strategy:</strong>{" "}
                               {entry.analysis.strategyOutput.strategy.draftingStrategy}
                             </p>
-                            {entry.analysis.analysisOutput.analysis.intent === "hard_no" ? (
-                              <p className="statusMessage">
-                                This reply reads as a hard negative. Recommended action stays
-                                courteous and non-pushy.
-                              </p>
+                            {analysisGuidance ? (
+                              <p className="statusMessage">{analysisGuidance}</p>
                             ) : null}
                           </div>
                         ) : null}
@@ -536,25 +694,69 @@ export default async function ProspectDetailPage({
                                           <p>{draft.bodyText}</p>
                                           <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
                                           {bundleIndex === 0 ? (
-                                            <ArtifactActionButtons
-                                              workspaceId={workspace.workspaceId}
-                                              campaignId={resolvedParams.campaignId}
-                                              prospectId={prospect.id}
-                                              artifactType="draft_reply_option"
-                                              targetSlotId={draft.slotId}
-                                              copyText={[
-                                                draft.subject ?? null,
-                                                draft.bodyText,
-                                              ].filter(Boolean).join("\n\n")}
-                                              exportText={[
-                                                draft.subject ?? null,
-                                                draft.bodyText,
-                                              ].filter(Boolean).join("\n\n")}
-                                              exportFileName={`reply-draft-${draft.slotId}-${prospect.companyDomain ?? prospect.id}.txt`}
-                                              allowSelect
-                                              allowCopy
-                                              allowExport
-                                            />
+                                            <>
+                                              <ArtifactActionButtons
+                                                workspaceId={workspace.workspaceId}
+                                                campaignId={resolvedParams.campaignId}
+                                                prospectId={prospect.id}
+                                                artifactType="draft_reply_option"
+                                                targetSlotId={draft.slotId}
+                                                copyText={[
+                                                  draft.subject ?? null,
+                                                  draft.bodyText,
+                                                ].filter(Boolean).join("\n\n")}
+                                                exportText={[
+                                                  draft.subject ?? null,
+                                                  draft.bodyText,
+                                                ].filter(Boolean).join("\n\n")}
+                                                exportFileName={`reply-draft-${draft.slotId}-${prospect.companyDomain ?? prospect.id}.txt`}
+                                                allowSelect
+                                                allowCopy
+                                                allowExport
+                                              />
+                                              {(() => {
+                                                const inboxDraft = inboxDraftsByArtifact.get(
+                                                  buildReplyInboxDraftArtifactId({
+                                                    inboundMessageId: entry.message.id,
+                                                    slotId: draft.slotId,
+                                                  }),
+                                                );
+
+                                                if (inboxDraft) {
+                                                  return (
+                                                    <p className="statusMessage compactStatusMessage">
+                                                      {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                                                    </p>
+                                                  );
+                                                }
+
+                                                if (!activeInboxAccount) {
+                                                  return (
+                                                    <p className="statusMessage compactStatusMessage">
+                                                      Connect Gmail in Settings to turn this into an inbox draft.
+                                                    </p>
+                                                  );
+                                                }
+
+                                                if (!prospect.email) {
+                                                  return (
+                                                    <p className="statusMessage compactStatusMessage">
+                                                      Add a prospect email before creating a Gmail draft.
+                                                    </p>
+                                                  );
+                                                }
+
+                                                return (
+                                                  <form action={createReplyInboxDraftAction} className="inlineActions compactInlineActions">
+                                                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                                                    <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                                                    <input type="hidden" name="prospectId" value={prospect.id} />
+                                                    <input type="hidden" name="targetSlotId" value={draft.slotId} />
+                                                    <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                                                  </form>
+                                                );
+                                              })()}
+                                            </>
                                           ) : null}
                                           {draftQuality ? (
                                             <div className="researchSection compactSection">
@@ -872,6 +1074,48 @@ export default async function ProspectDetailPage({
                   allowCopy
                   allowExport
                 />
+                {(() => {
+                  const inboxDraft = inboxDraftsByArtifact.get(
+                    buildSequenceInboxDraftArtifactId({
+                      sequenceRecordId: latestSequence.recordId,
+                      targetPart: "initial_email",
+                    }),
+                  );
+
+                  if (inboxDraft) {
+                    return (
+                      <p className="statusMessage compactStatusMessage">
+                        {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                      </p>
+                    );
+                  }
+
+                  if (!activeInboxAccount) {
+                    return (
+                      <p className="statusMessage compactStatusMessage">
+                        Connect Gmail in Settings to push this email into the inbox as a draft.
+                      </p>
+                    );
+                  }
+
+                  if (!prospect.email) {
+                    return (
+                      <p className="statusMessage compactStatusMessage">
+                        Add a prospect email before creating a Gmail draft.
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <form action={createSequenceInboxDraftAction} className="inlineActions compactInlineActions">
+                      <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                      <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                      <input type="hidden" name="prospectId" value={prospect.id} />
+                      <input type="hidden" name="artifactType" value="sequence_initial_email" />
+                      <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                    </form>
+                  );
+                })()}
                 <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
@@ -952,6 +1196,38 @@ export default async function ProspectDetailPage({
                         allowCopy
                         allowExport
                       />
+                      {(() => {
+                        const inboxDraft = inboxDraftsByArtifact.get(
+                          buildSequenceInboxDraftArtifactId({
+                            sequenceRecordId: latestSequence.recordId,
+                            targetPart: "follow_up_step",
+                            targetStepNumber: step.stepNumber,
+                          }),
+                        );
+
+                        if (inboxDraft) {
+                          return (
+                            <p className="statusMessage compactStatusMessage">
+                              {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                            </p>
+                          );
+                        }
+
+                        if (!activeInboxAccount || !prospect.email) {
+                          return null;
+                        }
+
+                        return (
+                          <form action={createSequenceInboxDraftAction} className="inlineActions compactInlineActions">
+                            <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+                            <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
+                            <input type="hidden" name="prospectId" value={prospect.id} />
+                            <input type="hidden" name="artifactType" value="sequence_follow_up_step" />
+                            <input type="hidden" name="targetStepNumber" value={step.stepNumber} />
+                            <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                          </form>
+                        );
+                      })()}
                       <form action={regenerateSequencePartAction} className="panel prospectResearchForm compactPanel">
                         <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                         <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
@@ -1071,3 +1347,12 @@ export default async function ProspectDetailPage({
     </main>
   );
 }
+
+
+
+
+
+
+
+
+

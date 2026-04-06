@@ -1,4 +1,4 @@
-export const demoSeedVersion = "20260402140000";
+﻿export const demoSeedVersion = "20260402140000";
 
 export const demoSenderProfiles = [
   {
@@ -180,8 +180,8 @@ export const demoProspects = [
     contactName: "Maya Singh",
     contactEmail: "maya@ledgerloop.example",
     title: "Co-founder",
-    status: "sequenced",
-    notes: "Good founder-led outbound example.",
+    status: "replied",
+    notes: "Founder-led outbound example with a positive reply thread.",
   },
   {
     key: "pipelinepilot",
@@ -192,8 +192,8 @@ export const demoProspects = [
     contactName: "Chris Morgan",
     contactEmail: "chris@pipelinepilot.example",
     title: "VP Growth",
-    status: "researched",
-    notes: "Agency-managed workflow example.",
+    status: "replied",
+    notes: "Agency-managed workflow example with an objection-handling thread.",
   },
   {
     key: "northwind_security",
@@ -617,6 +617,267 @@ export const demoSequences = [
     },
   },
   {
+    key: "ledgerloop_sequence",
+    prospectKey: "ledgerloop",
+    generationMode: "sender_aware",
+    status: "draft",
+    content: {
+      subjectLineSet: {
+        subjectLines: [
+          { text: "A thought on LedgerLoop's finance workflow", rationale: "Matches the founder-led tone and finance workflow angle." },
+          { text: "Keeping finance ops lean at LedgerLoop", rationale: "Anchors on lean-operator positioning from the website." },
+        ],
+        rationale: "Founder sequence stays personal and observant.",
+        qualityChecks: [{ name: "no_generic_fluff", passed: true, details: "Both options are specific to finance workflows." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:05:00.000Z"),
+        },
+      },
+      openerSet: {
+        openerOptions: [
+          {
+            text: "Saw LedgerLoop is focused on reporting and approval workflows for lean finance teams.",
+            rationale: "Ties directly to the homepage message.",
+            evidenceSupport: ["finance workflow automation"],
+          },
+        ],
+        rationale: "Founder openers stay low-ego and specific.",
+        qualityChecks: [{ name: "tone_fit", passed: true, details: "Observant and personally written." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:05:00.000Z"),
+        },
+      },
+      initialEmail: {
+        email: {
+          subject: "A thought on LedgerLoop's finance workflow",
+          opener: "Saw LedgerLoop is focused on reporting and approval workflows for lean finance teams.",
+          body: "That usually means the bar is not just automation, but keeping process changes trustworthy for a small team. We help teams structure research and outbound decisions so they can stay specific without creating more review overhead.",
+          cta: "If useful, I can share a short founder-style example.",
+          rationale: "Feels like a thoughtful founder note instead of a sales blast.",
+          qualityChecks: [{ name: "cta_presence", passed: true, details: "Ends with a low-pressure CTA." }],
+        },
+        rationale: "Calm founder-led opener with a narrow ask.",
+        qualityChecks: [{ name: "no_unsupported_claims", passed: true, details: "Avoids benchmarks and invented proof." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:05:00.000Z"),
+        },
+      },
+      followUpSequence: {
+        sequenceSteps: [
+          {
+            stepNumber: 1,
+            waitDays: 4,
+            subject: "Finance ops without more admin",
+            opener: "Following up because this usually becomes a process design problem before it becomes a tooling one.",
+            body: "If helpful, I can share the short version of how teams keep outbound and research reviewable without adding another manual checkpoint.",
+            cta: "Worth sending?",
+            rationale: "Keeps the founder voice and light CTA.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 2,
+            waitDays: 7,
+            subject: "Close the loop on LedgerLoop?",
+            opener: "I can leave this here after this note.",
+            body: "If this is not relevant, no problem. If the workflow side becomes active later, I am happy to reconnect with something more specific to finance operators.",
+            cta: "Either way is fine.",
+            rationale: "Respectful founder soft close.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 3,
+            waitDays: 9,
+            subject: "Leaving this here",
+            opener: "Final note from me.",
+            body: "I will leave this with you. If a more structured outbound or research workflow becomes useful later on, I am happy to send a more concrete example then.",
+            cta: "No need to reply if now is not the time.",
+            rationale: "Maintains a premium, low-pressure close.",
+            qualityChecks: [],
+          },
+        ],
+        rationale: "Founder follow-ups stay concise and personal.",
+        qualityChecks: [{ name: "max_length_targets", passed: true, details: "The steps stay within the intended founder cadence." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:05:00.000Z"),
+        },
+      },
+      sequenceVersion: 1,
+      generatedForMode: "sender_aware",
+    },
+    qualityChecksJson: {
+      generatedAt: new Date("2026-04-02T14:05:00.000Z"),
+      summary: { score: 0.82, label: "strong", blocked: false, needsReview: false },
+      dimensions: [
+        { name: "personalization", score: 0.79, label: "strong", details: "Grounded in finance workflow signals." },
+        { name: "clarity", score: 0.84, label: "strong", details: "Clear progression and gentle ask." },
+        { name: "cta_quality", score: 0.8, label: "strong", details: "CTAs stay founder-appropriate." },
+        { name: "fluff_risk", score: 0.1, label: "low_risk", details: "Very little filler language." },
+        { name: "unsupported_claim_risk", score: 0.05, label: "low_risk", details: "No invented performance proof." },
+        { name: "tone_fit", score: 0.87, label: "strong", details: "The tone reads like a thoughtful founder note." },
+      ],
+      checks: [{ code: "founder_tone_fit", status: "pass", message: "Draft stays calm and low-ego." }],
+      notes: ["Demo founder sequence."],
+    },
+  },
+  {
+    key: "pipelinepilot_sequence",
+    prospectKey: "pipelinepilot",
+    generationMode: "sender_aware",
+    status: "draft",
+    content: {
+      subjectLineSet: {
+        subjectLines: [
+          { text: "PipelinePilot client visibility question", rationale: "Agency framing tied to client delivery visibility." },
+          { text: "Tightening outsourced outbound visibility", rationale: "Matches the prospect's operating model." },
+        ],
+        rationale: "Agency sequence emphasizes accountable delivery.",
+        qualityChecks: [{ name: "no_generic_fluff", passed: true, details: "Subjects stay operational and specific." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:08:00.000Z"),
+        },
+      },
+      openerSet: {
+        openerOptions: [
+          {
+            text: "Noticed PipelinePilot is framed around clearer operating visibility for outsourced outbound programs.",
+            rationale: "Directly grounded in public positioning.",
+            evidenceSupport: ["outsourced outbound visibility"],
+          },
+        ],
+        rationale: "Agency openers are accountable and consultative.",
+        qualityChecks: [{ name: "tone_fit", passed: true, details: "Professional and measured." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:08:00.000Z"),
+        },
+      },
+      initialEmail: {
+        email: {
+          subject: "PipelinePilot client visibility question",
+          opener: "Noticed PipelinePilot is framed around clearer operating visibility for outsourced outbound programs.",
+          body: "That usually shows up when client teams want more confidence in message quality without slowing execution. Signal Lane helps agencies keep research, message governance, and client review moving in one operating rhythm.",
+          cta: "Open to a short example?",
+          rationale: "Agency-focused note that balances delivery and governance.",
+          qualityChecks: [{ name: "cta_presence", passed: true, details: "Ends with a short CTA." }],
+        },
+        rationale: "Professional and consultative without agency fluff.",
+        qualityChecks: [{ name: "no_unsupported_claims", passed: true, details: "Avoids client-result claims." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:08:00.000Z"),
+        },
+      },
+      followUpSequence: {
+        sequenceSteps: [
+          {
+            stepNumber: 1,
+            waitDays: 3,
+            subject: "Client review without drag",
+            opener: "Following up because the friction usually appears in approvals, not just list building.",
+            body: "If useful, I can share how teams are keeping client-facing outbound reviewable without turning every launch into a long QA loop.",
+            cta: "Useful to send?",
+            rationale: "Keeps the agency angle practical.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 2,
+            waitDays: 6,
+            subject: "Another angle on PipelinePilot",
+            opener: "A second angle is the operating visibility side.",
+            body: "When multiple stakeholders touch outbound, small process gaps become quality issues fast. Structured workflows usually create more confidence than another reporting layer alone.",
+            cta: "Happy to send the short version if that helps.",
+            rationale: "Focuses on operating confidence.",
+            qualityChecks: [],
+          },
+          {
+            stepNumber: 3,
+            waitDays: 8,
+            subject: "Close the loop from me",
+            opener: "I can leave this here after this note.",
+            body: "If this is already handled internally, no problem. If review and delivery visibility become more active later, I am happy to reconnect with something more tailored.",
+            cta: "Either way is fine.",
+            rationale: "Agency close that stays respectful.",
+            qualityChecks: [],
+          },
+        ],
+        rationale: "Sequence is designed for agency-operated multi-stakeholder workflows.",
+        qualityChecks: [{ name: "max_length_targets", passed: true, details: "Each step stays concise enough for agency outreach." }],
+        generationMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "sequence.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-02T14:08:00.000Z"),
+        },
+      },
+      sequenceVersion: 1,
+      generatedForMode: "sender_aware",
+    },
+    qualityChecksJson: {
+      generatedAt: new Date("2026-04-02T14:08:00.000Z"),
+      summary: { score: 0.81, label: "strong", blocked: false, needsReview: false },
+      dimensions: [
+        { name: "personalization", score: 0.78, label: "strong", details: "Anchored in outsourced outbound visibility." },
+        { name: "clarity", score: 0.83, label: "strong", details: "Clear explanation and CTA." },
+        { name: "cta_quality", score: 0.8, label: "strong", details: "Calls to action stay light and consultative." },
+        { name: "fluff_risk", score: 0.12, label: "low_risk", details: "Avoids agency jargon and hype." },
+        { name: "unsupported_claim_risk", score: 0.06, label: "low_risk", details: "No invented client proof points." },
+        { name: "tone_fit", score: 0.84, label: "strong", details: "Reads like a polished client-facing operator." },
+      ],
+      checks: [{ code: "agency_tone_fit", status: "pass", message: "The copy stays accountable and measured." }],
+      notes: ["Demo agency sequence."],
+    },
+  },  {
     key: "basic_sequence",
     prospectKey: "northwind_security",
     generationMode: "basic",
@@ -749,6 +1010,29 @@ export const demoSequences = [
   },
 ] as const;
 
+export const demoSequenceSendPlans = [
+  {
+    sequenceKey: "apex_ops_sequence",
+    sentMessageIndexes: [0, 1, 2],
+    baseSentAt: "2026-04-02T15:00:00.000Z",
+  },
+  {
+    sequenceKey: "ledgerloop_sequence",
+    sentMessageIndexes: [0, 1],
+    baseSentAt: "2026-04-02T15:20:00.000Z",
+  },
+  {
+    sequenceKey: "pipelinepilot_sequence",
+    sentMessageIndexes: [0, 1, 2],
+    baseSentAt: "2026-04-02T15:35:00.000Z",
+  },
+  {
+    sequenceKey: "basic_sequence",
+    sentMessageIndexes: [0],
+    baseSentAt: "2026-04-02T15:50:00.000Z",
+  },
+] as const;
+
 export const demoReplyThreads = [
   {
     prospectKey: "apex_ops",
@@ -851,6 +1135,214 @@ export const demoReplyThreads = [
           },
         ],
         guardrails: ["Avoid pushing for a meeting now.", "Do not introduce unsupported proof points."],
+      },
+    },
+  },
+  {
+    prospectKey: "ledgerloop",
+    messages: [
+      {
+        key: "inbound_reply",
+        direction: "inbound",
+        subject: "Re: A thought on LedgerLoop's finance workflow",
+        bodyText:
+          "This is relevant. We are trying to keep approval-heavy processes lean right now. If you have the short founder example you mentioned, send it over.",
+      },
+    ],
+    analysis: {
+      classification: "positive",
+      sentiment: "positive",
+      urgency: "medium",
+      intent: "interested",
+      confidence: 0.91,
+      analysisOutput: {
+        analysis: {
+          intent: "interested",
+          objectionType: null,
+          classification: "interested",
+          confidence: {
+            score: 0.91,
+            label: "high",
+            reasons: ["The prospect explicitly says the note is relevant and asks for the example."],
+          },
+          recommendedAction: "send_more_info",
+          rationale: "The reply signals clear relevance and asks for the promised example rather than resisting the outreach.",
+          keySignals: ["This is relevant", "send it over"],
+          cautionFlags: ["Keep the reply concise and aligned with the founder tone."],
+        },
+        rationale: "The prospect is positively engaged and wants the next artifact, not a bigger pitch.",
+        qualityChecks: [{ name: "respect_hard_no", passed: true, details: "The reply is clearly positive, not negative." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:20:00.000Z"),
+        },
+      },
+      strategyOutput: {
+        strategy: {
+          recommendedAction: "send_more_info",
+          draftingStrategy: "Acknowledge the relevance signal, send the concise example, and avoid turning it into a full pitch.",
+          guardrails: ["Stay founder-like and specific.", "Do not over-explain or introduce inflated proof points."],
+          toneGuidance: ["Calm", "Specific", "Personally written"],
+          escalationNeeded: false,
+        },
+        rationale: "The best next step is to deliver exactly what the prospect asked for.",
+        qualityChecks: [{ name: "confidence_language_fit", passed: true, details: "The strategy uses confident but still measured language." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:20:00.000Z"),
+        },
+      },
+    },
+    draftBundle: {
+      version: 1,
+      output: {
+        recommendedAction: "send_more_info",
+        draftingStrategy: "Send the short founder example and keep the tone personal.",
+        confidence: {
+          score: 0.9,
+          label: "high",
+          reasons: ["The prospect asked for the example directly."],
+        },
+        drafts: [
+          {
+            slotId: "founder-1",
+            label: "Short founder example",
+            subject: "Re: A thought on LedgerLoop's finance workflow",
+            bodyText: "Makes sense. The short version is that teams are putting one lightweight review checkpoint before outbound goes out, so they keep context quality high without adding another admin layer. If useful, I can send the slightly more detailed version too.",
+            strategyNote: "Directly answers the request.",
+          },
+          {
+            slotId: "founder-2",
+            label: "Process angle",
+            subject: "Re: A thought on LedgerLoop's finance workflow",
+            bodyText: "Absolutely. The pattern I had in mind is keeping research and approval logic tight enough that the team does not add another spreadsheet-heavy review step. Happy to send the concise version and leave it with you.",
+            strategyNote: "Keeps the founder voice and process lens.",
+          },
+          {
+            slotId: "founder-3",
+            label: "Soft handoff",
+            subject: "Re: A thought on LedgerLoop's finance workflow",
+            bodyText: "Happy to. I will send the short founder example and keep it tight so it is easy to scan. If it is useful, we can pick it up from there.",
+            strategyNote: "Most deferential option.",
+          },
+        ],
+        guardrails: ["Do not over-pitch after a positive reply.", "Keep the example short and useful."],
+      },
+    },
+  },
+  {
+    prospectKey: "pipelinepilot",
+    messages: [
+      {
+        key: "inbound_reply",
+        direction: "inbound",
+        subject: "Re: PipelinePilot client visibility question",
+        bodyText:
+          "Appreciate the note. We already have an internal process for client review, so the timing is not ideal for another system right now.",
+      },
+    ],
+    analysis: {
+      classification: "objection",
+      sentiment: "negative",
+      urgency: "low",
+      intent: "objection_already_has_solution",
+      confidence: 0.87,
+      analysisOutput: {
+        analysis: {
+          intent: "objection_already_has_solution",
+          objectionType: "already_has_solution",
+          classification: "objection_already_has_solution",
+          confidence: {
+            score: 0.87,
+            label: "high",
+            reasons: ["The prospect says they already have an internal process and the timing is not ideal."],
+          },
+          recommendedAction: "follow_up_later",
+          rationale: "The prospect is not asking for more detail. They are signaling that an existing internal process is good enough for now.",
+          keySignals: ["already have an internal process", "timing is not ideal"],
+          cautionFlags: ["Do not push hard against an existing-solution objection."],
+        },
+        rationale: "This is a classic already-has-a-solution objection with low immediate urgency.",
+        qualityChecks: [{ name: "respect_hard_no", passed: true, details: "The analysis distinguishes an objection from a hard no." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:40:00.000Z"),
+        },
+      },
+      strategyOutput: {
+        strategy: {
+          recommendedAction: "follow_up_later",
+          draftingStrategy: "Acknowledge the current process, avoid arguing, and leave the door open politely.",
+          guardrails: ["Do not pressure the prospect to switch now.", "Do not undermine their current workflow."],
+          toneGuidance: ["Professional", "Measured", "Respectful"],
+          escalationNeeded: false,
+        },
+        rationale: "A graceful close protects credibility better than a rebuttal.",
+        qualityChecks: [{ name: "confidence_language_fit", passed: true, details: "The strategy fits a high-confidence objection call." }],
+        analysisMetadata: {
+          provider: "demo-fixture",
+          model: "seeded-sample-v1",
+          promptVersion: "reply.v1",
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          generatedAt: new Date("2026-04-03T09:40:00.000Z"),
+        },
+      },
+    },
+    draftBundle: {
+      version: 1,
+      output: {
+        recommendedAction: "follow_up_later",
+        draftingStrategy: "Respect the existing process and leave a low-pressure path for later.",
+        confidence: {
+          score: 0.86,
+          label: "high",
+          reasons: ["The objection is explicit and does not invite a pitch battle."],
+        },
+        drafts: [
+          {
+            slotId: "agency-1",
+            label: "Respectful close",
+            subject: "Re: PipelinePilot client visibility question",
+            bodyText: "Understood. If the internal process is serving the team well, there is no need to force another system into the mix. I will leave it there, and if visibility or review friction becomes active later on, I am happy to reconnect with something more specific.",
+            strategyNote: "Safest default for an existing-solution objection.",
+          },
+          {
+            slotId: "agency-2",
+            label: "Leave-the-door-open",
+            subject: "Re: PipelinePilot client visibility question",
+            bodyText: "Makes sense. I appreciate the context. I will leave this here rather than push against a process that is already working for you. If the approval or delivery side becomes noisier later, I am happy to send a more concrete example then.",
+            strategyNote: "Measured and consultative.",
+          },
+          {
+            slotId: "agency-3",
+            label: "Shortest option",
+            subject: null,
+            bodyText: "Understood. I will leave it there for now and avoid adding more to your process.",
+            strategyNote: "Briefest close.",
+          },
+        ],
+        guardrails: ["Do not rebut the existing-solution objection aggressively.", "Leave the thread professionally."],
       },
     },
   },
@@ -967,3 +1459,13 @@ export const demoSeedSummary = {
   sequenceCount: demoSequences.length,
   replyThreadCount: demoReplyThreads.length,
 } as const;
+
+
+
+
+
+
+
+
+
+

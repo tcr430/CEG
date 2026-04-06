@@ -1,4 +1,4 @@
-# Outbound Copilot
+﻿# Outbound Copilot
 
 Institutional-grade outbound copilot for SDRs, SaaS founders, and lead generation agencies.
 
@@ -8,6 +8,8 @@ The product generates structured outbound artifacts using:
 - a basic fallback mode when sender-aware personalization is not available
 
 The system is being built as a migration-ready monorepo with service-style boundaries, strict validation, and a long-term data strategy that supports model evaluation and future fine-tuning of open-weight models.
+
+Inbox-provider integrations are prepared behind a provider-agnostic contract as well, so Gmail and Microsoft 365 support can be added later without reshaping the core thread model.
 
 ## Phase 1 Scope
 
@@ -36,6 +38,7 @@ packages/
   billing/
   core/
   database/
+  inbox/
   jobs/
   observability/
   reply-engine/
@@ -58,6 +61,7 @@ infrastructure/
 - Zod validation for application contracts
 - schema validation before persistence for AI outputs
 - provider abstraction for future model portability
+- internal capability-level routing for multi-provider evaluation readiness
 - architecture choices that can later be extracted into services
 
 ## Local Development
@@ -67,7 +71,7 @@ pnpm install
 pnpm dev
 ```
 
-For local demos, trusted internal admins can opt into development-only sample data by setting `DEMO_SEED_ENABLED=true` in [`.env.local`](D:/Project/CEG/.env.local) and then loading demo data from [page.tsx](D:/Project/CEG/apps/web/app/app/settings/debug/page.tsx). The loader stays disabled in production.
+For local demos, trusted internal admins can opt into development-only sample data by setting `DEMO_SEED_ENABLED=true` in [`.env.local`](D:/Project/CEG/.env.local) and then loading demo data from [page.tsx](D:/Project/CEG/apps/web/app/app/settings/debug/page.tsx). The seeded workspace now includes realistic research, sent-message tracking, reply threads, and campaign performance scenarios. The loader stays disabled in production.
 
 ## Vercel Deployment Notes
 
@@ -84,6 +88,7 @@ pnpm build
 pnpm lint
 pnpm test
 pnpm typecheck
+pnpm --filter @ceg/testing eval
 pnpm --filter web dev
 ```
 
@@ -101,3 +106,7 @@ For compatibility with repository guidance in `AGENTS.md`, the same template val
 - [ARCHITECTURE.md](D:/Project/CEG/ARCHITECTURE.md)
 - [DATA_STRATEGY.md](D:/Project/CEG/DATA_STRATEGY.md)
 - [AGENTS.md](D:/Project/CEG/AGENTS.md)
+
+
+
+

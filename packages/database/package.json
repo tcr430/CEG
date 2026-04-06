@@ -13,7 +13,11 @@
   },
   "dependencies": {
     "@ceg/core": "workspace:*",
-    "@ceg/validation": "workspace:*"
+    "@ceg/validation": "workspace:*",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.2"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",

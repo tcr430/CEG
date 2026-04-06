@@ -14,17 +14,15 @@ import {
 } from "@ceg/reply-engine";
 import { getRequiredEnv } from "@ceg/security";
 
+import { createAiOperationMetadata, type OpenAiUsage } from "./ai-provider-metadata";
+
 type OpenAiChatCompletionResponse = {
   choices?: Array<{
     message?: {
       content?: string | null;
     };
   }>;
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  };
+  usage?: OpenAiUsage;
 };
 
 const DEFAULT_OPENAI_REPLY_MODEL = "gpt-4.1-mini";
@@ -98,6 +96,30 @@ function getThreadDirective(input: ReplyAnalysisRequest): string {
   ].join("\n");
 }
 
+function getPerformanceHintsDirective(input: ReplyAnalysisRequest): string | null {
+  const hints = input.promptContext.performanceHints;
+
+  if (!hints?.available) {
+    return null;
+  }
+
+  return [
+    `Performance hint confidence: ${hints.confidence}`,
+    hints.preferredToneStyle
+      ? `Preferred tone from better-performing history: ${hints.preferredToneStyle}`
+      : null,
+    hints.effectivePatterns.length > 0
+      ? `Patterns that performed better: ${hints.effectivePatterns.map((pattern) => pattern.guidance).join(" | ")}`
+      : null,
+    hints.cautionPatterns.length > 0
+      ? `Patterns to use cautiously: ${hints.cautionPatterns.map((pattern) => pattern.guidance).join(" | ")}`
+      : null,
+    hints.notes.length > 0 ? `Hint notes: ${hints.notes.join(" | ")}` : null,
+    "Use these only as gentle historical bias. Current reply content, safety rules, and confidence handling take priority.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 function getSharedSystemPrompt(input: ReplyAnalysisRequest): string {
   return [
     "You analyze inbound prospect replies and generate professional response drafts.",
@@ -106,6 +128,7 @@ function getSharedSystemPrompt(input: ReplyAnalysisRequest): string {
     "Do not push after a hard no. Prefer courteous closure when the reply is a clear stop signal.",
     "Do not repeat the entire thread back to the prospect.",
     "When confidence is low, use softer language and avoid over-claiming certainty.",
+    getPerformanceHintsDirective(input),
     `Campaign name: ${input.campaign.name}`,
     input.campaign.offerSummary
       ? `Campaign offer: ${input.campaign.offerSummary}`
@@ -125,17 +148,15 @@ function getSharedSystemPrompt(input: ReplyAnalysisRequest): string {
 
 function createMetadata(
   usage: OpenAiChatCompletionResponse["usage"],
+  startedAt: number,
 ): ReplyOperationMetadata {
-  return {
+  return createAiOperationMetadata({
     provider: "openai",
     model: getModelName(),
     promptVersion: PROMPT_VERSION,
-    inputTokens: usage?.prompt_tokens ?? null,
-    outputTokens: usage?.completion_tokens ?? null,
-    totalTokens: usage?.total_tokens ?? null,
-    costUsd: null,
-    generatedAt: new Date(),
-  };
+    startedAt,
+    usage,
+  });
 }
 
 async function callOpenAiJson<TOutput>(input: {
@@ -145,6 +166,7 @@ async function callOpenAiJson<TOutput>(input: {
   validate: (payload: unknown) => TOutput;
 }): Promise<TOutput> {
   const apiKey = getRequiredEnv("OPENAI_API_KEY");
+  const startedAt = Date.now();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -185,8 +207,8 @@ async function callOpenAiJson<TOutput>(input: {
   }
 
   const parsed = JSON.parse(content) as Record<string, unknown>;
-  parsed.analysisMetadata = createMetadata(payload.usage);
-  parsed.generationMetadata = createMetadata(payload.usage);
+  parsed.analysisMetadata = createMetadata(payload.usage, startedAt);
+  parsed.generationMetadata = createMetadata(payload.usage, startedAt);
   return input.validate(parsed);
 }
 
@@ -253,3 +275,11 @@ export function createOpenAiReplyModelAdapter(): ReplyGenerationModelAdapter {
     },
   };
 }
+
+
+
+
+
+
+
+

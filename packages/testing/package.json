@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "eval": "pnpm --dir ../.. --filter @ceg/validation build && pnpm --dir ../.. --filter @ceg/sequence-engine build && pnpm --dir ../.. --filter @ceg/testing build && node --experimental-strip-types tests/run-evals.ts",
     "lint": "eslint src tests --max-warnings=0",
     "test": "tsc --project tsconfig.json && node --experimental-strip-types tests/run-tests.ts",
     "typecheck": "tsc --project tsconfig.json --noEmit"

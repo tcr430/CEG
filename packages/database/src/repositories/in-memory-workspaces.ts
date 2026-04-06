@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type {
   CreateWorkspaceInput,
   CreateWorkspaceRecordInput,
+  UpdateWorkspaceProfileInput,
   UpdateWorkspaceSettingsInput,
   Workspace,
 } from "@ceg/validation";
@@ -11,6 +12,7 @@ import type { WorkspaceRepository } from "./workspaces.js";
 import {
   validateCreateWorkspaceInput,
   validateCreateWorkspaceRecordInput,
+  validateUpdateWorkspaceProfileInput,
   validateUpdateWorkspaceSettingsInput,
   validateWorkspaceId,
 } from "./shared.js";
@@ -78,6 +80,27 @@ export function createInMemoryWorkspaceRepository(
       const updated: Workspace = {
         ...existing,
         settings: values.settings,
+        updatedAt: new Date(),
+      };
+
+      records.set(updated.id, updated);
+      return updated;
+    },
+    async updateWorkspaceProfile(input: UpdateWorkspaceProfileInput) {
+      const values = validateUpdateWorkspaceProfileInput(input);
+      const existing = records.get(values.workspaceId);
+
+      if (existing === undefined) {
+        throw new Error("Workspace not found.");
+      }
+
+      const updated: Workspace = {
+        ...existing,
+        name: values.name,
+        settings: {
+          ...existing.settings,
+          profile: values.profile,
+        },
         updatedAt: new Date(),
       };
 

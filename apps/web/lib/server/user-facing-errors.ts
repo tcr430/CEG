@@ -1,4 +1,4 @@
-﻿const DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again.";
+const DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again.";
 
 const USER_FACING_ERROR_MAP: Array<{
   pattern: RegExp;
@@ -49,6 +49,21 @@ const USER_FACING_ERROR_MAP: Array<{
     pattern: /prospect not found/i,
     code: "prospect-not-found",
     message: "That prospect could not be found.",
+  },
+  {
+    pattern: /gmail oauth.*not.*configured|gmail oauth is not configured/i,
+    code: "gmail-not-configured",
+    message: "Gmail connection is not configured yet.",
+  },
+  {
+    pattern: /gmail account credentials are missing|gmail account credentials expired|reconnect the inbox/i,
+    code: "gmail-reconnect-required",
+    message: "Reconnect Gmail and try the import again.",
+  },
+  {
+    pattern: /inbox account not found/i,
+    code: "inbox-account-not-found",
+    message: "That inbox account could not be found for this workspace.",
   },
   {
     pattern: /website url.*required|public website url/i,

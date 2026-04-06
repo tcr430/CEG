@@ -1,4 +1,4 @@
-import {
+﻿import {
   assertFeatureEntitlement,
   assertUsageEntitlement,
   checkFeatureEntitlement,
@@ -19,6 +19,7 @@ import type { Subscription } from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
 import { createOperationContext } from "./observability";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import { getSharedSubscriptionRepository } from "./subscriptions";
 import { getSharedUsageEventRepository } from "./usage-events";
 
@@ -212,6 +213,19 @@ export async function createCheckoutSessionForWorkspace(input: {
     planCode: input.planCode,
   });
 
+  await trackProductAnalyticsEvent({
+    event: "billing_upgrade_clicked",
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? null,
+    entityType: "workspace",
+    entityId: input.workspaceId,
+    requestId: operation.requestId,
+    metadata: {
+      planCode: input.planCode,
+      checkoutSessionId: session.id,
+    },
+  });
+
   return session;
 }
 
@@ -345,3 +359,6 @@ export async function handleStripeWebhook(input: {
 export function getOptionalStripePublishableKey(): string | undefined {
   return getOptionalEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
 }
+
+
+

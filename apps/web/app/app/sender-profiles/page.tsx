@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -8,6 +9,11 @@ import { getWorkspaceBillingState } from "../../../lib/server/billing";
 import { getSenderProfilesEmptyState } from "../../../lib/empty-state-guidance";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { listSenderProfilesForWorkspace } from "../../../lib/server/sender-profiles";
+
+export const metadata: Metadata = {
+  title: "Sender profiles",
+  description: "Manage sender-aware profiles and basic-mode context.",
+};
 
 type SenderProfilesPageProps = {
   searchParams?: Promise<{
@@ -66,6 +72,9 @@ export default async function SenderProfilesPage({
           New sender profile
         </Link>
         <span className="pill">{billing.planLabel} plan</span>
+        <Link href={`/app/settings?workspace=${workspace.workspaceId}`} className="buttonSecondary">
+          View plan settings
+        </Link>
       </div>
 
       <section className="panel" aria-labelledby="sender-profiles-title">
@@ -76,10 +85,16 @@ export default async function SenderProfilesPage({
             to campaigns for higher-quality personalization.
           </p>
           {!billing.features.senderAwareProfiles.allowed ? (
-            <p className="statusMessage">
-              Sender-aware SDR, founder, and agency profiles are gated on this plan.
-              Basic mode remains available.
-            </p>
+            <div className="stack compactStack">
+              <p className="statusMessage">
+                Sender-aware SDR, founder, and agency profiles are gated on this plan. Basic mode remains available.
+              </p>
+              <div className="inlineActions">
+                <Link href={`/app/settings?workspace=${workspace.workspaceId}`} className="buttonSecondary">
+                  Review upgrade options
+                </Link>
+              </div>
+            </div>
           ) : null}
         </div>
 
@@ -135,3 +150,8 @@ export default async function SenderProfilesPage({
     </main>
   );
 }
+
+
+
+
+

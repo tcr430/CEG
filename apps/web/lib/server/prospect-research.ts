@@ -4,7 +4,7 @@ import {
   type ResearchEngineService,
 } from "@ceg/research-engine";
 import { assertSafeUrl } from "@ceg/security";
-import type { Prospect, ResearchSnapshot } from "@ceg/validation";
+import type { AiOperationMetadata, Prospect, ResearchSnapshot } from "@ceg/validation";
 
 import { getSharedAuditEventRepository } from "./audit-events";
 import {
@@ -16,6 +16,13 @@ import {
   updateProspectForCampaign,
 } from "./campaigns";
 import { createOperationContext } from "./observability";
+import {
+  beginProspectAsyncOperation,
+  completeProspectAsyncOperation,
+  failProspectAsyncOperation,
+} from "./prospect-job-runs";
+import { getResearchModelAdapter } from "./model-providers";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import { getSharedUsageEventRepository } from "./usage-events";
 
 declare global {
@@ -34,11 +41,24 @@ function getResearchSnapshotRepository(): ResearchSnapshotRepository {
 
 function getResearchEngine(): ResearchEngineService {
   if (globalThis.__cegResearchEngineService === undefined) {
-    globalThis.__cegResearchEngineService = createResearchEngineService();
+    globalThis.__cegResearchEngineService = createResearchEngineService({
+      summarizerOptions: {
+        modelAdapter: getResearchModelAdapter(),
+      },
+    });
   }
 
   return globalThis.__cegResearchEngineService;
 }
+
+function readResearchOperationMetadata(result: {
+  operationMetadata?: {
+    summarization?: AiOperationMetadata | null;
+  };
+}) {
+  return result.operationMetadata?.summarization ?? null;
+}
+
 
 function mergeProspectMetadata(
   prospect: Prospect,
@@ -111,6 +131,22 @@ export async function runProspectResearchForCampaign(input: {
     meterKey: "websiteResearchRuns",
   });
 
+  const asyncRun = await beginProspectAsyncOperation({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    kind: "prospect_research",
+    idempotencyKey: `prospect_research:${input.prospectId}:${normalizedUrl}`,
+    requestId: operation.requestId,
+  });
+
+  if (asyncRun.status === "already_running") {
+    operation.logger.info("Prospect research already running", {
+      websiteUrl: normalizedUrl,
+    });
+    throw new Error("Prospect research is already running for this prospect.");
+  }
+
   operation.logger.info("Prospect research started", {
     websiteUrl: normalizedUrl,
   });
@@ -125,6 +161,7 @@ export async function runProspectResearchForCampaign(input: {
       mode: "company_profile",
     });
 
+    const summarizationMetadata = readResearchOperationMetadata(result);
     const companyProfile = {
       ...result.companyProfile,
       likelyPainPoints: result.companyProfile.likelyPainPoints ?? [],
@@ -157,6 +194,7 @@ export async function runProspectResearchForCampaign(input: {
         },
         extracted: result.extracted,
         trainingRecord: result.trainingRecord,
+        operationMetadata: result.operationMetadata,
       },
     });
 
@@ -198,6 +236,25 @@ export async function runProspectResearchForCampaign(input: {
         confidenceScore: snapshot.structuredData.quality.overall.score,
         meterKey: "websiteResearchRuns",
         workspacePlanCode: input.workspacePlanCode ?? "free",
+        provider: summarizationMetadata?.provider ?? null,
+        model: summarizationMetadata?.model ?? null,
+        latencyMs: summarizationMetadata?.latencyMs ?? null,
+      },
+    });
+
+    await trackProductAnalyticsEvent({
+      event: "research_run_completed",
+      workspaceId: input.workspaceId,
+      userId: input.userId ?? null,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      entityType: "research_snapshot",
+      entityId: snapshot.id,
+      requestId: operation.requestId,
+      metadata: {
+        confidence: snapshot.structuredData.quality.overall.label,
+        provider: summarizationMetadata?.provider ?? null,
+        model: summarizationMetadata?.model ?? null,
       },
     });
 
@@ -216,6 +273,21 @@ export async function runProspectResearchForCampaign(input: {
       },
       metadata: {
         confidence: snapshot.structuredData.quality.overall.label,
+        provider: summarizationMetadata?.provider ?? null,
+        model: summarizationMetadata?.model ?? null,
+      },
+    });
+
+    await completeProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "prospect_research",
+      requestId: operation.requestId,
+      resultSummary: {
+        snapshotId: snapshot.id,
+        sourceUrl: snapshot.sourceUrl,
+        confidence: snapshot.structuredData.quality.overall.label,
       },
     });
 
@@ -226,6 +298,17 @@ export async function runProspectResearchForCampaign(input: {
 
     return snapshot;
   } catch (error) {
+    await failProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "prospect_research",
+      requestId: operation.requestId,
+      errorSummary: error instanceof Error ? error.message : "Unknown research error",
+      resultSummary: {
+        sourceUrl: normalizedUrl,
+      },
+    });
     await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
@@ -249,3 +332,16 @@ export async function runProspectResearchForCampaign(input: {
     throw error;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

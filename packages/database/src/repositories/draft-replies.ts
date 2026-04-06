@@ -19,6 +19,12 @@ export type CreateDraftReplyRecordInput = {
 
 export type DraftReplyRepository = {
   createDraftReply(input: CreateDraftReplyRecordInput): Promise<DraftReply>;
-  listDraftRepliesByMessage(messageId: string): Promise<DraftReply[]>;
-  listDraftRepliesByThread(threadId: string): Promise<DraftReply[]>;
+  listDraftRepliesByMessage(
+    workspaceId: string,
+    messageId: string,
+  ): Promise<DraftReply[]>;
+  listDraftRepliesByThread(
+    workspaceId: string,
+    threadId: string,
+  ): Promise<DraftReply[]>;
 };

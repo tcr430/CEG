@@ -18,6 +18,12 @@ export type ReplyAnalysisRepository = {
   upsertReplyAnalysis(
     input: UpsertReplyAnalysisRecordInput,
   ): Promise<ReplyAnalysis>;
-  getReplyAnalysisByMessage(messageId: string): Promise<ReplyAnalysis | null>;
-  listReplyAnalysesByThread(threadId: string): Promise<ReplyAnalysis[]>;
+  getReplyAnalysisByMessage(
+    workspaceId: string,
+    messageId: string,
+  ): Promise<ReplyAnalysis | null>;
+  listReplyAnalysesByThread(
+    workspaceId: string,
+    threadId: string,
+  ): Promise<ReplyAnalysis[]>;
 };

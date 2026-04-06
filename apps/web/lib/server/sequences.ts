@@ -22,8 +22,9 @@ import {
 } from "@ceg/validation";
 
 import { getCampaignForWorkspace, getProspectForCampaign } from "./campaigns";
-import { createOpenAiSequenceModelAdapter } from "./openai-sequence-provider";
+import { getSequenceModelAdapter } from "./model-providers";
 import { getLatestResearchSnapshotForProspect } from "./prospect-research";
+import { buildSequencePerformanceHints } from "./generation-performance-hints";
 import {
   assertWorkspaceFeatureAccess,
   assertWorkspaceUsageAccess,
@@ -31,6 +32,12 @@ import {
 import { getSenderProfileForWorkspace } from "./sender-profiles";
 import { getSharedAuditEventRepository } from "./audit-events";
 import { createOperationContext } from "./observability";
+import {
+  beginProspectAsyncOperation,
+  completeProspectAsyncOperation,
+  failProspectAsyncOperation,
+} from "./prospect-job-runs";
+import { trackProductAnalyticsEvent } from "./product-analytics";
 import { getSharedUsageEventRepository } from "./usage-events";
 import { recordTrainingSignal } from "./training-signals";
 
@@ -50,7 +57,7 @@ function getSequenceRepository(): SequenceRepository {
 function getSequenceEngine(): SequenceEngineService {
   if (globalThis.__cegSequenceEngineService === undefined) {
     globalThis.__cegSequenceEngineService = createSequenceEngineService(
-      createOpenAiSequenceModelAdapter(),
+      getSequenceModelAdapter(),
     );
   }
 
@@ -346,7 +353,7 @@ async function buildSequenceGenerationInput(input: {
     throw new Error("Campaign or prospect not found for workspace.");
   }
 
-  const [senderContext, researchSnapshot] = await Promise.all([
+  const [senderContext, researchSnapshot, performanceHints] = await Promise.all([
     buildSenderContext(
       input.workspaceId,
       input.workspacePlanCode,
@@ -357,6 +364,10 @@ async function buildSequenceGenerationInput(input: {
       input.campaignId,
       input.prospectId,
     ),
+    buildSequencePerformanceHints({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+    }),
   ]);
 
   const prospectCompanyProfile =
@@ -407,6 +418,7 @@ async function buildSequenceGenerationInput(input: {
         preferredCallToActionStyle:
           prospectCompanyProfile.confidence.label === "low" ? "soft" : "value_first",
       },
+      performanceHints,
     },
     objective:
       campaign.offerSummary ??
@@ -690,6 +702,20 @@ export async function generateSequenceForProspect(input: {
     campaignId: input.campaignId,
     prospectId: input.prospectId,
   });
+  const asyncRun = await beginProspectAsyncOperation({
+    workspaceId: input.workspaceId,
+    campaignId: input.campaignId,
+    prospectId: input.prospectId,
+    kind: "sequence_generation",
+    idempotencyKey: `sequence_generation:${input.campaignId}:${input.prospectId}`,
+    requestId: operation.requestId,
+  });
+
+  if (asyncRun.status === "already_running") {
+    operation.logger.info("Sequence generation already running");
+    throw new Error("Sequence generation is already running for this prospect.");
+  }
+
   const sequenceInput = await buildSequenceGenerationInput(input);
   const existingSequences = await getSequenceRepository().listSequencesByProspect(
     input.workspaceId,
@@ -771,6 +797,21 @@ export async function generateSequenceForProspect(input: {
       },
     });
 
+    await trackProductAnalyticsEvent({
+      event: "sequence_generated",
+      workspaceId: input.workspaceId,
+      userId: input.userId ?? null,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      entityType: "sequence",
+      entityId: created.id,
+      requestId: operation.requestId,
+      metadata: {
+        generationMode: sequenceInput.senderContext.mode,
+        sequenceVersion: version,
+      },
+    });
+
     await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
@@ -808,6 +849,19 @@ export async function generateSequenceForProspect(input: {
       requestId: operation.requestId,
     });
 
+    await completeProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "sequence_generation",
+      requestId: operation.requestId,
+      resultSummary: {
+        sequenceId: created.id,
+        sequenceVersion: version,
+        generationMode: sequenceInput.senderContext.mode,
+      },
+    });
+
     runLogger.info("Sequence generation completed", {
       sequenceId: created.id,
       generationMode: sequenceInput.senderContext.mode,
@@ -816,6 +870,14 @@ export async function generateSequenceForProspect(input: {
 
     return compiled;
   } catch (error) {
+    await failProspectAsyncOperation({
+      workspaceId: input.workspaceId,
+      campaignId: input.campaignId,
+      prospectId: input.prospectId,
+      kind: "sequence_generation",
+      requestId: operation.requestId,
+      errorSummary: error instanceof Error ? error.message : "Unknown sequence generation error",
+    });
     await getSharedAuditEventRepository().createAuditEvent({
       workspaceId: input.workspaceId,
       userId: input.userId,
@@ -1243,3 +1305,10 @@ export async function recordSequenceDistributionSignalForProspect(input: {
     requestId: input.requestId,
   });
 }
+
+
+
+
+
+
+

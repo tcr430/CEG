@@ -51,19 +51,29 @@ export function createInMemoryReplyAnalysisRepository(
       records.set(record.id, record);
       return record;
     },
-    async getReplyAnalysisByMessage(messageId) {
+    async getReplyAnalysisByMessage(workspaceId, messageId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedMessageId = validateMessageId(messageId);
       return (
         [...records.values()]
-          .filter((analysis) => analysis.messageId === validatedMessageId)
+          .filter(
+            (analysis) =>
+              analysis.workspaceId === validatedWorkspaceId &&
+              analysis.messageId === validatedMessageId,
+          )
           .sort((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime())[0] ??
         null
       );
     },
-    async listReplyAnalysesByThread(threadId) {
+    async listReplyAnalysesByThread(workspaceId, threadId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedThreadId = validateConversationThreadId(threadId);
       return [...records.values()]
-        .filter((analysis) => analysis.threadId === validatedThreadId)
+        .filter(
+          (analysis) =>
+            analysis.workspaceId === validatedWorkspaceId &&
+            analysis.threadId === validatedThreadId,
+        )
         .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
     },
   };

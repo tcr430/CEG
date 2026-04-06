@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import {
+  aiOperationMetadataSchema,
   companyProfileSchema,
+  type AiOperationMetadata,
   type CompanyProfile,
   type ConfidenceScore,
   type EvidenceFlag,
@@ -87,6 +89,10 @@ export const researchQualityReportSchema = z.object({
   flags: z.array(researchEvidenceFlagSchema).default([]),
 });
 
+export const researchOperationMetadataSchema = z.object({
+  summarization: aiOperationMetadataSchema.nullable().default(null),
+});
+
 export const websiteResearchOutputSchema = z.object({
   input: websiteResearchInputSchema,
   fetch: researchFetchResultSchema,
@@ -95,6 +101,7 @@ export const websiteResearchOutputSchema = z.object({
   companyProfile: companyProfileSchema,
   evidence: z.array(researchEvidenceSnippetSchema).default([]),
   quality: researchQualityReportSchema,
+  operationMetadata: researchOperationMetadataSchema,
   trainingRecord: z.object({
     sourceUrl: z.string().trim().url(),
     extractionVersion: z.string().trim().min(1),
@@ -110,12 +117,14 @@ export type CleanedResearchDocument = z.infer<typeof cleanedResearchDocumentSche
 export type ExtractedResearchDocument = z.infer<typeof extractedResearchDocumentSchema>;
 export type ResearchQualityDimension = z.infer<typeof researchQualityDimensionSchema>;
 export type ResearchQualityReport = z.infer<typeof researchQualityReportSchema>;
+export type ResearchOperationMetadata = z.infer<typeof researchOperationMetadataSchema>;
 export type WebsiteResearchOutput = z.infer<typeof websiteResearchOutputSchema>;
 
 export type CompanyProfileSummarization = {
   companyProfile: CompanyProfile;
   evidence: EvidenceSnippet[];
   flags: EvidenceFlag[];
+  operationMetadata: AiOperationMetadata | null;
 };
 
 export type ResearchScoringResult = {
@@ -124,6 +133,7 @@ export type ResearchScoringResult = {
 
 export type ResearchModelAdapter = {
   summarizeCompanyProfile(input: {
+    request: WebsiteResearchInput;
     extracted: ExtractedResearchDocument;
     evidence: EvidenceSnippet[];
   }): Promise<CompanyProfileSummarization>;

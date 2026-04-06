@@ -91,9 +91,13 @@ export function createInMemoryCampaignRepository(
       records.set(updated.id, updated);
       return updated;
     },
-    async deleteCampaign(campaignId) {
+    async deleteCampaign(workspaceId, campaignId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedCampaignId = validateCampaignId(campaignId);
-      records.delete(validatedCampaignId);
+      const existing = records.get(validatedCampaignId);
+      if (existing?.workspaceId === validatedWorkspaceId) {
+        records.delete(validatedCampaignId);
+      }
     },
   };
 }

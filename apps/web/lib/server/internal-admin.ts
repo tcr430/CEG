@@ -171,6 +171,22 @@ function getSourceHost(value: string): string {
   }
 }
 
+function requireManagedWorkspaceAccess(input: {
+  workspaceId: string;
+  user: AuthenticatedUser;
+}): WorkspaceMembership {
+  const membership =
+    input.user.memberships.find(
+      (candidate) => candidate.workspaceId === input.workspaceId,
+    ) ?? null;
+
+  if (membership === null || !canManageWorkspace(membership)) {
+    throw new Error("Workspace admin access is required for this view.");
+  }
+
+  return membership;
+}
+
 export async function getRecentManagedWorkspaces(
   user: AuthenticatedUser,
 ): Promise<InternalAdminWorkspaceSummary[]> {
@@ -204,6 +220,7 @@ export async function getInternalAdminOverview(input: {
   workspaceId: string;
   user: AuthenticatedUser;
 }): Promise<InternalAdminOverview> {
+  requireManagedWorkspaceAccess(input);
   const workspaces = await getRecentManagedWorkspaces(input.user);
   const campaigns = await listCampaignsForWorkspace(input.workspaceId);
   const campaignProspects = await Promise.all(
@@ -221,7 +238,10 @@ export async function getInternalAdminOverview(input: {
 
   const researchRuns = await Promise.all(
     flattenedProspects.map(async ({ prospect }) =>
-      getResearchSnapshotRepository().listResearchSnapshotsByProspect(prospect.id),
+      getResearchSnapshotRepository().listResearchSnapshotsByProspect(
+        input.workspaceId,
+        prospect.id,
+      ),
     ),
   );
   const sequenceRuns = await Promise.all(
@@ -251,7 +271,10 @@ export async function getInternalAdminOverview(input: {
         return [];
       }
 
-      return getReplyAnalysisRepository().listReplyAnalysesByThread(thread.id);
+      return getReplyAnalysisRepository().listReplyAnalysesByThread(
+        input.workspaceId,
+        thread.id,
+      );
     }),
   );
 

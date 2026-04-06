@@ -49,6 +49,8 @@ assert.equal(result.companyProfile.websiteUrl, "https://acme.com");
 assert.ok(result.companyProfile.personalizationHooks.length >= 1);
 assert.ok(result.evidence.length >= 2);
 assert.ok(result.quality.overall.score > 0.5);
+assert.equal(result.operationMetadata.summarization?.provider, "internal");
+assert.equal(result.operationMetadata.summarization?.model, "heuristic-company-profile");
 assert.equal(result.trainingRecord.extractionVersion, "extract.v1");
 
 console.log("@ceg/research-engine contract tests passed");

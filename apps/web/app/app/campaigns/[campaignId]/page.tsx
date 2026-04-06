@@ -1,8 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ActionEmptyState } from "../../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../../components/feedback-banner";
+import { PerformanceSummaryCard } from "../../../../components/performance-summary-card";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import {
   getCampaignForWorkspace,
@@ -10,10 +11,15 @@ import {
 } from "../../../../lib/server/campaigns";
 import { getProspectsEmptyState } from "../../../../lib/empty-state-guidance";
 import { getWorkspaceOnboardingSummary } from "../../../../lib/server/onboarding";
+import { getCampaignPerformanceMetrics } from "../../../../lib/server/campaign-performance";
+import { buildShareablePerformanceSummary } from "../../../../lib/performance-summary";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
 import { createProspectAction, updateCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
 import { ProspectForm } from "../prospect-form";
+import { getUpgradePrompt } from "../../../../lib/upgrade-prompts";
+import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
+import { getWorkspaceBillingState } from "../../../../lib/server/billing";
 
 type CampaignDetailPageProps = {
   params: Promise<{
@@ -48,15 +54,39 @@ export default async function CampaignDetailPage({
     notFound();
   }
 
-  const [senderProfiles, prospects, onboarding] = await Promise.all([
+  const [senderProfiles, prospects, onboarding, performance, billing] = await Promise.all([
     listSenderProfilesForWorkspace(workspace.workspaceId),
     listProspectsForCampaign(workspace.workspaceId, campaign.id),
     getWorkspaceOnboardingSummary({
       membership: workspace,
       userId: context.user.userId,
     }),
+    getCampaignPerformanceMetrics(workspace.workspaceId, campaign.id),
+    getWorkspaceBillingState({
+      workspaceId: workspace.workspaceId,
+      workspacePlanCode: workspace.billingPlanCode,
+    }),
   ]);
   const emptyState = getProspectsEmptyState(onboarding.selectedUserType);
+  const performanceUpgradePrompt = getUpgradePrompt({
+    surface: "campaign_performance",
+    billing,
+    performance,
+  });
+  const shareablePerformanceSummary = buildShareablePerformanceSummary({
+    scope: "campaign",
+    snapshot:
+      performance ?? {
+        outboundMessages: 0,
+        replies: 0,
+        positiveReplies: 0,
+        replyRate: null,
+        positiveReplyRate: null,
+        positiveReplyIntents: [],
+        calculatedAt: new Date(),
+        version: 1,
+      },
+  });
 
   return (
     <main className="shell">
@@ -111,6 +141,25 @@ export default async function CampaignDetailPage({
               campaign membership remain explicit from the start.
             </p>
           </div>
+
+          <div className="dashboardCard">
+            <p className="cardLabel">Outbound performance</p>
+            <h2>{performance?.outboundMessages ?? 0} outbound message(s)</h2>
+            <p>Replies: {performance?.replies ?? 0}. Positive replies: {performance?.positiveReplies ?? 0}.</p>
+            <div className="pillRow">
+              <span className="pill">Reply rate: {performance?.replyRate === null || performance?.replyRate === undefined ? "n/a" : `${Math.round(performance.replyRate * 100)}%`}</span>
+              <span className="pill">Positive reply rate: {performance?.positiveReplyRate === null || performance?.positiveReplyRate === undefined ? "n/a" : `${Math.round(performance.positiveReplyRate * 100)}%`}</span>
+            </div>
+          </div>
+
+          <PerformanceSummaryCard summary={shareablePerformanceSummary} />
+
+          {performanceUpgradePrompt ? (
+            <UpgradePromptCard
+              workspaceId={workspace.workspaceId}
+              prompt={performanceUpgradePrompt}
+            />
+          ) : null}
 
           <div id="prospect-form">
             <ProspectForm
@@ -173,3 +222,4 @@ export default async function CampaignDetailPage({
     </main>
   );
 }
+

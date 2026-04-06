@@ -7,6 +7,7 @@ export type EvaluationExpectedProperty = {
 export type GoldenExample = {
   id: string;
   operation:
+    | "research_profile_extraction"
     | "sequence_generation"
     | "sequence_regeneration"
     | "reply_analysis"
@@ -17,6 +18,42 @@ export type GoldenExample = {
 };
 
 export const goldenExamples = {
+  research: [
+    {
+      id: "company-profile-public-site",
+      operation: "research_profile_extraction",
+      scenario:
+        "Research output should produce a structured company profile with evidence and personalization hooks.",
+      expectedProperties: [
+        {
+          key: "companyName",
+          description: "A company name should be present when public evidence supports it.",
+          required: true,
+        },
+        {
+          key: "summary",
+          description: "A company summary should be present.",
+          required: true,
+        },
+        {
+          key: "valuePropositions",
+          description: "At least one supported value proposition should be present.",
+          required: true,
+        },
+        {
+          key: "likelyPainPoints",
+          description: "At least one likely pain point should be present.",
+          required: true,
+        },
+        {
+          key: "personalizationHooks",
+          description: "At least one personalization hook should be present.",
+          required: true,
+        },
+      ],
+      discouragedPatterns: ["revolutionary", "guarantee results"],
+    },
+  ] satisfies GoldenExample[],
   sequence: [
     {
       id: "founder-sequence-prospect-research",
@@ -57,6 +94,37 @@ export const goldenExamples = {
       ],
     },
   ] satisfies GoldenExample[],
+  replyAnalysis: [
+    {
+      id: "timing-objection-analysis",
+      operation: "reply_analysis",
+      scenario:
+        "Reply analysis should classify the objection clearly and recommend a grounded next action.",
+      expectedProperties: [
+        {
+          key: "classification",
+          description: "A structured classification should be present.",
+          required: true,
+        },
+        {
+          key: "recommendedAction",
+          description: "A recommended next action should be present.",
+          required: true,
+        },
+        {
+          key: "confidence",
+          description: "Confidence metadata should be present.",
+          required: true,
+        },
+        {
+          key: "rationale",
+          description: "The analysis should explain its reasoning.",
+          required: true,
+        },
+      ],
+      discouragedPatterns: ["ASAP", "guarantee results", "touching base"],
+    },
+  ] satisfies GoldenExample[],
   replies: [
     {
       id: "timing-objection-needs-more-info",
@@ -64,11 +132,6 @@ export const goldenExamples = {
       scenario:
         "Timing-related reply should acknowledge the objection, answer the request, and stay low-pressure.",
       expectedProperties: [
-        {
-          key: "classification",
-          description: "A structured reply classification should be present.",
-          required: true,
-        },
         {
           key: "recommendedAction",
           description: "A next action recommendation should be present.",
@@ -81,7 +144,12 @@ export const goldenExamples = {
         },
         {
           key: "confidence",
-          description: "The analysis should include confidence metadata.",
+          description: "The draft output should include confidence metadata.",
+          required: true,
+        },
+        {
+          key: "draftingStrategy",
+          description: "A clear draft strategy should be present.",
           required: true,
         },
       ],

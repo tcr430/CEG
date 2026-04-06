@@ -1,9 +1,15 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 
 import {
   createInMemoryAuditEventRepository,
   createInMemoryCampaignRepository,
+  createInMemoryInboxAccountRepository,
+  createInMemoryInboxSyncRunRepository,
+  createInMemoryImportedMessageRefRepository,
+  createInMemoryImportedThreadRefRepository,
   createInMemoryWorkspaceRepository,
+  createInMemoryUserRepository,
+  createInMemoryWorkspaceMemberRepository,
   createInMemoryConversationThreadRepository,
   createInMemoryDraftReplyRepository,
   createInMemoryMessageRepository,
@@ -576,6 +582,21 @@ async function run(): Promise<void> {
       },
     });
 
+    const updatedGeneratedOutbound = await messageRepository.updateMessage({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      messageId: generatedOutbound.id,
+      status: "sent",
+      providerMessageId: "provider-message-123",
+      sentAt: new Date("2026-04-04T10:05:00.000Z"),
+      metadata: {
+        ...generatedOutbound.metadata,
+        sendTracking: {
+          status: "sent",
+          mode: "manual",
+        },
+      },
+    });
+
     const analysis = await analysisRepository.upsertReplyAnalysis({
       workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
       threadId: thread.id,
@@ -658,29 +679,345 @@ async function run(): Promise<void> {
       },
     });
 
-    const latestAnalysis = await analysisRepository.getReplyAnalysisByMessage(message.id);
-    const analyses = await analysisRepository.listReplyAnalysesByThread(thread.id);
-    const draftReplies = await draftReplyRepository.listDraftRepliesByMessage(message.id);
-    const threadDraftReplies = await draftReplyRepository.listDraftRepliesByThread(thread.id);
-    const threadMessages = await messageRepository.listMessagesByThread(thread.id);
+    const latestAnalysis = await analysisRepository.getReplyAnalysisByMessage(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      message.id,
+    );
+    const analyses = await analysisRepository.listReplyAnalysesByThread(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
+    const deniedAnalyses = await analysisRepository.listReplyAnalysesByThread(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
+    const draftReplies = await draftReplyRepository.listDraftRepliesByMessage(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      message.id,
+    );
+    const deniedDraftReplies = await draftReplyRepository.listDraftRepliesByMessage(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      message.id,
+    );
+    const importedMessageRefRepository = createInMemoryImportedMessageRefRepository();
+    const importedMessageRef = await importedMessageRefRepository.upsertImportedMessageRef({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      inboxAccountId: "0ca2287f-b16c-4e04-b69b-f791b11dc4a3",
+      importedThreadRefId: "af7c0cea-ef32-4c84-b97d-d24f327a0912",
+      messageId: updatedGeneratedOutbound.id,
+      provider: "gmail",
+      providerMessageId: "provider-message-123",
+      providerThreadId: "thread-123",
+      direction: "outbound",
+      providerMessageType: "draft",
+      messageRole: "draft",
+      subject: updatedGeneratedOutbound.subject,
+      fromAddress: "alex@acme.com",
+      toAddresses: ["jamie@acme.com"],
+      ccAddresses: [],
+      bccAddresses: [],
+      syncState: {
+        status: "healthy",
+        consecutiveFailures: 0,
+        metadata: {},
+      },
+      metadata: {},
+      sentAt: updatedGeneratedOutbound.sentAt,
+    });
+    const fetchedImportedMessageRef = await importedMessageRefRepository.getImportedMessageRefByMessageId(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      updatedGeneratedOutbound.id,
+    );
+    const deniedImportedMessageRef = await importedMessageRefRepository.getImportedMessageRefByMessageId(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      updatedGeneratedOutbound.id,
+    );
+    const threadDraftReplies = await draftReplyRepository.listDraftRepliesByThread(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
+    const deniedThreadDraftReplies = await draftReplyRepository.listDraftRepliesByThread(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
+    const campaignMessages = await messageRepository.listMessagesByCampaign(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+    );
+    const threadMessages = await messageRepository.listMessagesByThread(
+      "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
+    const deniedThreadMessages = await messageRepository.listMessagesByThread(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      thread.id,
+    );
 
     assert.equal(thread.status, "open");
     assert.equal(generatedOutbound.metadata.source, "generated");
+    assert.equal(updatedGeneratedOutbound.status, "sent");
+    assert.equal(updatedGeneratedOutbound.providerMessageId, "provider-message-123");
     assert.equal(manualOutbound.metadata.source, "manual");
     assert.equal(message.metadata.source, "imported");
     assert.equal(message.direction, "inbound");
     assert.equal(analysis.intent, "needs_more_info");
     assert.equal(latestAnalysis?.confidence, newerAnalysis.confidence);
     assert.equal(analyses.length, 1);
+    assert.equal(deniedAnalyses.length, 0);
     assert.equal(threadDraftReplies.length, 2);
+    assert.equal(fetchedImportedMessageRef?.id, importedMessageRef.id);
+    assert.equal(deniedImportedMessageRef, null);
+    assert.equal(deniedDraftReplies.length, 0);
+    assert.equal(deniedThreadDraftReplies.length, 0);
     assert.equal(threadMessages.length, 3);
+    assert.equal(campaignMessages.length, 3);
+    assert.equal(deniedThreadMessages.length, 0);
     assert.equal(draftReply.qualityChecksJson?.summary.score, 72);
     assert.deepEqual(new Set(draftReplies.map((draft) => draft.id)), new Set([draftReply.id, secondDraftReply.id]));
+  }
+  {
+    const queries: DatabaseQuery[] = [];
+    const client = createMockClient(
+      [
+        [
+          {
+            id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+            email: "owner@example.com",
+            full_name: "Owner Example",
+            avatar_url: null,
+            auth_provider: "supabase",
+            auth_provider_subject: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+            status: "active",
+            created_at: "2026-04-04T10:00:00.000Z",
+            updated_at: "2026-04-04T10:00:00.000Z",
+          },
+        ],
+      ],
+      queries,
+    );
+
+    const { createUserRepository } = await import("../dist/repositories/users.js");
+    const repository = createUserRepository(client);
+    const user = await repository.upsertUser({
+      id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      email: "owner@example.com",
+      fullName: "Owner Example",
+      authProvider: "supabase",
+      authProviderSubject: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      status: "active",
+    });
+
+    assert.equal(user.email, "owner@example.com");
+    assert.match(queries[0]?.statement ?? "", /INSERT INTO users/);
+  }
+
+  {
+    const queries: DatabaseQuery[] = [];
+    const client = createMockClient(
+      [
+        [
+          {
+            id: "64ad043c-9435-4388-92b9-9e0becbeff74",
+            workspace_id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+            user_id: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+            role: "owner",
+            status: "active",
+            invited_by_user_id: null,
+            joined_at: "2026-04-04T10:00:00.000Z",
+            created_at: "2026-04-04T10:00:00.000Z",
+            updated_at: "2026-04-04T10:00:00.000Z",
+          },
+        ],
+      ],
+      queries,
+    );
+
+    const { createWorkspaceMemberRepository } = await import(
+      "../dist/repositories/workspace-members.js"
+    );
+    const repository = createWorkspaceMemberRepository(client);
+    const membership = await repository.upsertWorkspaceMember({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      userId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      role: "owner",
+      status: "active",
+      joinedAt: new Date("2026-04-04T10:00:00.000Z"),
+    });
+
+    assert.equal(membership.role, "owner");
+    assert.match(queries[0]?.statement ?? "", /INSERT INTO workspace_members/);
+  }
+
+  {
+    const userRepository = createInMemoryUserRepository();
+    const memberRepository = createInMemoryWorkspaceMemberRepository();
+
+    const invitedUser = await userRepository.upsertUser({
+      id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      email: "invitee@example.com",
+      status: "invited",
+    });
+
+    const invitedMembership = await memberRepository.upsertWorkspaceMember({
+      workspaceId: "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      userId: invitedUser.id,
+      role: "member",
+      status: "invited",
+    });
+
+    const activatedCount = await memberRepository.activateWorkspaceMembershipsByUserId(
+      invitedUser.id,
+    );
+    const activeMembership = await memberRepository.getWorkspaceMembership(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      invitedUser.id,
+    );
+    const listedMembers = await memberRepository.listWorkspaceMembersByWorkspaceId(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+    );
+
+    await memberRepository.updateWorkspaceMemberRole({
+      workspaceId: "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      userId: invitedUser.id,
+      role: "admin",
+      updatedByUserId: "9f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+    });
+    const updatedMembership = await memberRepository.getWorkspaceMembership(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      invitedUser.id,
+    );
+
+    await memberRepository.removeWorkspaceMember({
+      workspaceId: "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      userId: invitedUser.id,
+      removedByUserId: "9f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+    });
+    const removedMembership = await memberRepository.getWorkspaceMembership(
+      "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      invitedUser.id,
+    );
+
+    assert.equal(invitedMembership.status, "invited");
+    assert.equal(activatedCount, 1);
+    assert.equal(activeMembership?.status, "active");
+    assert.equal(listedMembers.length, 1);
+    assert.equal(updatedMembership?.role, "admin");
+    assert.equal(removedMembership, null);
+  }
+
+  {
+    const accountRepository = createInMemoryInboxAccountRepository();
+    const runRepository = createInMemoryInboxSyncRunRepository();
+    const threadRefRepository = createInMemoryImportedThreadRefRepository();
+    const messageRefRepository = createInMemoryImportedMessageRefRepository();
+
+    const account = await accountRepository.createInboxAccount({
+      workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      userId: "a6092054-22bf-4a2e-bf5c-6ca287c3dab1",
+      provider: "gmail",
+      emailAddress: "alex@acme.com",
+      displayName: "Alex Morgan",
+      providerAccountRef: "gmail-account-123",
+      metadata: {},
+    });
+
+    const run = await runRepository.createInboxSyncRun({
+      workspaceId: account.workspaceId,
+      inboxAccountId: account.id,
+      provider: account.provider,
+      syncMode: "incremental",
+      metadata: {},
+    });
+
+    const completedRun = await runRepository.completeInboxSyncRun({
+      inboxSyncRunId: run.id,
+      inboxAccountId: account.id,
+      status: "completed",
+      cursorAfter: "cursor-123",
+      importedThreadCount: 1,
+      importedMessageCount: 1,
+      metadata: {},
+    });
+
+    const importedThread = await threadRefRepository.upsertImportedThreadRef({
+      workspaceId: account.workspaceId,
+      inboxAccountId: account.id,
+      prospectId: "54ad043c-9435-4388-92b9-9e0becbeff74",
+      conversationThreadId: "ba7a8384-f5f5-4c87-96cd-e2b36045dad0",
+      provider: "gmail",
+      providerThreadId: "thread-123",
+      providerFolder: "INBOX",
+      subject: "Re: outbound",
+      participants: [
+        {
+          email: "jamie@acme.com",
+          name: "Jamie Stone",
+          role: "from",
+        },
+      ],
+      snippet: "Can you send more information?",
+      syncState: {
+        status: "healthy",
+        consecutiveFailures: 0,
+        metadata: {},
+      },
+      metadata: {},
+    });
+
+    const importedMessage = await messageRefRepository.upsertImportedMessageRef({
+      workspaceId: account.workspaceId,
+      inboxAccountId: account.id,
+      importedThreadRefId: importedThread.id,
+      messageId: "aa532df5-fc7d-4e25-bb23-ee2476a57349",
+      provider: "gmail",
+      providerMessageId: "message-123",
+      providerThreadId: importedThread.providerThreadId,
+      direction: "inbound",
+      providerMessageType: "inbound",
+      subject: "Re: outbound",
+      fromAddress: "jamie@acme.com",
+      toAddresses: ["alex@acme.com"],
+      ccAddresses: [],
+      bccAddresses: [],
+      syncState: {
+        status: "healthy",
+        consecutiveFailures: 0,
+        metadata: {},
+      },
+      metadata: {},
+      receivedAt: new Date("2026-04-04T10:02:00.000Z"),
+    });
+
+    const listedAccounts = await accountRepository.listInboxAccountsByWorkspace(
+      account.workspaceId,
+    );
+    const listedRuns = await runRepository.listInboxSyncRunsByAccount(account.id);
+    const threadRefs = await threadRefRepository.listImportedThreadRefsByConversationThread(
+      account.workspaceId,
+      "ba7a8384-f5f5-4c87-96cd-e2b36045dad0",
+    );
+    const deniedThreadRefs =
+      await threadRefRepository.listImportedThreadRefsByConversationThread(
+        "7f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+        "ba7a8384-f5f5-4c87-96cd-e2b36045dad0",
+      );
+    const messageRefs = await messageRefRepository.listImportedMessageRefsByThreadRef(
+      importedThread.id,
+    );
+
+    assert.equal(listedAccounts.length, 1);
+    assert.equal(completedRun.cursorAfter, "cursor-123");
+    assert.equal(listedRuns[0]?.status, "completed");
+    assert.equal(threadRefs[0]?.providerThreadId, "thread-123");
+    assert.equal(deniedThreadRefs.length, 0);
+    assert.equal(messageRefs[0]?.providerMessageId, "message-123");
+    assert.equal(importedMessage.direction, "inbound");
   }
   console.log("@ceg/database repository contract tests passed");
 }
 
 await run();
+
 
 
 

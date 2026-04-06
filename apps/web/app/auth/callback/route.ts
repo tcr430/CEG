@@ -1,8 +1,9 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { createOperationContext } from "../../../lib/server/observability";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
+import { syncSupabaseUserToDatabase } from "../../../lib/server/user-sync";
 import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
 export async function GET(request: Request) {
@@ -48,6 +49,17 @@ export async function GET(request: Request) {
       ),
       303,
     );
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user !== null) {
+    await syncSupabaseUserToDatabase({
+      user,
+      requestId: operation.requestId,
+    });
   }
 
   operation.logger.info("Supabase code exchange completed");

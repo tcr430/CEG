@@ -48,10 +48,15 @@ export function createInMemoryResearchSnapshotRepository(
       records.set(record.id, record);
       return record;
     },
-    async listResearchSnapshotsByProspect(prospectId) {
+    async listResearchSnapshotsByProspect(workspaceId, prospectId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedProspectId = validateProspectId(prospectId);
       return [...records.values()]
-        .filter((snapshot) => snapshot.prospectId === validatedProspectId)
+        .filter(
+          (snapshot) =>
+            snapshot.workspaceId === validatedWorkspaceId &&
+            snapshot.prospectId === validatedProspectId,
+        )
         .sort(
           (left, right) => right.capturedAt.getTime() - left.capturedAt.getTime(),
         );

@@ -5,31 +5,52 @@ import {
   createProspectInputSchema,
   createAuditEventInputSchema,
   createResearchSnapshotInputSchema,
+  createInboxAccountInputSchema,
+  createInboxSyncRunInputSchema,
   createSenderProfileInputSchema,
   createUsageEventInputSchema,
+  completeInboxSyncRunInputSchema,
+  upsertUserInputSchema,
+  upsertImportedMessageRefInputSchema,
+  upsertImportedThreadRefInputSchema,
+  upsertWorkspaceMemberInputSchema,
   createWorkspaceRecordInputSchema,
   createWorkspaceInputSchema,
   conversationThreadIdSchema,
+  importedThreadRefIdSchema,
+  importedMessageRefIdSchema,
+  inboxAccountIdSchema,
+  inboxSyncRunIdSchema,
   prospectIdSchema,
   messageIdSchema,
   senderProfileIdSchema,
   sequenceIdSchema,
+  updateInboxAccountSyncStateInputSchema,
   updateCampaignInputSchema,
   updateProspectInputSchema,
   updateSenderProfileInputSchema,
   updateWorkspaceSettingsInputSchema,
+  updateWorkspaceProfileInputSchema,
   workspaceIdSchema,
+  inviteWorkspaceMemberInputSchema,
+  removeWorkspaceMemberInputSchema,
   type Campaign,
   type ConversationThread,
   type CreateCampaignInput,
   type CreateProspectInput,
   type CreateAuditEventInput,
   type CreateResearchSnapshotInput,
+  type CreateInboxAccountInput,
+  type CreateInboxSyncRunInput,
   type CreateSenderProfileInput,
   type CreateUsageEventInput,
   type CreateWorkspaceRecordInput,
   type CreateWorkspaceInput,
   type DraftReply,
+  type ImportedMessageRef,
+  type ImportedThreadRef,
+  type InboxAccount,
+  type InboxSyncRun,
   type Message,
   type Prospect,
   type ReplyAnalysis,
@@ -38,14 +59,27 @@ import {
   type SenderProfile,
   type UsageEvent,
   type AuditEvent,
+  type User,
   type UpdateCampaignInput,
+  type UpdateWorkspaceMemberRoleInput,
+  type UpdateInboxAccountSyncStateInput,
   type UpdateProspectInput,
+  type InviteWorkspaceMemberInput,
+  type RemoveWorkspaceMemberInput,
+  type UpdateWorkspaceProfileInput,
   type UpdateSenderProfileInput,
   type UpdateWorkspaceSettingsInput,
+  type WorkspaceMember,
   type Workspace,
+  type CompleteInboxSyncRunInput,
   campaignSchema,
+  workspaceMemberSchema,
   conversationThreadSchema,
   draftReplySchema,
+  importedMessageRefSchema,
+  importedThreadRefSchema,
+  inboxAccountSchema,
+  inboxSyncRunSchema,
   messageSchema,
   prospectSchema,
   replyAnalysisSchema,
@@ -53,12 +87,18 @@ import {
   researchSnapshotSchema,
   senderProfileSchema,
   subscriptionSchema,
+  userSchema,
   usageEventSchema,
   auditEventSchema,
   workspaceSchema,
   upsertSubscriptionInputSchema,
   type Subscription,
   type UpsertSubscriptionInput,
+  type UpsertImportedMessageRefInput,
+  type UpsertImportedThreadRefInput,
+  type UpsertUserInput,
+  type UpsertWorkspaceMemberInput,
+  updateWorkspaceMemberRoleInputSchema,
 } from "@ceg/validation";
 
 export class RepositoryValidationError extends AppError {
@@ -98,6 +138,24 @@ export function validateSequenceId(sequenceId: string): string {
   return sequenceIdSchema.parse(sequenceId);
 }
 
+export function validateInboxAccountId(inboxAccountId: string): string {
+  return inboxAccountIdSchema.parse(inboxAccountId);
+}
+
+export function validateInboxSyncRunId(inboxSyncRunId: string): string {
+  return inboxSyncRunIdSchema.parse(inboxSyncRunId);
+}
+
+export function validateImportedThreadRefId(importedThreadRefId: string): string {
+  return importedThreadRefIdSchema.parse(importedThreadRefId);
+}
+
+export function validateImportedMessageRefId(
+  importedMessageRefId: string,
+): string {
+  return importedMessageRefIdSchema.parse(importedMessageRefId);
+}
+
 export function validateCreateWorkspaceInput(
   input: CreateWorkspaceInput,
 ): CreateWorkspaceInput {
@@ -110,10 +168,44 @@ export function validateCreateWorkspaceRecordInput(
   return createWorkspaceRecordInputSchema.parse(input);
 }
 
+export function validateUpsertUserInput(input: UpsertUserInput): UpsertUserInput {
+  return upsertUserInputSchema.parse(input);
+}
+
+export function validateUpsertWorkspaceMemberInput(
+  input: UpsertWorkspaceMemberInput,
+): UpsertWorkspaceMemberInput {
+  return upsertWorkspaceMemberInputSchema.parse(input);
+}
+
 export function validateUpdateWorkspaceSettingsInput(
   input: UpdateWorkspaceSettingsInput,
 ): UpdateWorkspaceSettingsInput {
   return updateWorkspaceSettingsInputSchema.parse(input);
+}
+
+export function validateUpdateWorkspaceProfileInput(
+  input: UpdateWorkspaceProfileInput,
+): UpdateWorkspaceProfileInput {
+  return updateWorkspaceProfileInputSchema.parse(input);
+}
+
+export function validateInviteWorkspaceMemberInput(
+  input: InviteWorkspaceMemberInput,
+): InviteWorkspaceMemberInput {
+  return inviteWorkspaceMemberInputSchema.parse(input);
+}
+
+export function validateUpdateWorkspaceMemberRoleInput(
+  input: UpdateWorkspaceMemberRoleInput,
+): UpdateWorkspaceMemberRoleInput {
+  return updateWorkspaceMemberRoleInputSchema.parse(input);
+}
+
+export function validateRemoveWorkspaceMemberInput(
+  input: RemoveWorkspaceMemberInput,
+): RemoveWorkspaceMemberInput {
+  return removeWorkspaceMemberInputSchema.parse(input);
 }
 
 export function validateCreateSenderProfileInput(
@@ -152,6 +244,42 @@ export function validateCreateResearchSnapshotInput(
   return createResearchSnapshotInputSchema.parse(input);
 }
 
+export function validateCreateInboxAccountInput(
+  input: CreateInboxAccountInput,
+): CreateInboxAccountInput {
+  return createInboxAccountInputSchema.parse(input);
+}
+
+export function validateUpdateInboxAccountSyncStateInput(
+  input: UpdateInboxAccountSyncStateInput,
+): UpdateInboxAccountSyncStateInput {
+  return updateInboxAccountSyncStateInputSchema.parse(input);
+}
+
+export function validateCreateInboxSyncRunInput(
+  input: CreateInboxSyncRunInput,
+): CreateInboxSyncRunInput {
+  return createInboxSyncRunInputSchema.parse(input);
+}
+
+export function validateCompleteInboxSyncRunInput(
+  input: CompleteInboxSyncRunInput,
+): CompleteInboxSyncRunInput {
+  return completeInboxSyncRunInputSchema.parse(input);
+}
+
+export function validateUpsertImportedThreadRefInput(
+  input: UpsertImportedThreadRefInput,
+): UpsertImportedThreadRefInput {
+  return upsertImportedThreadRefInputSchema.parse(input);
+}
+
+export function validateUpsertImportedMessageRefInput(
+  input: UpsertImportedMessageRefInput,
+): UpsertImportedMessageRefInput {
+  return upsertImportedMessageRefInputSchema.parse(input);
+}
+
 export function validateCreateUsageEventInput(
   input: CreateUsageEventInput,
 ): CreateUsageEventInput {
@@ -183,6 +311,30 @@ type WorkspaceRow = {
   owner_user_id: string | null;
   status: Workspace["status"];
   settings: Workspace["settings"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type UserRow = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  auth_provider: string | null;
+  auth_provider_subject: string | null;
+  status: User["status"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type WorkspaceMemberRow = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  role: WorkspaceMember["role"];
+  status: WorkspaceMember["status"];
+  invited_by_user_id: string | null;
+  joined_at: Date | string | null;
   created_at: Date | string;
   updated_at: Date | string;
 };
@@ -374,6 +526,90 @@ type SubscriptionRow = {
   updated_at: Date | string;
 };
 
+type InboxAccountRow = {
+  id: string;
+  workspace_id: string;
+  user_id: string | null;
+  provider: InboxAccount["provider"];
+  email_address: string;
+  display_name: string | null;
+  provider_account_ref: string;
+  status: InboxAccount["status"];
+  sync_state: InboxAccount["syncState"];
+  metadata: InboxAccount["metadata"];
+  last_synced_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type InboxSyncRunRow = {
+  id: string;
+  workspace_id: string;
+  inbox_account_id: string;
+  provider: InboxSyncRun["provider"];
+  status: InboxSyncRun["status"];
+  sync_mode: InboxSyncRun["syncMode"];
+  cursor_before: string | null;
+  cursor_after: string | null;
+  imported_thread_count: number;
+  imported_message_count: number;
+  started_at: Date | string;
+  finished_at: Date | string | null;
+  error_summary: string | null;
+  metadata: InboxSyncRun["metadata"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type ImportedThreadRefRow = {
+  id: string;
+  workspace_id: string;
+  inbox_account_id: string;
+  prospect_id: string | null;
+  conversation_thread_id: string | null;
+  provider: ImportedThreadRef["provider"];
+  provider_thread_id: string;
+  provider_folder: string | null;
+  subject: string | null;
+  participants: ImportedThreadRef["participants"];
+  snippet: string | null;
+  last_message_received_at: Date | string | null;
+  sync_state: ImportedThreadRef["syncState"];
+  metadata: ImportedThreadRef["metadata"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type ImportedMessageRefRow = {
+  id: string;
+  workspace_id: string;
+  inbox_account_id: string;
+  imported_thread_ref_id: string;
+  message_id: string | null;
+  provider: ImportedMessageRef["provider"];
+  provider_message_id: string;
+  provider_thread_id: string;
+  direction: ImportedMessageRef["direction"];
+  provider_message_type: ImportedMessageRef["providerMessageType"];
+  message_role: ImportedMessageRef["messageRole"];
+  reply_to_provider_message_id: string | null;
+  subject: string | null;
+  from_address: string | null;
+  to_addresses: ImportedMessageRef["toAddresses"];
+  cc_addresses: ImportedMessageRef["ccAddresses"];
+  bcc_addresses: ImportedMessageRef["bccAddresses"];
+  raw_body_text: string | null;
+  raw_body_html: string | null;
+  normalized_body_text: string | null;
+  normalized_body_html: string | null;
+  sync_state: ImportedMessageRef["syncState"];
+  metadata: ImportedMessageRef["metadata"];
+  sent_at: Date | string | null;
+  received_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
 type UsageEventRow = {
   id: string;
   workspace_id: string;
@@ -419,6 +655,34 @@ export function mapWorkspaceRow(row: WorkspaceRow): Workspace {
     ownerUserId: row.owner_user_id,
     status: row.status,
     settings: row.settings,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapUserRow(row: UserRow): User {
+  return userSchema.parse({
+    id: row.id,
+    email: row.email,
+    fullName: row.full_name,
+    avatarUrl: row.avatar_url,
+    authProvider: row.auth_provider,
+    authProviderSubject: row.auth_provider_subject,
+    status: row.status,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapWorkspaceMemberRow(row: WorkspaceMemberRow): WorkspaceMember {
+  return workspaceMemberSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    role: row.role,
+    status: row.status,
+    invitedByUserId: row.invited_by_user_id,
+    joinedAt: row.joined_at === null ? null : asDate(row.joined_at),
     createdAt: asDate(row.created_at),
     updatedAt: asDate(row.updated_at),
   });
@@ -657,6 +921,106 @@ export function mapSubscriptionRow(row: SubscriptionRow): Subscription {
       row.current_period_end === null ? null : asDate(row.current_period_end),
     cancelAtPeriodEnd: row.cancel_at_period_end,
     metadata: row.metadata,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapInboxAccountRow(row: InboxAccountRow): InboxAccount {
+  return inboxAccountSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    provider: row.provider,
+    emailAddress: row.email_address,
+    displayName: row.display_name,
+    providerAccountRef: row.provider_account_ref,
+    status: row.status,
+    syncState: row.sync_state,
+    metadata: row.metadata,
+    lastSyncedAt:
+      row.last_synced_at === null ? null : asDate(row.last_synced_at),
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapInboxSyncRunRow(row: InboxSyncRunRow): InboxSyncRun {
+  return inboxSyncRunSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    inboxAccountId: row.inbox_account_id,
+    provider: row.provider,
+    status: row.status,
+    syncMode: row.sync_mode,
+    cursorBefore: row.cursor_before,
+    cursorAfter: row.cursor_after,
+    importedThreadCount: row.imported_thread_count,
+    importedMessageCount: row.imported_message_count,
+    startedAt: asDate(row.started_at),
+    finishedAt: row.finished_at === null ? null : asDate(row.finished_at),
+    errorSummary: row.error_summary,
+    metadata: row.metadata,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapImportedThreadRefRow(
+  row: ImportedThreadRefRow,
+): ImportedThreadRef {
+  return importedThreadRefSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    inboxAccountId: row.inbox_account_id,
+    prospectId: row.prospect_id,
+    conversationThreadId: row.conversation_thread_id,
+    provider: row.provider,
+    providerThreadId: row.provider_thread_id,
+    providerFolder: row.provider_folder,
+    subject: row.subject,
+    participants: row.participants,
+    snippet: row.snippet,
+    lastMessageReceivedAt:
+      row.last_message_received_at === null
+        ? null
+        : asDate(row.last_message_received_at),
+    syncState: row.sync_state,
+    metadata: row.metadata,
+    createdAt: asDate(row.created_at),
+    updatedAt: asDate(row.updated_at),
+  });
+}
+
+export function mapImportedMessageRefRow(
+  row: ImportedMessageRefRow,
+): ImportedMessageRef {
+  return importedMessageRefSchema.parse({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    inboxAccountId: row.inbox_account_id,
+    importedThreadRefId: row.imported_thread_ref_id,
+    messageId: row.message_id,
+    provider: row.provider,
+    providerMessageId: row.provider_message_id,
+    providerThreadId: row.provider_thread_id,
+    direction: row.direction,
+    providerMessageType: row.provider_message_type,
+    messageRole: row.message_role,
+    replyToProviderMessageId: row.reply_to_provider_message_id,
+    subject: row.subject,
+    fromAddress: row.from_address,
+    toAddresses: row.to_addresses,
+    ccAddresses: row.cc_addresses,
+    bccAddresses: row.bcc_addresses,
+    rawBodyText: row.raw_body_text,
+    rawBodyHtml: row.raw_body_html,
+    normalizedBodyText: row.normalized_body_text,
+    normalizedBodyHtml: row.normalized_body_html,
+    syncState: row.sync_state,
+    metadata: row.metadata,
+    sentAt: row.sent_at === null ? null : asDate(row.sent_at),
+    receivedAt: row.received_at === null ? null : asDate(row.received_at),
     createdAt: asDate(row.created_at),
     updatedAt: asDate(row.updated_at),
   });

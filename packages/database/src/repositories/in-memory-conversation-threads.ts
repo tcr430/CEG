@@ -66,9 +66,52 @@ export function createInMemoryConversationThreadRepository(
       records.set(record.id, record);
       return record;
     },
+    async findOrCreateThreadByExternalRef(input) {
+      const workspaceId = validateWorkspaceId(input.workspaceId);
+      const externalThreadRef = input.externalThreadRef.trim();
+      const existing = [...records.values()]
+        .filter(
+          (thread) =>
+            thread.workspaceId === workspaceId &&
+            thread.externalThreadRef === externalThreadRef,
+        )
+        .sort((left, right) => sortKey(right) - sortKey(left))[0];
+
+      if (existing) {
+        return existing;
+      }
+
+      const now = new Date();
+      const record: ConversationThread = {
+        id: randomUUID(),
+        workspaceId,
+        campaignId: input.campaignId ?? null,
+        prospectId: input.prospectId ?? null,
+        status: input.status ?? "open",
+        externalThreadRef,
+        latestMessageAt: input.latestMessageAt ?? null,
+        metadata: input.metadata ?? {},
+        createdAt: now,
+        updatedAt: now,
+      };
+      records.set(record.id, record);
+      return record;
+    },
     async getThreadById(threadId) {
       const validated = validateConversationThreadId(threadId);
       return records.get(validated) ?? null;
+    },
+    async getThreadByExternalRef(workspaceId, externalThreadRef) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
+      return (
+        [...records.values()]
+          .filter(
+            (thread) =>
+              thread.workspaceId === validatedWorkspaceId &&
+              thread.externalThreadRef === externalThreadRef,
+          )
+          .sort((left, right) => sortKey(right) - sortKey(left))[0] ?? null
+      );
     },
     async getThreadByProspect(workspaceId, campaignId, prospectId) {
       const validatedWorkspaceId = validateWorkspaceId(workspaceId);

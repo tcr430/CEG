@@ -1,8 +1,4 @@
-import {
-  createInMemorySenderProfileRepository,
-  type SenderProfileRepository,
-} from "@ceg/database";
-import type {
+﻿import type {
   CreateSenderProfileInput,
   SenderProfile,
   UpdateSenderProfileInput,
@@ -10,19 +6,9 @@ import type {
 
 import { getSharedAuditEventRepository } from "./audit-events";
 import { assertWorkspaceFeatureAccess } from "./billing";
+import { getSenderProfileRepository } from "./database";
 import { createOperationContext } from "./observability";
-
-declare global {
-  var __cegSenderProfileRepository: SenderProfileRepository | undefined;
-}
-
-function getSenderProfileRepository(): SenderProfileRepository {
-  if (globalThis.__cegSenderProfileRepository === undefined) {
-    globalThis.__cegSenderProfileRepository = createInMemorySenderProfileRepository();
-  }
-
-  return globalThis.__cegSenderProfileRepository;
-}
+import { trackProductAnalyticsEvent } from "./product-analytics";
 
 export async function listSenderProfilesForWorkspace(
   workspaceId: string,
@@ -93,6 +79,19 @@ export async function createSenderProfileForWorkspace(
     isDefault: created.isDefault,
   });
 
+  await trackProductAnalyticsEvent({
+    event: "sender_profile_created",
+    workspaceId: input.workspaceId,
+    userId: input.userId ?? input.createdByUserId ?? null,
+    entityType: "sender_profile",
+    entityId: created.id,
+    requestId: operation.requestId,
+    metadata: {
+      senderType: created.senderType,
+      isDefault: created.isDefault,
+    },
+  });
+
   return created;
 }
 
@@ -146,3 +145,6 @@ export async function updateSenderProfileForWorkspace(
 
   return updated;
 }
+
+
+

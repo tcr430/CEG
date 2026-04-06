@@ -16,7 +16,10 @@ export type ResearchSnapshotRepository = {
   createResearchSnapshot(
     input: CreateResearchSnapshotInput,
   ): Promise<ResearchSnapshot>;
-  listResearchSnapshotsByProspect(prospectId: string): Promise<ResearchSnapshot[]>;
+  listResearchSnapshotsByProspect(
+    workspaceId: string,
+    prospectId: string,
+  ): Promise<ResearchSnapshot[]>;
   getLatestResearchSnapshotByProspect(
     workspaceId: string,
     prospectId: string,
@@ -75,7 +78,8 @@ export function createResearchSnapshotRepository(
         getFirstRowOrThrow(result.rows, "research snapshot"),
       );
     },
-    async listResearchSnapshotsByProspect(prospectId) {
+    async listResearchSnapshotsByProspect(workspaceId, prospectId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedProspectId = validateProspectId(prospectId);
       const result = await client.query<Parameters<typeof mapResearchSnapshotRow>[0]>({
         statement: `
@@ -94,10 +98,11 @@ export function createResearchSnapshotRepository(
             created_at,
             updated_at
           FROM research_snapshots
-          WHERE prospect_id = $1
+          WHERE workspace_id = $1
+            AND prospect_id = $2
           ORDER BY captured_at DESC
         `,
-        params: [validatedProspectId],
+        params: [validatedWorkspaceId, validatedProspectId],
       });
 
       return result.rows.map((row) => mapResearchSnapshotRow(row));

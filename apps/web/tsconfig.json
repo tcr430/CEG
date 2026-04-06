@@ -1,6 +1,7 @@
-{
+﻿{
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "plugins": [
       {
         "name": "next"
@@ -17,3 +18,4 @@
     "node_modules"
   ]
 }
+

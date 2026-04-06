@@ -4,6 +4,7 @@
   trainingSignalPayloadSchema,
   type GeneratedArtifactType,
   type TrainingSignalActionType,
+  type TrainingSignalOutcome,
   type TrainingSignalPayload,
 } from "@ceg/validation";
 
@@ -27,6 +28,7 @@ export type RecordTrainingSignalInput = {
   afterText?: string | null;
   selectedOptionId?: string | null;
   exportFormat?: string | null;
+  outcomeSignal?: TrainingSignalOutcome | null;
   metadata?: Record<string, unknown>;
   requestId?: string;
 };
@@ -207,6 +209,7 @@ export async function recordTrainingSignal(
     campaignSnapshot: snapshotContext.campaignSnapshot,
     prospectSnapshot: snapshotContext.prospectSnapshot,
     researchSnapshot: snapshotContext.researchSnapshot,
+    outcomeSignal: input.outcomeSignal ?? null,
     metadata: input.metadata ?? {},
   });
 

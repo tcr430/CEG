@@ -1,6 +1,7 @@
 import type {
   CreateWorkspaceInput,
   CreateWorkspaceRecordInput,
+  UpdateWorkspaceProfileInput,
   UpdateWorkspaceSettingsInput,
   Workspace,
 } from "@ceg/validation";
@@ -11,6 +12,7 @@ import {
   mapWorkspaceRow,
   validateCreateWorkspaceInput,
   validateCreateWorkspaceRecordInput,
+  validateUpdateWorkspaceProfileInput,
   validateUpdateWorkspaceSettingsInput,
   validateWorkspaceId,
 } from "./shared.js";
@@ -20,6 +22,7 @@ export type WorkspaceRepository = {
   createWorkspaceRecord(input: CreateWorkspaceRecordInput): Promise<Workspace>;
   getWorkspaceById(workspaceId: string): Promise<Workspace | null>;
   updateWorkspaceSettings(input: UpdateWorkspaceSettingsInput): Promise<Workspace>;
+  updateWorkspaceProfile(input: UpdateWorkspaceProfileInput): Promise<Workspace>;
 };
 
 export function createWorkspaceRepository(
@@ -136,6 +139,56 @@ export function createWorkspaceRepository(
             updated_at
         `,
         params: [values.workspaceId, values.settings],
+      });
+
+      return mapWorkspaceRow(getFirstRowOrThrow(result.rows, "workspace"));
+    },
+    async updateWorkspaceProfile(input) {
+      const values = validateUpdateWorkspaceProfileInput(input);
+      const current = await client.query<Parameters<typeof mapWorkspaceRow>[0]>({
+        statement: `
+          SELECT
+            id,
+            slug,
+            name,
+            owner_user_id,
+            status,
+            settings,
+            created_at,
+            updated_at
+          FROM workspaces
+          WHERE id = $1
+          LIMIT 1
+        `,
+        params: [values.workspaceId],
+      });
+      const existing = getFirstRowOrThrow(current.rows, "workspace");
+      const existingWorkspace = mapWorkspaceRow(existing);
+      const result = await client.query<Parameters<typeof mapWorkspaceRow>[0]>({
+        statement: `
+          UPDATE workspaces
+          SET name = $2,
+              settings = $3,
+              updated_at = NOW()
+          WHERE id = $1
+          RETURNING
+            id,
+            slug,
+            name,
+            owner_user_id,
+            status,
+            settings,
+            created_at,
+            updated_at
+        `,
+        params: [
+          values.workspaceId,
+          values.name,
+          {
+            ...existingWorkspace.settings,
+            profile: values.profile,
+          },
+        ],
       });
 
       return mapWorkspaceRow(getFirstRowOrThrow(result.rows, "workspace"));

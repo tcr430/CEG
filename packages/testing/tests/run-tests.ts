@@ -14,12 +14,16 @@ import {
   findDiscouragedFluff,
   findHardNoPushiness,
   findUnsupportedClaims,
+  getWorkspaceScopedTables,
   goldenExamples,
   inboundReplyFixtures,
   prospectWebsiteSummaryFixtures,
   regressionCases,
+  runWorkflowEvalCase,
   senderProfileFixtures,
   summarizeReplyExpectations,
+  summarizeRestrictedTables,
+  workspaceScopedRlsExpectations,
 } from "../dist/index.js";
 
 const validatedFounder = senderProfileSchema.parse(
@@ -113,5 +117,42 @@ const replySummary = summarizeReplyExpectations({
 
 assert.equal(replySummary.action, "stop_outreach");
 assert.equal(replySummary.draftCount, 1);
+assert.equal(workspaceScopedRlsExpectations.length >= 10, true);
+assert.deepEqual(summarizeRestrictedTables().sort(), [
+  "audit_events",
+  "subscriptions",
+  "usage_events",
+]);
+assert.equal(getWorkspaceScopedTables().includes("campaigns"), true);
 
-console.log("@ceg/testing evaluation fixtures and harness tests passed");
+const workflowEvalResult = runWorkflowEvalCase({
+  id: goldenExamples.replyAnalysis[0].id,
+  workflow: "reply_analysis",
+  description: goldenExamples.replyAnalysis[0].scenario,
+  schema: replyClassificationOutputSchema,
+  output: {
+    intent: "needs_more_info",
+    objectionType: "timing",
+    classification: "needs_more_info",
+    confidence: {
+      score: 0.7,
+      label: "medium",
+      reasons: ["The prospect asked for more context."],
+    },
+    recommendedAction: "send_more_info",
+    rationale: "The reply requests more context and does not reject the offer.",
+    keySignals: ["timing is not right", "send more context"],
+    cautionFlags: [],
+  },
+  expectedProperties: goldenExamples.replyAnalysis[0].expectedProperties,
+  textBlocks: [
+    "The reply requests more context and does not reject the offer.",
+    "timing is not right",
+    "send more context",
+  ],
+  discouragedPatterns: goldenExamples.replyAnalysis[0].discouragedPatterns,
+  toneAvoidPhrases: ["guarantee", "ASAP"],
+});
+assert.equal(workflowEvalResult.passed, true);
+
+console.log("@ceg/testing evaluation fixtures and RLS harness tests passed");

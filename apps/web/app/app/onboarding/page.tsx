@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../components/feedback-banner";
@@ -15,6 +16,11 @@ import {
   selectOnboardingUserTypeAction,
   skipOnboardingAction,
 } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Onboarding",
+  description: "Complete the initial workspace setup flow.",
+};
 
 type OnboardingPageProps = {
   searchParams?: Promise<{
@@ -387,3 +393,5 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
     </main>
   );
 }
+
+

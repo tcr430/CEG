@@ -140,6 +140,39 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
         </div>
 
         <div className="dashboardCard">
+          <p className="cardLabel">Dataset export</p>
+          <h2>Internal training and eval bundle</h2>
+          <p>
+            Export a structured JSON bundle for supervised tuning, preference learning, and regression evaluation work. This stays restricted to trusted internal admins.
+          </p>
+          <form method="post" action="/api/internal/dataset-export" className="settingsForm">
+            <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
+            <label className="fieldLabel" htmlFor="dataset-date-from">From date</label>
+            <input id="dataset-date-from" name="dateFrom" type="date" className="textInput" />
+            <label className="fieldLabel" htmlFor="dataset-date-to">To date</label>
+            <input id="dataset-date-to" name="dateTo" type="date" className="textInput" />
+            <label className="fieldLabel" htmlFor="dataset-artifact-type">Artifact focus</label>
+            <select id="dataset-artifact-type" name="artifactType" className="textInput defaultSelect">
+              <option value="">All supported artifacts</option>
+              <option value="research_snapshot">Research snapshots</option>
+              <option value="reply_analysis">Reply analyses</option>
+              <option value="sequence_bundle">Sequence bundles</option>
+              <option value="sequence_initial_email">Initial emails</option>
+              <option value="sequence_follow_up_step">Follow-up steps</option>
+              <option value="draft_reply_bundle">Reply draft bundles</option>
+              <option value="draft_reply_option">Reply draft options</option>
+            </select>
+            <label className="fieldLabel" htmlFor="dataset-signal-mode">Signal focus</label>
+            <select id="dataset-signal-mode" name="signalMode" className="textInput defaultSelect" defaultValue="all">
+              <option value="all">All matching records</option>
+              <option value="accepted_or_edited">Accepted or edited only</option>
+              <option value="edited_only">Edited only</option>
+            </select>
+            <button type="submit" className="buttonSecondary">Export dataset JSON</button>
+          </form>
+        </div>
+
+        <div className="dashboardCard">
           <p className="cardLabel">Accessible workspaces</p>
           <h2>{overview.workspaces.length} recent workspaces</h2>
           <div className="statusList">

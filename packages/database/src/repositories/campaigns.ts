@@ -19,7 +19,7 @@ export type CampaignRepository = {
   getCampaignById(campaignId: string): Promise<Campaign | null>;
   listCampaignsByWorkspace(workspaceId: string): Promise<Campaign[]>;
   updateCampaign(input: UpdateCampaignInput): Promise<Campaign>;
-  deleteCampaign(campaignId: string): Promise<void>;
+  deleteCampaign(workspaceId: string, campaignId: string): Promise<void>;
 };
 
 function buildCampaignSettings(
@@ -204,14 +204,16 @@ export function createCampaignRepository(
 
       return mapCampaignRow(getFirstRowOrThrow(result.rows, "campaign"));
     },
-    async deleteCampaign(campaignId) {
+    async deleteCampaign(workspaceId, campaignId) {
+      const validatedWorkspaceId = validateWorkspaceId(workspaceId);
       const validatedCampaignId = validateCampaignId(campaignId);
       await client.query({
         statement: `
           DELETE FROM campaigns
-          WHERE id = $1
+          WHERE workspace_id = $1
+            AND id = $2
         `,
-        params: [validatedCampaignId],
+        params: [validatedWorkspaceId, validatedCampaignId],
       });
     },
   };

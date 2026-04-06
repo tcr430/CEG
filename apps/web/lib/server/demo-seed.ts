@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+﻿import { randomUUID } from "node:crypto";
 
 import {
   createInMemoryDraftReplyRepository,
@@ -28,6 +28,7 @@ import {
   demoResearchSnapshots,
   demoSeedSummary,
   demoSeedVersion,
+  demoSequenceSendPlans,
   demoSenderProfiles,
   demoSequences,
 } from "../../../../infrastructure/demo-data/fixtures";
@@ -39,11 +40,13 @@ import {
 import { getSharedAuditEventRepository } from "./audit-events";
 import { createCampaignForWorkspace, createProspectForCampaign, updateProspectForCampaign } from "./campaigns";
 import { createOperationContext } from "./observability";
+import { refreshCampaignPerformanceMetrics } from "./campaign-performance";
 import {
   appendLatestSequenceMessagesToProspectThread,
   createInboundReplyForProspect,
   getReplyThreadStateForProspect,
 } from "./replies";
+import { markProspectThreadMessageSent } from "./inbox-drafts";
 import { createSenderProfileForWorkspace } from "./sender-profiles";
 import { getSharedUsageEventRepository } from "./usage-events";
 import { getWorkspaceRecordById, updateWorkspaceSettings } from "./workspaces";
@@ -166,6 +169,7 @@ export async function seedWorkspaceDemoData(input: {
   const senderProfileIds = new Map<string, string>();
   const campaignIds = new Map<string, string>();
   const prospectsByKey = new Map<string, Awaited<ReturnType<typeof createProspectForCampaign>>>();
+  const sequenceSendPlans = new Map(demoSequenceSendPlans.map((plan) => [plan.sequenceKey, plan]));
 
   for (const senderProfile of demoSenderProfiles) {
     const created = await createSenderProfileForWorkspace({
@@ -387,12 +391,38 @@ export async function seedWorkspaceDemoData(input: {
       },
     });
 
-    await appendLatestSequenceMessagesToProspectThread({
+    const createdMessages = await appendLatestSequenceMessagesToProspectThread({
       workspaceId: input.workspaceId,
       campaignId: prospect.campaignId,
       prospectId: prospect.id,
       userId: input.userId ?? undefined,
     });
+
+    const sendPlan = sequenceSendPlans.get(sequence.key);
+    if (sendPlan) {
+      const baseSentAt = new Date(sendPlan.baseSentAt);
+      for (const [order, messageIndex] of sendPlan.sentMessageIndexes.entries()) {
+        const message = createdMessages[messageIndex];
+
+        if (!message) {
+          continue;
+        }
+
+        const sentAt = new Date(baseSentAt.getTime() + order * 60 * 60 * 1000);
+        await markProspectThreadMessageSent({
+          workspaceId: input.workspaceId,
+          campaignId: prospect.campaignId,
+          prospectId: prospect.id,
+          messageId: message.id,
+          userId: input.userId ?? undefined,
+          requestId: operation.requestId,
+          mode: "manual",
+          providerMessageId: `demo-sent-${sequence.key}-${messageIndex + 1}`,
+          providerThreadId: `demo-thread-${prospect.id}`,
+          sentAt,
+        });
+      }
+    }
   }
 
   for (const threadFixture of demoReplyThreads) {
@@ -409,6 +439,7 @@ export async function seedWorkspaceDemoData(input: {
         subject: inbound.subject,
         bodyText: inbound.bodyText,
         userId: input.userId ?? undefined,
+        autoAnalyze: false,
       });
     }
 
@@ -554,6 +585,8 @@ export async function seedWorkspaceDemoData(input: {
         demoSeedVersion,
       },
     });
+
+    await refreshCampaignPerformanceMetrics(input.workspaceId, prospect.campaignId);
   }
 
   const loadedAt = new Date().toISOString();
@@ -583,3 +616,10 @@ export async function seedWorkspaceDemoData(input: {
     summary: demoSeedSummary,
   };
 }
+
+
+
+
+
+
+
