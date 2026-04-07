@@ -1,4 +1,4 @@
-﻿-- Workspace-scoped Row Level Security foundation for Supabase/Postgres.
+-- Workspace-scoped Row Level Security foundation for Supabase/Postgres.
 --
 -- Intent:
 -- 1. Keep normal product tables readable and writable only within the caller's workspace scope.
