@@ -1,15 +1,22 @@
-﻿# Outbound Copilot
+# OutFlow
 
-Institutional-grade outbound copilot for SDRs, SaaS founders, and lead generation agencies.
+Agency-first operating system for hyperpersonalized cold email.
 
-The product generates structured outbound artifacts using:
+The current product is designed primarily for small-to-mid outbound agencies serving B2B clients with multi-client campaign execution and manual-heavy personalization workflows. It is built to help teams create better, more personalized cold email faster while keeping human control, reviewability, and campaign learning inside the workflow.
+
+Today the system supports:
 - sender-aware context when available
 - prospect-aware research from public websites
+- structured sequence and reply workflows
 - a basic fallback mode when sender-aware personalization is not available
 
-The system is being built as a migration-ready monorepo with service-style boundaries, strict validation, and a long-term data strategy that supports model evaluation and future fine-tuning of open-weight models.
+The product should be understood as a workflow system, not just a generation utility. AI assists with research, drafting, and classification, but the operating model remains human-reviewed: AI proposes, human approves.
 
-Inbox-provider integrations are prepared behind a provider-agnostic contract as well, so Gmail and Microsoft 365 support can be added later without reshaping the core thread model.
+This repository is being built as a migration-ready monorepo with service-style boundaries, strict validation, and a long-term data strategy that supports evaluation, operational memory, and future model improvement.
+
+Inbox-provider integrations are prepared behind a provider-agnostic contract so Gmail and Microsoft 365 support can evolve without reshaping the core thread model. Gmail is the first concrete provider path in the repo today.
+
+Supported secondary modes remain in the product today for SDR, founder-led, and basic fallback workflows, but they should be understood as supported scope rather than the primary business positioning.
 
 ## Phase 1 Scope
 
@@ -63,6 +70,9 @@ infrastructure/
 - provider abstraction for future model portability
 - internal capability-level routing for multi-provider evaluation readiness
 - architecture choices that can later be extracted into services
+- workflow ownership over one-shot generation
+- operational memory and campaign learning grounded in structured product data
+- human review as the default control surface for AI-assisted work
 
 ## Local Development
 
@@ -80,6 +90,8 @@ The app is designed to stay portable, but it is ready for Vercel deployment with
 - set Supabase, Stripe, and OpenAI variables only for the features you actually enable
 - keep server-only secrets in server modules; secret-bearing integrations live under [server](D:/Project/CEG/apps/web/lib/server)
 - Vercel preview deployments can fall back to `VERCEL_URL` when `NEXT_PUBLIC_APP_URL` is omitted, but production should use an explicit canonical origin
+
+User-facing packaging now uses `Starter`, `Growth`, and `Enterprise`. Internal billing codes remain `free`, `pro`, and `agency` for compatibility, so expect those identifiers in code, Stripe mappings, and operational docs.
 
 ## Validation Commands
 
@@ -106,7 +118,3 @@ For compatibility with repository guidance in `AGENTS.md`, the same template val
 - [ARCHITECTURE.md](D:/Project/CEG/ARCHITECTURE.md)
 - [DATA_STRATEGY.md](D:/Project/CEG/DATA_STRATEGY.md)
 - [AGENTS.md](D:/Project/CEG/AGENTS.md)
-
-
-
-

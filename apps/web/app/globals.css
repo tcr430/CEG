@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   color-scheme: light;
   --background: #f4efe6;
   --foreground: #1f1b16;
@@ -692,11 +692,27 @@ h2 {
 
 .onboardingChoiceButton {
   width: 100%;
+  min-height: 88px;
+  padding: 14px 16px;
+  text-align: left;
 }
+
+.onboardingChoiceButton small {
+  display: block;
+  margin-top: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.dashboardPanelDense {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 
 @media (max-width: 900px) {
   .onboardingProgressStrip,
-  .onboardingChoiceGrid {
+  .onboardingChoiceGrid,
+  .dashboardPanelDense {
     grid-template-columns: 1fr;
   }
 }
@@ -1185,4 +1201,60 @@ body {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+.workflowStageCard {
+  gap: 16px;
+}
+
+.workflowStageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.workflowStageItem {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.workflowStageHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workflowStageIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.workflowStageItem-complete {
+  border-color: rgba(26, 82, 64, 0.24);
+  background: rgba(26, 82, 64, 0.08);
+}
+
+.workflowStageItem-current {
+  border-color: rgba(166, 93, 36, 0.28);
+  background: rgba(166, 93, 36, 0.1);
+}
+
+.workflowStageItem-upcoming {
+  opacity: 0.92;
+}
+
+.workflowStageHint {
+  margin-top: 0;
 }

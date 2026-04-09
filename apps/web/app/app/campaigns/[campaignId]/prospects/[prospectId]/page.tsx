@@ -11,6 +11,7 @@ import type {
 
 import { ActionEmptyState } from "../../../../../../components/action-empty-state";
 import { ArtifactActionButtons } from "../../../../../../components/artifact-action-buttons";
+import { WorkflowStageStrip } from "../../../../../../components/workflow-stage-strip";
 import { FeedbackBanner } from "../../../../../../components/feedback-banner";
 import { SubmitButton } from "../../../../../../components/submit-button";
 
@@ -32,6 +33,10 @@ import {
 import { getProspectForCampaign } from "../../../../../../lib/server/campaigns";
 import { getWorkspaceInboxState } from "../../../../../../lib/server/inbox/service";
 import { getReplyAnalysisGuidance } from "../../../../../../lib/reply-analysis-guidance";
+import {
+  buildVisibleWorkflowStages,
+  getVisibleWorkflowNextAction,
+} from "../../../../../../lib/workflow-visibility";
 import { getWorkspaceOnboardingSummary } from "../../../../../../lib/server/onboarding";
 import { listProspectAsyncOperations } from "../../../../../../lib/server/prospect-job-runs";
 import { getLatestResearchSnapshotForProspect } from "../../../../../../lib/server/prospect-research";
@@ -109,7 +114,7 @@ function formatInboxDraftStatus(status: "created" | "updated" | "sent") {
     return "Sent";
   }
 
-  return status === "created" ? "Draft in Gmail" : "Draft refreshed in Gmail";
+  return status === "created" ? "Draft in Gmail for review" : "Draft refreshed in Gmail for review";
 }
 
 function formatMessageStatus(status: string) {
@@ -240,15 +245,27 @@ export default async function ProspectDetailPage({
     billing,
     performance: null,
   });
+  const workflowStages = buildVisibleWorkflowStages({
+    setupReady:
+      onboarding.senderProfileCount > 0 || onboarding.selectedUserType === "basic",
+    campaignReady: true,
+    prospectReady: true,
+    researchReady: latestSnapshot !== null,
+    draftReady: latestSequence !== null,
+    reviewReady: latestSequence !== null,
+    replyReady:
+      replyState.thread !== null || replyState.latestInboundMessage !== null || hasDraftBundles,
+    iterationReady: replyState.latestAnalysis !== null || hasDraftBundles,
+  });
+  const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
 
   return (
     <main className="shell">
       <section className="hero">
-        <p className="eyebrow">Prospect Research</p>
+        <p className="eyebrow">Prospect workflow</p>
         <h1>{prospect.companyName ?? prospect.contactName ?? "Prospect detail"}</h1>
         <p className="lede">
-          Run grounded prospect research, generate outreach sequences, and manage
-          the full prospect thread without mixing server logic into the UI.
+          Run the full prospect workflow in order: grounded research, reviewed sequence drafts, thread-based reply handling, and outcome-aware iteration inside one workspace-scoped record.
         </p>
       </section>
 
@@ -265,10 +282,23 @@ export default async function ProspectDetailPage({
 
       <section className="profileDetailGrid">
         <div className="stack">
+          <WorkflowStageStrip
+            label="Workflow moat"
+            title="Keep this account inside one end-to-end workflow"
+            description="This screen is where the product should feel most productized: the same prospect record carries research, draft generation, human review, reply handling, and the structured signals that make later guidance more informed over time."
+            stages={workflowStages}
+            nextActionLabel={workflowNextAction ? "Current focus" : undefined}
+            nextActionTitle={workflowNextAction?.label}
+            nextActionNote={workflowNextAction?.note}
+          />
+
           <div className="dashboardCard">
-            <p className="cardLabel">Prospect summary</p>
+            <p className="cardLabel">Target account</p>
             <h2>{prospect.contactName ?? prospect.companyName ?? "Prospect"}</h2>
             <p>{prospect.companyWebsite ?? "Add a public website URL to run research."}</p>
+            <p>
+              This prospect record is the anchor for stored company context, research snapshots, draft history, and reply handling over time.
+            </p>
             <div className="pillRow">
               <span className="pill">{prospect.status}</span>
               {latestSnapshot ? (
@@ -284,8 +314,8 @@ export default async function ProspectDetailPage({
             </div>
           </div>
           <div className="dashboardCard">
-            <p className="cardLabel">Operation status</p>
-            <h2>Slow workflow readiness</h2>
+            <p className="cardLabel">Run status</p>
+            <h2>Current stage activity</h2>
             <p>
               Research and generation still complete inline today, but each run now records durable state so retries and future queue workers can resume safely.
             </p>
@@ -314,7 +344,7 @@ export default async function ProspectDetailPage({
           </div>
 
           <div className="dashboardCard">
-            <p className="cardLabel">Plan guardrails</p>
+            <p className="cardLabel">Workflow headroom</p>
             <h2>Current workspace limits</h2>
             <ul className="researchList compactResearchList">
               <li>
@@ -355,6 +385,11 @@ export default async function ProspectDetailPage({
           ) : null}
 
           <form id="research-form" action={runProspectResearchAction} className="panel prospectResearchForm">
+            <p className="cardLabel">Stage 1</p>
+            <h2>Research this target account</h2>
+            <p>
+              Start by grounding the workflow in real company evidence so later drafts and reviews stay specific. The resulting research snapshot becomes stored context the workflow can reuse later.
+            </p>
             <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
             <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
             <input type="hidden" name="prospectId" value={prospect.id} />
@@ -372,15 +407,20 @@ export default async function ProspectDetailPage({
 
             <p className="statusMessage">
               The workflow fetches one public page safely, extracts structured text,
-              builds a confidence-aware company profile, and stores a research snapshot.
+              builds a confidence-aware company profile, and stores a research snapshot for review before generation.
             </p>
 
             <div className="inlineActions">
-              <SubmitButton className="buttonPrimary" pendingLabel="Running research...">Run website research</SubmitButton>
+              <SubmitButton className="buttonPrimary" pendingLabel="Running research...">Run research step</SubmitButton>
             </div>
           </form>
 
           <form id="sequence-form" action={generateProspectSequenceAction} className="panel prospectResearchForm">
+            <p className="cardLabel">Stage 2</p>
+            <h2>Create a draft sequence for review</h2>
+            <p>
+              Draft only after the brief and research are ready, then treat the output as something to review, not something to send blindly.
+            </p>
             <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
             <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
             <input type="hidden" name="prospectId" value={prospect.id} />
@@ -388,20 +428,20 @@ export default async function ProspectDetailPage({
             <p className="statusMessage">
               Sequence generation uses the campaign brief, sender profile when available,
               and the latest research snapshot. If research confidence is low, the copy is
-              instructed to stay softer and avoid unsupported specifics.
+              instructed to stay softer and avoid unsupported specifics. The result is a draft sequence for review and editing before use.
             </p>
 
             <div className="inlineActions">
-              <SubmitButton className="buttonPrimary" pendingLabel="Generating sequence...">Generate email sequence</SubmitButton>
+              <SubmitButton className="buttonPrimary" pendingLabel="Generating sequence...">Create sequence draft</SubmitButton>
             </div>
           </form>
 
           <div className="dashboardCard researchSnapshotCard">
-            <p className="cardLabel">Conversation thread</p>
-            <h2>Prospect thread timeline</h2>
+            <p className="cardLabel">Stage 4</p>
+            <h2>Handle replies and follow-through</h2>
             <p>
               Capture inbound replies, add manual outbound notes, and attach generated
-              sequence drafts so the thread stays auditable and easy to scan.
+              sequence drafts so the thread stays auditable and easy to scan. Reply analysis and draft replies are suggestions for review, not automatic decisions. The thread becomes stored inbox and reply context for later follow-through.
             </p>
 
             <div className="threadComposerGrid">
@@ -466,7 +506,7 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Analyze latest reply</SubmitButton>
+                  <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Run reply analysis</SubmitButton>
                 </form>
               ) : null}
 
@@ -475,7 +515,7 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <SubmitButton className="buttonSecondary" pendingLabel="Generating drafts...">Generate reply drafts</SubmitButton>
+                  <SubmitButton className="buttonSecondary" pendingLabel="Generating drafts...">Generate reply draft options</SubmitButton>
                 </form>
               ) : null}
 
@@ -484,10 +524,14 @@ export default async function ProspectDetailPage({
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                   <input type="hidden" name="prospectId" value={prospect.id} />
-                  <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence to thread</SubmitButton>
+                  <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence draft to thread</SubmitButton>
                 </form>
               ) : null}
             </div>
+
+            <p className="statusMessage compactStatusMessage">
+              AI proposes reply analysis and draft responses here. Your team still decides what to send, edit, save, or move into Gmail.
+            </p>
 
             {!hasDraftBundles ? (
               <ActionEmptyState
@@ -505,14 +549,14 @@ export default async function ProspectDetailPage({
                       <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                       <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                       <input type="hidden" name="prospectId" value={prospect.id} />
-                      <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Analyze latest reply</SubmitButton>
+                      <SubmitButton className="buttonPrimary" pendingLabel="Analyzing reply...">Run reply analysis</SubmitButton>
                     </form>
                   ) : (
                     <form action={generateReplyDraftsAction}>
                       <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                       <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                       <input type="hidden" name="prospectId" value={prospect.id} />
-                      <SubmitButton className="buttonPrimary" pendingLabel="Generating drafts...">Generate reply drafts</SubmitButton>
+                      <SubmitButton className="buttonPrimary" pendingLabel="Generating drafts...">Generate reply draft options</SubmitButton>
                     </form>
                   )
                 }
@@ -663,6 +707,9 @@ export default async function ProspectDetailPage({
                         {entry.draftBundles.length > 0 ? (
                           <div className="threadInsightCard">
                             <h4>Draft reply versions</h4>
+                            <p className="statusMessage compactStatusMessage">
+                              Each version is a proposed response set. Review and edit before using it in a live client thread.
+                            </p>
                             <div className="stack">
                               {entry.draftBundles.map((bundle, bundleIndex) => (
                                 <section key={`${bundle.version}-${bundle.bundleId}`} className="threadDraftBundle">
@@ -733,7 +780,7 @@ export default async function ProspectDetailPage({
                                                 if (!activeInboxAccount) {
                                                   return (
                                                     <p className="statusMessage compactStatusMessage">
-                                                      Connect Gmail in Settings to turn this into an inbox draft.
+                                                      Connect Gmail in Settings to turn this into a review draft.
                                                     </p>
                                                   );
                                                 }
@@ -752,7 +799,7 @@ export default async function ProspectDetailPage({
                                                     <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                                                     <input type="hidden" name="prospectId" value={prospect.id} />
                                                     <input type="hidden" name="targetSlotId" value={draft.slotId} />
-                                                    <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                                                    <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create Gmail draft</SubmitButton>
                                                   </form>
                                                 );
                                               })()}
@@ -837,7 +884,7 @@ export default async function ProspectDetailPage({
                                                 </label>
                                                 <div className="inlineActions">
                                                   <button type="submit" className="buttonSecondary">
-                                                    Save edited draft
+                                                    Save reviewed draft
                                                   </button>
                                                 </div>
                                               </form>
@@ -873,7 +920,7 @@ export default async function ProspectDetailPage({
                         <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                         <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                         <input type="hidden" name="prospectId" value={prospect.id} />
-                        <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence to thread</SubmitButton>
+                        <SubmitButton className="buttonSecondary" pendingLabel="Adding to thread...">Add latest sequence draft to thread</SubmitButton>
                       </form>
                     ) : null}
                   </>
@@ -884,7 +931,7 @@ export default async function ProspectDetailPage({
 
           {latestSnapshot ? (
             <div className="dashboardCard researchSnapshotCard">
-              <p className="cardLabel">Latest snapshot</p>
+              <p className="cardLabel">Stage 1 | Research snapshot</p>
               <h2>{companyProfile?.companyName ?? prospect.companyName ?? "Company profile"}</h2>
               <p>
                 {softLead(confidenceLabel)} summary: {companyProfile?.summary ?? "No summary extracted yet."}
@@ -957,7 +1004,7 @@ export default async function ProspectDetailPage({
               nextAction={researchEmptyState.nextAction}
               actions={
                 <a href="#research-form" className="buttonPrimary">
-                  Run research
+                  Start research stage
                 </a>
               }
             />
@@ -965,10 +1012,13 @@ export default async function ProspectDetailPage({
 
           {latestSequence ? (
             <div className="dashboardCard researchSnapshotCard">
-              <p className="cardLabel">Latest sequence</p>
+              <p className="cardLabel">Stage 3 | Review sequence draft</p>
               <h2>Sequence version {latestSequence.sequenceVersion}</h2>
               <p>
-                Generated for {latestSequence.generatedForMode.replaceAll("_", " ")} mode.
+                Generated for {latestSequence.generatedForMode.replaceAll("_", " ")} mode. This draft now joins the stored prospect workflow history.
+              </p>
+              <p className="statusMessage compactStatusMessage">
+                This is the review stage: refine the draft, move the right parts into the thread, and only then create inbox drafts or mark messages as sent.
               </p>
               <div className="researchSection">
                 <h3>Subject lines</h3>
@@ -1093,7 +1143,7 @@ export default async function ProspectDetailPage({
                   if (!activeInboxAccount) {
                     return (
                       <p className="statusMessage compactStatusMessage">
-                        Connect Gmail in Settings to push this email into the inbox as a draft.
+                        Connect Gmail in Settings to push this email into Gmail as a review draft.
                       </p>
                     );
                   }
@@ -1112,7 +1162,7 @@ export default async function ProspectDetailPage({
                       <input type="hidden" name="campaignId" value={resolvedParams.campaignId} />
                       <input type="hidden" name="prospectId" value={prospect.id} />
                       <input type="hidden" name="artifactType" value="sequence_initial_email" />
-                      <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                      <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create Gmail draft</SubmitButton>
                     </form>
                   );
                 })()}
@@ -1159,7 +1209,7 @@ export default async function ProspectDetailPage({
                     <textarea name="rationale" rows={3} defaultValue={latestSequence.initialEmail.email.rationale} />
                   </label>
                   <div className="inlineActions">
-                    <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save edited initial email</SubmitButton>
+                    <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save reviewed initial email</SubmitButton>
                   </div>
                 </form>
               </div>
@@ -1224,7 +1274,7 @@ export default async function ProspectDetailPage({
                             <input type="hidden" name="prospectId" value={prospect.id} />
                             <input type="hidden" name="artifactType" value="sequence_follow_up_step" />
                             <input type="hidden" name="targetStepNumber" value={step.stepNumber} />
-                            <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create draft in Gmail</SubmitButton>
+                            <SubmitButton className="buttonSecondary" pendingLabel="Creating draft...">Create Gmail draft</SubmitButton>
                           </form>
                         );
                       })()}
@@ -1273,7 +1323,7 @@ export default async function ProspectDetailPage({
                           <textarea name="rationale" rows={3} defaultValue={step.rationale} />
                         </label>
                         <div className="inlineActions">
-                          <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save edited step</SubmitButton>
+                          <SubmitButton className="buttonSecondary" pendingLabel="Saving edit...">Save reviewed step</SubmitButton>
                         </div>
                       </form>
                     </li>
@@ -1321,13 +1371,13 @@ export default async function ProspectDetailPage({
             </div>
           ) : (
             <ActionEmptyState
-              label="No sequence yet"
+              label="Stage 2 not started"
               title={sequenceEmptyState.title}
               description={sequenceEmptyState.description}
               nextAction={sequenceEmptyState.nextAction}
               actions={
                 <a href="#sequence-form" className="buttonPrimary">
-                  Generate sequence
+                  Create draft for review
                 </a>
               }
             />
@@ -1335,18 +1385,19 @@ export default async function ProspectDetailPage({
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Capture notes</p>
-          <h2>What gets stored</h2>
+          <p className="cardLabel">Workflow memory</p>
+          <h2>What this workflow preserves over time</h2>
           <p>
             The thread now preserves manual outbound messages, generated outbound sequence
             drafts, inbound prospect replies, reply analyses, and draft reply versions so
-            future inbox sync can attach to a clean server-side timeline.
+            future inbox sync can attach to a clean server-side timeline. That includes what the system proposed and what a human later edited or approved when the workflow captures it. In practical terms, this is where prospect-level operational memory is already real in the product today.
           </p>
         </div>
       </section>
     </main>
   );
 }
+
 
 
 

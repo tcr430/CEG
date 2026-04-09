@@ -1,10 +1,11 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../components/feedback-banner";
 import { PerformanceSummaryCard } from "../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../components/upgrade-prompt-card";
+import { WorkflowStageStrip } from "../../components/workflow-stage-strip";
 import { getWorkspaceAppContext } from "../../lib/server/auth";
 import {
   buildCampaignOverview,
@@ -16,6 +17,10 @@ import { getWorkspaceOnboardingSummary } from "../../lib/server/onboarding";
 import { getUserTypeLabel } from "../../lib/server/onboarding-state";
 import { getWorkspacePerformanceSummary } from "../../lib/server/campaign-performance";
 import { getUpgradePrompt } from "../../lib/upgrade-prompts";
+import {
+  buildVisibleWorkflowStages,
+  getVisibleWorkflowNextAction,
+} from "../../lib/workflow-visibility";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -65,15 +70,27 @@ export default async function DashboardPage({
     snapshot: performance,
     campaignCount: campaignOverview.campaignCount,
   });
+  const workflowStages = buildVisibleWorkflowStages({
+    setupReady:
+      onboarding.senderProfileCount > 0 || onboarding.selectedUserType === "basic",
+    campaignReady: onboarding.campaignCount > 0,
+    prospectReady: onboarding.prospectCount > 0,
+    researchReady: onboarding.prospectCount > 0,
+    draftReady: performance.outboundMessages > 0,
+    reviewReady: performance.outboundMessages > 0,
+    replyReady: performance.replies > 0,
+    iterationReady: performance.replies > 0 || performance.positiveReplies > 0,
+  });
+  const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
 
   return (
     <main className="appShell">
       <aside className="sidebar">
         <p className="eyebrow">Workspace overview</p>
-        <h1 className="appTitle">Launch your next outbound workflow</h1>
+        <h1 className="appTitle">Run client outbound from one controlled workflow</h1>
         <p className="sidebarText">
-          Move from sender context to campaign setup, prospect research, sequences,
-          and reply handling inside one workspace-scoped system.
+          Move from sender and client context to campaign setup, prospect research, sequences,
+          reply handling, and reusable workflow memory inside one workspace-scoped system.
         </p>
 
         <div className="workspaceBadge">
@@ -112,8 +129,18 @@ export default async function DashboardPage({
       <section className="dashboardPanel">
         <FeedbackBanner error={params.error} notice={params.notice} />
 
+        <WorkflowStageStrip
+          label="Workflow moat"
+          title="One visible path from setup to iteration"
+          description="The workspace is meant to help operators run the full outbound workflow in one place while also preserving reusable context over time: establish context, brief the campaign, add target accounts, ground drafts in research, review what AI proposes, handle replies, and learn from outcomes in a way that can inform better guidance later."
+          stages={workflowStages}
+          nextActionLabel={workflowNextAction ? "Current focus" : undefined}
+          nextActionTitle={workflowNextAction?.label}
+          nextActionNote={workflowNextAction?.note}
+        />
+
         <div className="dashboardCard">
-          <p className="cardLabel">Authenticated user</p>
+          <p className="cardLabel">Operator access</p>
           <h2>{context.user.email ?? "Signed-in user"}</h2>
           <p>
             Workspace access is resolved on the server from local user and membership
@@ -122,10 +149,10 @@ export default async function DashboardPage({
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Current workspace</p>
+          <p className="cardLabel">Active workspace</p>
           <h2>{workspace.workspaceSlug ?? workspace.workspaceId}</h2>
           <p>
-            User type: {getUserTypeLabel(onboarding.selectedUserType)}. Plan: {onboarding.billing.planLabel}.
+            Operating mode: {getUserTypeLabel(onboarding.selectedUserType)}. Plan: {onboarding.billing.planLabel}.
           </p>
         </div>
 
@@ -133,10 +160,10 @@ export default async function DashboardPage({
           <p className="cardLabel">Core setup</p>
           <h2>
             {onboarding.isComplete
-              ? "Ready for live outreach"
+              ? "Ready for live client work"
               : onboarding.isSkipped
                 ? "Onboarding paused"
-                : "Setup still in progress"}
+                : "Client workflow setup in progress"}
           </h2>
           <p>
             {onboarding.steps.filter((step) => step.status === "complete").length} of {onboarding.steps.length} setup steps are complete for this workspace.
@@ -151,48 +178,55 @@ export default async function DashboardPage({
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Quick start</p>
-          <h2>Follow the strongest demo path</h2>
+          <p className="cardLabel">Workflow path</p>
+          <h2>Move the next client workflow forward</h2>
+          <p>
+            These actions map to the operating sequence that creates the workflow moat: setup,
+            brief, queue, research, draft, review, reply handling, and iteration.
+          </p>
           <div className="launchPathGrid">
             <Link
               href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}
               className="profileCard"
             >
-              <p className="cardLabel">Step 1</p>
-              <h3>Create sender profile</h3>
-              <p>Capture positioning, value proposition, proof points, and tone.</p>
+              <p className="cardLabel">Setup</p>
+              <h3>Capture sender context</h3>
+              <p>Set the reusable positioning, proof points, and tone the workflow will carry forward into campaigns and drafts.</p>
             </Link>
             <Link
               href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
               className="profileCard"
             >
-              <p className="cardLabel">Step 2</p>
-              <h3>Create campaign</h3>
-              <p>Set offer summary, ICP, framework, and sender linkage.</p>
+              <p className="cardLabel">Brief</p>
+              <h3>Create campaign brief</h3>
+              <p>Define the client offer, ICP, framework, and sender linkage before prospects move into research and drafting.</p>
             </Link>
             <Link
               href={`/app/campaigns?workspace=${workspace.workspaceId}`}
               className="profileCard"
             >
-              <p className="cardLabel">Step 3</p>
-              <h3>Add prospects</h3>
-              <p>Move from campaign brief into real companies and contacts.</p>
+              <p className="cardLabel">Queue and research</p>
+              <h3>Add prospects and move into live work</h3>
+              <p>Bring real target accounts into the workflow so research, sequence drafts, review, and reply handling all start from stored context.</p>
             </Link>
             <Link
               href={`/app/settings?workspace=${workspace.workspaceId}`}
               className="profileCard"
             >
-              <p className="cardLabel">Plan</p>
-              <h3>Check limits and upgrades</h3>
-              <p>Review research, sequence, and reply-intelligence headroom.</p>
+              <p className="cardLabel">Headroom</p>
+              <h3>Check workflow headroom</h3>
+              <p>Review limits before the workflow moves into heavier research, drafting, reply handling, and iteration.</p>
             </Link>
           </div>
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Performance snapshot</p>
+          <p className="cardLabel">Performance signals</p>
           <h2>{performance.outboundMessages} outbound message(s)</h2>
           <p>Replies: {performance.replies}. Positive replies: {performance.positiveReplies}.</p>
+          <p>
+            These snapshots are lightweight today, but they give the workspace real campaign history the product can use for more informed review and guidance over time.
+          </p>
           <p>
             Reply rate: {performance.replyRate === null ? "No outbound volume yet" : `${Math.round(performance.replyRate * 100)}%`}.
             Positive reply rate: {performance.positiveReplyRate === null ? "No outbound volume yet" : `${Math.round(performance.positiveReplyRate * 100)}%`}.
@@ -216,7 +250,7 @@ export default async function DashboardPage({
           </div>
           <div className="dashboardCard nestedCard">
             <p className="cardLabel">Quick switching</p>
-            <h3>Move between campaigns faster</h3>
+            <h3>Move between client campaigns faster</h3>
             {campaignOverview.quickSwitchCampaigns.length > 0 ? (
               <div className="inlineActions compactInlineActions">
                 {campaignOverview.quickSwitchCampaigns.map((item) => (
@@ -253,24 +287,33 @@ export default async function DashboardPage({
                 ))}
               </ul>
             ) : (
-              <p>Once outbound messages start landing replies, the strongest campaigns will surface here.</p>
+              <p>Once live campaigns start landing replies, the strongest client motions will surface here and give the team a conservative read on what has started working.</p>
             )}
           </div>
         </div>
 
         <div className="dashboardCard">
-          <p className="cardLabel">Coverage snapshot</p>
+          <p className="cardLabel">Stored context</p>
           <h2>{onboarding.senderProfileCount} sender profile(s)</h2>
           <p>
             {onboarding.senderProfileCount > 0
-              ? "Sender context is ready for campaign selection and higher-quality generation."
-              : "Start with a sender profile, or continue in basic mode until sender-specific context is ready."}
+              ? "Reusable sender context is ready for campaign selection and higher-quality client work."
+              : "Start with a sender profile, or continue in basic mode until reusable sender context is ready."}
           </p>
           <p>
             Campaigns: {onboarding.campaignCount}. Prospects: {onboarding.prospectCount}.
+          </p>
+          <p>
+            The workspace becomes more useful as it accumulates sender context, campaign briefs, target accounts, stored reply history, and outcome signals that later workflows can reference. That foundation is what makes the product performance-aware rather than purely generative.
           </p>
         </div>
       </section>
     </main>
   );
 }
+
+
+
+
+
+

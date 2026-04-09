@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../../components/feedback-banner";
@@ -51,8 +51,7 @@ export default async function SenderProfileDetailPage({
         <p className="eyebrow">Sender Profiles</p>
         <h1>{profile.name}</h1>
         <p className="lede">
-          Keep sender context explicit and editable so future campaign and
-          sequence workflows can reference this profile directly.
+          Keep sender context explicit and editable so future campaign and sequence workflows can reference this stored context directly instead of recreating it each time.
         </p>
       </section>
 
@@ -76,6 +75,9 @@ export default async function SenderProfileDetailPage({
             {profile.targetCustomer ??
               "Add target customer detail so future sender-aware messaging has sharper context."}
           </p>
+          <p>
+            This record preserves reusable sender voice, proof, positioning, and workflow goals so later campaign briefs and drafts can start from stored context.
+          </p>
           <div className="pillRow">
             <span className="pill">{profile.status}</span>
             <span className="pill">{billing.planLabel} plan</span>
@@ -95,3 +97,6 @@ export default async function SenderProfileDetailPage({
     </main>
   );
 }
+
+
+

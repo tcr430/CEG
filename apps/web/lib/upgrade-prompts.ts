@@ -162,18 +162,18 @@ function buildGenerationLimitPrompt(
 
   const body =
     billing.planCode === "free"
-      ? `This workspace is running close to its ${pressure.label} limit. Upgrade to Pro for more headroom so you can keep researching, generating, and iterating toward more replies without rationing each run.`
-      : `This workspace is pressing against ${pressure.label} capacity. Move to Agency to keep improving performance across more prospects and campaigns without monthly ceilings slowing the team down.`;
+      ? `This workspace is running close to its ${pressure.label} limit. Upgrade to Growth for more headroom so the team can keep researching, generating, and iterating across live client work without rationing each run.`
+      : `This workspace is pressing against ${pressure.label} capacity. Move to Enterprise to keep improving performance across more client campaigns without monthly ceilings slowing the team down.`;
 
   return {
     id: "generation_limit",
     tone: pressure.remaining === 0 ? "strong" : "subtle",
     targetPlanCode,
-    eyebrow: "Upgrade prompt",
+    eyebrow: "Workflow capacity",
     title,
     body,
     ctaLabel:
-      targetPlanCode === "pro" ? "Upgrade to Pro" : "Upgrade to Agency",
+      targetPlanCode === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise",
   };
 }
 
@@ -195,18 +195,18 @@ function buildPerformancePrompt(
 
   const body =
     billing.planCode === "free"
-      ? "You now have real reply-rate signal. Upgrade to Pro to bring sender-aware context and more generation headroom into the workflow so you can push for better performance across more live prospects."
-      : "You now have real campaign performance data. Upgrade to Agency to keep testing and improving what drives replies without operational ceilings limiting the motion.";
+      ? "You now have real reply-rate signal. Upgrade to Growth to bring sender-aware context and more generation headroom into the workflow so the team can turn that early campaign history into more informed guidance across live client work."
+      : "You now have real campaign performance data. Upgrade to Enterprise to keep testing and refining what drives replies without operational ceilings limiting the client portfolio.";
 
   return {
     id: "performance_visibility",
     tone: "subtle",
     targetPlanCode,
-    eyebrow: "Performance signal",
+    eyebrow: "Campaign learning",
     title: "Turn early reply data into a stronger outbound motion",
     body,
     ctaLabel:
-      targetPlanCode === "pro" ? "Upgrade to Pro" : "Upgrade to Agency",
+      targetPlanCode === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise",
   };
 }
 
@@ -225,18 +225,18 @@ function buildReplyPrompt(
 
   const body =
     billing.planCode === "free"
-      ? "This workspace is leaning on reply intelligence heavily. Upgrade to Pro for more analysis and draft capacity so the team can respond faster and stay focused on more positive conversations."
-      : "Reply intelligence is now a meaningful part of this workflow. Upgrade to Agency to keep handling higher reply volume and more regeneration without plan friction.";
+      ? "This workspace is leaning on reply intelligence heavily. Upgrade to Growth for more analysis and draft capacity so the team can respond faster while building a stronger record of how replies are classified and handled."
+      : "Reply intelligence is now a meaningful part of this workflow. Upgrade to Enterprise to keep handling higher reply volume and more regeneration without plan friction across client work.";
 
   return {
     id: "reply_intelligence",
     tone: "subtle",
     targetPlanCode,
-    eyebrow: "Reply workflow",
+    eyebrow: "Reply handling",
     title: "Keep momentum when reply handling starts to matter",
     body,
     ctaLabel:
-      targetPlanCode === "pro" ? "Upgrade to Pro" : "Upgrade to Agency",
+      targetPlanCode === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise",
   };
 }
 
@@ -278,3 +278,4 @@ export function getUpgradePrompt(
         : null;
   }
 }
+

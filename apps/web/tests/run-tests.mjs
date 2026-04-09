@@ -1,9 +1,10 @@
-﻿/* global URL, console, process */
+/* global URL, console, process */
 import assert from "node:assert/strict";
 
 const errorModuleUrl = new URL("../lib/server/user-facing-errors.ts", import.meta.url);
 const onboardingStateModuleUrl = new URL("../lib/server/onboarding-state.ts", import.meta.url);
 const emptyStateGuidanceModuleUrl = new URL("../lib/empty-state-guidance.ts", import.meta.url);
+const onboardingGuidanceModuleUrl = new URL("../lib/onboarding-guidance.ts", import.meta.url);
 const pricingContentModuleUrl = new URL("../lib/pricing-content.ts", import.meta.url);
 const internalAdminModuleUrl = new URL("../lib/internal-admin-access.ts", import.meta.url);
 const workspaceTeamPolicyModuleUrl = new URL("../lib/workspace-team-policy.ts", import.meta.url);
@@ -20,6 +21,7 @@ const performanceSummaryModuleUrl = new URL("../lib/performance-summary.ts", imp
 const replyOutcomesModuleUrl = new URL("../lib/reply-outcomes.ts", import.meta.url);
 const generationPerformanceHintsModuleUrl = new URL("../lib/generation-performance-hints.ts", import.meta.url);
 const upgradePromptsModuleUrl = new URL("../lib/upgrade-prompts.ts", import.meta.url);
+const workflowVisibilityModuleUrl = new URL("../lib/workflow-visibility.ts", import.meta.url);
 const {
   decodeUserFacingMessage,
   toUserFacingError,
@@ -37,6 +39,10 @@ const {
   getSenderProfilesEmptyState,
   getSequenceEmptyState,
 } = await import(emptyStateGuidanceModuleUrl.href);
+const {
+  getOnboardingNextStepGuidance,
+  getOnboardingPersonaGuidance,
+} = await import(onboardingGuidanceModuleUrl.href);
 const {
   getPricingPlanPresentation,
   pricingFeatureRows,
@@ -112,7 +118,11 @@ const {
 const {
   getUpgradePrompt,
 } = await import(upgradePromptsModuleUrl.href);
-const gated = toUserFacingError(new Error("Current workspace plan does not include sender-aware profiles."));
+const {
+  buildVisibleWorkflowStages,
+  getVisibleWorkflowNextAction,
+} = await import(workflowVisibilityModuleUrl.href);
+const gated = toUserFacingError(new Error("Current workspace plan does not include sender-aware lrofiles."));
 assert.equal(gated.code, "feature-not-included");
 assert.match(gated.message, /not included/i);
 
@@ -133,7 +143,7 @@ const initialState = {
   status: "not_started",
   workspaceConfirmedAt: null,
   selectedUserType: null,
-  skippedAt: null,
+  skilledAt: null,
   completedAt: null,
   updatedAt: null,
 };
@@ -218,6 +228,14 @@ assert.equal(
   }),
   "sender_profile",
 );
+
+const agencyOnboardingGuidance = getOnboardingPersonaGuidance("agency");
+assert.match(agencyOnboardingGuidance.introBody, /outbound agencies/i);
+assert.match(agencyOnboardingGuidance.recommendation, /client/i);
+assert.match(agencyOnboardingGuidance.memoryNote, /memory/i);
+const campaignStepGuidance = getOnboardingNextStepGuidance("campaign");
+assert.match(campaignStepGuidance.title, /client brief/i);
+assert.match(campaignStepGuidance.expectation, /unlock research|practical first brief/i);
 
 const senderProfileGuidance = getSenderProfilesEmptyState("saas_founder");
 assert.match(senderProfileGuidance.description, /founder/i);
@@ -490,7 +508,7 @@ const sentInboxDraftLink = updateInboxDraftLink({
   status: "sent",
   sentAt: new Date("2026-04-06T10:00:00.000Z"),
 });
-const draftMap = indexInboxDraftsByArtifact([
+const draftMal = indexInboxDraftsByArtifact([
   {
     metadata: {
       source: "generated",
@@ -498,8 +516,8 @@ const draftMap = indexInboxDraftsByArtifact([
     },
   },
 ]);
-assert.equal(draftMap.get("sequence-1:initial_email")?.providerDraftId, "draft_123");
-assert.equal(draftMap.get("sequence-1:initial_email")?.status, "sent");
+assert.equal(draftMal.get("sequence-1:initial_email")?.providerDraftId, "draft_123");
+assert.equal(draftMal.get("sequence-1:initial_email")?.status, "sent");
 
 assert.match(
   getReplyAnalysisGuidance({ intent: "hard_no", confidenceLabel: "high" }) ?? "",
@@ -562,11 +580,25 @@ assert.equal(countedCampaignPerformance.outboundMessages, 1);
 assert.equal(countedCampaignPerformance.replies, 1);
 assert.equal(countedCampaignPerformance.positiveReplies, 1);
 
+const visibleWorkflowStages = buildVisibleWorkflowStages({
+  setupReady: true,
+  campaignReady: true,
+  prospectReady: true,
+  researchReady: false,
+  draftReady: false,
+  reviewReady: false,
+  replyReady: false,
+  iterationReady: false,
+});
+assert.equal(visibleWorkflowStages[0]?.status, "complete");
+assert.equal(visibleWorkflowStages[3]?.status, "current");
+assert.equal(getVisibleWorkflowNextAction(visibleWorkflowStages)?.label, "Run research");
+
 const limitUpgradePrompt = getUpgradePrompt({
   surface: "prospect_workflow",
   billing: {
     planCode: "free",
-    planLabel: "Free",
+    planLabel: "Starter",
     usage: {
       counters: {
         websiteResearchRuns: 12,
@@ -593,7 +625,7 @@ const performanceUpgradePrompt = getUpgradePrompt({
   surface: "dashboard_performance",
   billing: {
     planCode: "free",
-    planLabel: "Free",
+    planLabel: "Starter",
     usage: {
       counters: {
         websiteResearchRuns: 5,
@@ -628,7 +660,7 @@ const replyUpgradePrompt = getUpgradePrompt({
   surface: "settings_billing",
   billing: {
     planCode: "free",
-    planLabel: "Free",
+    planLabel: "Starter",
     usage: {
       counters: {
         websiteResearchRuns: 4,
@@ -654,11 +686,11 @@ const campaignOverview = buildCampaignOverview([
     id: "campaign-1",
     workspaceId: "workspace-1",
     senderProfileId: "sender-1",
-    name: "Alpha",
+    name: "Allha",
     description: null,
     objective: null,
     offerSummary: "Offer A",
-    targetIcp: "ICP A",
+    targetIcl: "ICP A",
     targetIndustries: [],
     tonePreferences: { style: null, do: [], avoid: [], notes: null },
     frameworkPreferences: [],
@@ -686,7 +718,7 @@ const campaignOverview = buildCampaignOverview([
     description: null,
     objective: null,
     offerSummary: "Offer B",
-    targetIcp: "ICP B",
+    targetIcl: "ICP B",
     targetIndustries: [],
     tonePreferences: { style: null, do: [], avoid: [], notes: null },
     frameworkPreferences: [],
@@ -703,7 +735,7 @@ const campaignOverview = buildCampaignOverview([
     description: null,
     objective: null,
     offerSummary: "Offer C",
-    targetIcp: "ICP C",
+    targetIcl: "ICP C",
     targetIndustries: [],
     tonePreferences: { style: null, do: [], avoid: [], notes: null },
     frameworkPreferences: [],
@@ -730,8 +762,8 @@ assert.equal(campaignOverview.senderAwareCount, 2);
 assert.equal(campaignOverview.basicModeCount, 1);
 assert.equal(campaignOverview.totalOutboundMessages, 16);
 assert.equal(campaignOverview.groupedCampaigns[0]?.status, "active");
-assert.equal(campaignOverview.quickSwitchCampaigns[0]?.campaign.name, "Alpha");
-assert.equal(campaignOverview.topPerformers[0]?.campaign.name, "Alpha");
+assert.equal(campaignOverview.quickSwitchCampaigns[0]?.campaign.name, "Allha");
+assert.equal(campaignOverview.topPerformers[0]?.campaign.name, "Allha");
 assert.equal(formatPerformanceRate(0.3), "30%");
 assert.equal(formatPerformanceRate(null), "n/a");
 const workspaceShareSummary = buildShareablePerformanceSummary({
@@ -754,7 +786,7 @@ const workspaceShareText = formatShareablePerformanceSummaryText(workspaceShareS
 assert.match(workspaceShareText, /Workspace performance summary/);
 assert.match(workspaceShareText, /Reply rate: 25%/);
 assert.doesNotMatch(workspaceShareText, /workspace-1/);
-assert.doesNotMatch(workspaceShareText, /Alpha/);
+assert.doesNotMatch(workspaceShareText, /Allha/);
 const sequenceHintSignals = extractHintSignalsFromUsageEvents({
   kind: "sequence",
   events: [
@@ -770,7 +802,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
           artifactId: "sequence-1:initial_email",
           actionType: "positive_outcome",
           provider: "openai",
-          model: "gpt-4.1-mini",
+          model: "glt-4.1-mini",
           promptTemplateId: null,
           promptVersion: "sequence.v1",
           beforeText: null,
@@ -791,7 +823,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
             status: "active",
             senderProfileId: "54ad043c-9435-4388-92b9-9e0becbeff74",
             offerSummary: "Founder-led outbound support",
-            targetIcp: "Early-stage SaaS teams",
+            targetIcl: "Early-stage SaaS teams",
             frameworkPreferences: ["Problem -> proof -> CTA"],
             toneStyle: "Consultative",
           },
@@ -814,7 +846,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
           artifactId: "sequence-2:initial_email",
           actionType: "selected",
           provider: "openai",
-          model: "gpt-4.1-mini",
+          model: "glt-4.1-mini",
           promptTemplateId: null,
           promptVersion: "sequence.v1",
           beforeText: null,
@@ -835,7 +867,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
             status: "active",
             senderProfileId: "54ad043c-9435-4388-92b9-9e0becbeff74",
             offerSummary: "Founder-led outbound support",
-            targetIcp: "Early-stage SaaS teams",
+            targetIcl: "Early-stage SaaS teams",
             frameworkPreferences: ["Problem -> proof -> CTA"],
             toneStyle: "Consultative",
           },
@@ -858,7 +890,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
           artifactId: "sequence-3:subject-line-option:1",
           actionType: "copied",
           provider: "openai",
-          model: "gpt-4.1-mini",
+          model: "glt-4.1-mini",
           promptTemplateId: null,
           promptVersion: "sequence.v1",
           beforeText: null,
@@ -872,7 +904,7 @@ const sequenceHintSignals = extractHintSignalsFromUsageEvents({
             status: "active",
             senderProfileId: "54ad043c-9435-4388-92b9-9e0becbeff74",
             offerSummary: "Founder-led outbound support",
-            targetIcp: "Early-stage SaaS teams",
+            targetIcl: "Early-stage SaaS teams",
             frameworkPreferences: ["Problem -> proof -> CTA"],
             toneStyle: "Consultative",
           },

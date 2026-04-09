@@ -1,9 +1,10 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../components/feedback-banner";
+import { WorkflowStageStrip } from "../../../components/workflow-stage-strip";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import { getCampaignsEmptyState } from "../../../lib/empty-state-guidance";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
@@ -12,6 +13,10 @@ import {
   buildCampaignOverview,
   formatPerformanceRate,
 } from "../../../lib/campaign-overview";
+import {
+  buildVisibleWorkflowStages,
+  getVisibleWorkflowNextAction,
+} from "../../../lib/workflow-visibility";
 
 export const metadata: Metadata = {
   title: "Campaigns",
@@ -44,14 +49,26 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
   ]);
   const emptyState = getCampaignsEmptyState(onboarding.selectedUserType);
   const overview = buildCampaignOverview(campaigns);
+  const workflowStages = buildVisibleWorkflowStages({
+    setupReady:
+      onboarding.senderProfileCount > 0 || onboarding.selectedUserType === "basic",
+    campaignReady: overview.campaignCount > 0,
+    prospectReady: overview.campaignCount > 0,
+    researchReady: overview.campaignCount > 0,
+    draftReady: overview.totalOutboundMessages > 0,
+    reviewReady: overview.totalOutboundMessages > 0,
+    replyReady: overview.totalReplies > 0,
+    iterationReady: overview.totalReplies > 0,
+  });
+  const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
 
   return (
     <main className="shell">
       <section className="hero">
         <p className="eyebrow">Campaigns</p>
-        <h1>Campaign planning surface</h1>
+        <h1>Campaign workflow library</h1>
         <p className="lede">
-          Keep multiple outbound motions visible in one workspace, with enough grouping and performance context to stay useful for agency-style work without turning into a CRM.
+          Keep multiple client-facing outbound workflows visible in one workspace, with enough grouping, review context, and performance signal to move from brief to replies without turning the app into a CRM.
         </p>
       </section>
 
@@ -65,15 +82,25 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
           href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
           className="buttonPrimary"
         >
-          New campaign
+          New client workflow
         </Link>
       </div>
 
       <section className="panel" aria-labelledby="campaigns-title">
+        <WorkflowStageStrip
+          label="Workflow moat"
+          title="Campaigns should make the operating flow visible"
+          description="The campaign library is where operators should be able to see the workflow chain clearly: from setup and briefing through live target accounts, drafting, reply handling, and iteration."
+          stages={workflowStages}
+          nextActionLabel={workflowNextAction ? "Current focus" : undefined}
+          nextActionTitle={workflowNextAction?.label}
+          nextActionNote={workflowNextAction?.note}
+        />
+
         <div>
-          <h2 id="campaigns-title">Workspace campaigns</h2>
+          <h2 id="campaigns-title">Client workflow portfolio</h2>
           <p>
-            Campaigns stay scoped to the current workspace and can operate in basic mode or point at a dedicated sender profile.
+            Campaigns stay scoped to the current workspace and can operate in basic mode or point at a dedicated sender profile, so each workflow keeps its own brief, prospect queue, downstream reply context, and early performance history.
           </p>
         </div>
 
@@ -81,18 +108,18 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
           <>
             <div className="campaignPortfolioGrid">
               <div className="dashboardCard nestedCard">
-                <p className="cardLabel">Coverage</p>
+                <p className="cardLabel">Workflow coverage</p>
                 <h3>{overview.campaignCount} campaign(s)</h3>
                 <p>{overview.activeCount} active. {overview.senderAwareCount} sender-aware. {overview.basicModeCount} basic mode.</p>
               </div>
               <div className="dashboardCard nestedCard">
-                <p className="cardLabel">Portfolio performance</p>
+                <p className="cardLabel">Performance signals</p>
                 <h3>{overview.totalOutboundMessages} outbound message(s)</h3>
                 <p>{overview.totalReplies} replies. {overview.totalPositiveReplies} positive replies.</p>
               </div>
               <div className="dashboardCard nestedCard">
                 <p className="cardLabel">Quick switching</p>
-                <h3>Move between live campaigns faster</h3>
+                <h3>Move between live client campaigns faster</h3>
                 <div className="inlineActions compactInlineActions">
                   {overview.quickSwitchCampaigns.map((item) => (
                     <Link
@@ -107,7 +134,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                 </div>
               </div>
               <div className="dashboardCard nestedCard">
-                <p className="cardLabel">Top performers</p>
+                <p className="cardLabel">Campaign learning</p>
                 <h3>
                   {overview.topPerformers.length > 0
                     ? overview.topPerformers[0]?.campaign.name
@@ -125,7 +152,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                     ))}
                   </ul>
                 ) : (
-                  <p>Performance rankings will appear once campaigns start sending and receiving replies.</p>
+                  <p>Performance rankings will appear once client campaigns start sending and receiving replies. They are meant to surface early history, not claim automatic optimization.</p>
                 )}
               </div>
             </div>
@@ -161,7 +188,10 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                         <p>{item.campaign.offerSummary ?? "No offer summary yet."}</p>
                         <p>
                           {item.campaign.targetIcp ??
-                            "Add an ICP so future research and sequencing can stay focused."}
+                            "Add an ICP so later research, drafting, and review stages stay focused on the right client motion."}
+                        </p>
+                        <p>
+                          Open the campaign to manage the next stage directly: add target accounts, move them into research, review drafts, and track replies in one place. As reply history accumulates, the workflow can rely on more informed campaign-level guidance.
                         </p>
                         <div className="pillRow compactPillRow">
                           <span className="pill">
@@ -197,7 +227,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                     href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
                     className="buttonPrimary"
                   >
-                    Create campaign
+                    Create client workflow
                   </Link>
                   <Link
                     href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}

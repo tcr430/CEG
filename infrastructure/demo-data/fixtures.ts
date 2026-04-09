@@ -1,4 +1,4 @@
-﻿export const demoSeedVersion = "20260402140000";
+export const demoSeedVersion = "20260402140000";
 
 export const demoSenderProfiles = [
   {
@@ -35,7 +35,7 @@ export const demoSenderProfiles = [
     companyName: "Acme",
     companyWebsite: "https://acme.example",
     productDescription:
-      "Outbound copilot for lean B2B SaaS teams who need better research and more reviewable AI-assisted messaging.",
+      "OutFlow-style outbound workflow support for lean B2B SaaS teams that need better research and more reviewable messaging.",
     targetCustomer:
       "Founders and early go-to-market leaders building outbound without a large operations team.",
     valueProposition:

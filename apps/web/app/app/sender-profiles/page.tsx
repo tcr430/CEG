@@ -51,11 +51,9 @@ export default async function SenderProfilesPage({
     <main className="shell">
       <section className="hero">
         <p className="eyebrow">Sender Profiles</p>
-        <h1>Sender profile library</h1>
+        <h1>Sender and client context library</h1>
         <p className="lede">
-          Create and refine sender-aware profile context for SDRs, founders,
-          agencies, or a basic fallback mode. Campaigns will later select from
-          these profiles directly.
+          Create and refine reusable sender-aware context for SDRs, founders, agencies, or a basic fallback mode. This is one of the clearest forms of stored operational context in the product today, and later campaign workflows can select from these profiles directly.
         </p>
       </section>
 
@@ -79,15 +77,14 @@ export default async function SenderProfilesPage({
 
       <section className="panel" aria-labelledby="sender-profiles-title">
         <div>
-          <h2 id="sender-profiles-title">Workspace profiles</h2>
+          <h2 id="sender-profiles-title">Reusable sender profiles</h2>
           <p>
-            Profiles are scoped to the current workspace and can later be linked
-            to campaigns for higher-quality personalization.
+            Profiles are scoped to the current workspace and can later be linked to campaigns for more consistent personalization, review, and reuse across client work. They preserve sender voice, proof points, positioning, and workflow goals so teams do not need to restate them every time.
           </p>
           {!billing.features.senderAwareProfiles.allowed ? (
             <div className="stack compactStack">
               <p className="statusMessage">
-                Sender-aware SDR, founder, and agency profiles are gated on this plan. Basic mode remains available.
+                Sender-aware SDR, founder, and agency profiles are gated on this plan. Basic mode remains available until the workspace is ready for richer reusable context.
               </p>
               <div className="inlineActions">
                 <Link href={`/app/settings?workspace=${workspace.workspaceId}`} className="buttonSecondary">
@@ -119,6 +116,7 @@ export default async function SenderProfilesPage({
                   {profile.valueProposition ??
                     "Add a value proposition to improve future sender-aware outputs."}
                 </p>
+                <p>Stored here: sender voice, proof points, positioning, and workflow goals that later campaigns can reuse.</p>
               </Link>
             ))
           ) : (
@@ -150,6 +148,9 @@ export default async function SenderProfilesPage({
     </main>
   );
 }
+
+
+
 
 
 

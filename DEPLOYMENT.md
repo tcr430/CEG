@@ -8,7 +8,7 @@ This guide covers the practical path to running the product in production on Ver
 - OpenAI for generation
 - Google OAuth for Gmail inbox imports and draft creation when inbox sync is enabled
 
-It is written for a solo founder who needs a reliable checklist, not a platform playbook.
+It is written for a solo founder or agency operator who needs a reliable checklist, not a platform playbook. The deployment posture reflects the current product as an agency-grade workflow system with human-reviewed AI outputs, not an autonomous outbound engine.
 
 ## Local Prerequisites
 
@@ -53,9 +53,13 @@ Auth setup notes:
 Stripe is only required if paid billing is enabled.
 
 Required:
-- create products/prices for `pro` and `agency`
+- create products/prices for the user-facing plans `Starter`, `Growth`, and `Enterprise` and map paid billing to the stable internal codes `pro` and `agency`
 - configure a webhook endpoint for the deployed app
 - capture the webhook signing secret
+
+Current implementation note:
+- user-facing plan labels are `Starter`, `Growth`, and `Enterprise`, while internal billing codes remain `free`, `pro`, and `agency`
+- map Stripe price ids to those stable internal codes when wiring billing, support, or operational tooling
 
 Environment variables:
 - `STRIPE_SECRET_KEY`
@@ -220,6 +224,11 @@ Before first deploy:
 - internal admin allowlist set only for trusted emails
 - `DEMO_SEED_ENABLED` left unset or `false`
 
+Commercial naming note:
+- user-facing plan labels are `Starter`, `Growth`, and `Enterprise`
+- internal billing codes remain `free`, `pro`, and `agency` in code and Stripe mappings
+- keep that distinction explicit when wiring products, prices, and support/debug tooling
+
 After deploy:
 - open the landing page
 - verify sign-in page loads
@@ -301,7 +310,3 @@ After deploy:
 - verify a non-member cannot read another workspace's records
 - verify owner/admin access is required for sensitive workspace-operational tables like `subscriptions`, `usage_events`, and `audit_events`
 - verify service-role operations remain server-only
-
-
-
-

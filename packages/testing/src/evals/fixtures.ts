@@ -133,7 +133,7 @@ export const senderProfileFixtures = {
     senderType: "saas_founder",
     companyName: "Acme",
     companyWebsite: "https://acme.com",
-    productDescription: "Outbound copilot for lean teams.",
+    productDescription: "OutFlow-style outbound workflow support for lean teams.",
     targetCustomer: "B2B SaaS founders.",
     valueProposition: "Sharper outbound without manual research busywork.",
     differentiation: "Structured evidence and sender-aware workflows.",

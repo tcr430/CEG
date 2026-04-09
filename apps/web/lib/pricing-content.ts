@@ -20,11 +20,11 @@ export type PricingFeatureRow = {
 export const pricingPlans: PricingPlanPresentation[] = [
   {
     code: "free",
-    label: "Free",
-    headline: "Prove the workflow in basic mode.",
+    label: "Starter",
+    headline: "Start the workflow with the core operating surface.",
     summary:
-      "Start with guarded capacity, public-website research, and production-minded sequence plus reply workflows.",
-    audience: "Best for first live campaigns and founder or rep-led validation.",
+      "Start with core workflow capacity, public-website research, and a credible operating setup for early live client work.",
+    audience: "Best for a solo operator or very small agency team establishing the core workflow.",
     bullets: [
       "Basic mode workflows without sender-aware profile support",
       "Public website research for real prospect context",
@@ -33,11 +33,11 @@ export const pricingPlans: PricingPlanPresentation[] = [
   },
   {
     code: "pro",
-    label: "Pro",
-    headline: "Run sender-aware outbound with room to operate.",
+    label: "Growth",
+    headline: "Expand the workflow for a growing agency team.",
     summary:
-      "Add sender profiles, expand research and generation headroom, and keep one team on a tighter outbound standard.",
-    audience: "Best for SDR teams and SaaS founders running a serious outbound motion.",
+      "Add sender-aware context, more research and generation headroom, and stronger operating room for a growing delivery team.",
+    audience: "Best for a small agency team that needs sender-aware workflow depth, collaboration, and reusable operating context.",
     featured: true,
     bullets: [
       "Sender-aware profiles for SDR, founder, and agency contexts",
@@ -47,11 +47,11 @@ export const pricingPlans: PricingPlanPresentation[] = [
   },
   {
     code: "agency",
-    label: "Agency",
-    headline: "Scale multi-client outbound without low ceilings.",
+    label: "Enterprise",
+    headline: "Run larger-scale client operations without workflow ceilings.",
     summary:
-      "Keep the same workflow and controls while removing the operational headroom issues that slow agency teams down.",
-    audience: "Best for lead generation agencies and high-throughput outbound operations.",
+      "Keep the same workflow and controls while opening up higher-volume client operations, deeper controls, and more room to iterate.",
+    audience: "Best for larger agency operations that need more scale, deeper control, and more support around active client delivery.",
     bullets: [
       "Sender-aware profiles included across agency workflows",
       "Research, sequence generation, reply intelligence, and regenerations without monthly caps",

@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   OnboardingStepId,
   SenderProfileType,
   WorkspaceOnboardingState,
@@ -19,27 +19,27 @@ export const onboardingSteps: Array<{
   {
     id: "workspace",
     label: "Workspace",
-    description: "Confirm the workspace you want to start with.",
+    description: "Confirm the workspace that should hold this outbound workflow.",
   },
   {
     id: "user_type",
-    label: "User type",
-    description: "Choose the motion that best fits your outbound workflow.",
+    label: "Workflow shape",
+    description: "Choose the operating shape that best fits this workspace.",
   },
   {
     id: "sender_profile",
     label: "Sender context",
-    description: "Create a sender profile or continue with basic mode.",
+    description: "Capture reusable sender context, or continue with basic mode.",
   },
   {
     id: "campaign",
     label: "First campaign",
-    description: "Capture your offer, ICP, tone, and framework.",
+    description: "Create the first client workflow brief with offer, ICP, tone, and framework.",
   },
   {
     id: "prospect",
-    label: "First prospect",
-    description: "Add one prospect so research and generation start from real data.",
+    label: "First target account",
+    description: "Add one target account so research, drafting, and replies start from real context.",
   },
 ];
 
@@ -177,11 +177,11 @@ export function createOnboardingStatePatch(input: {
 export function getUserTypeLabel(value: SenderProfileType | null | undefined) {
   switch (value) {
     case "sdr":
-      return "SDR";
+      return "SDR team";
     case "saas_founder":
       return "SaaS founder";
     case "agency":
-      return "Lead gen agency";
+      return "Outbound agency";
     case "basic":
       return "Basic mode";
     default:

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppShellNav } from "../../components/app-shell-nav";
@@ -9,7 +9,7 @@ import { buildCampaignOverview } from "../../lib/campaign-overview";
 export const metadata: Metadata = {
   title: {
     default: "App",
-    template: "%s | Outbound Copilot",
+    template: "%s | OutFlow",
   },
 };
 
@@ -46,4 +46,3 @@ export default async function AppLayout({ children }: AppLayoutProps) {
     </div>
   );
 }
-

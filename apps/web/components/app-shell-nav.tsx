@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 type CampaignQuickLink = {
   href: string;
@@ -32,17 +32,17 @@ export function AppShellNav({
       <div className="appChromeMeta">
         <div className="appChromeBrand">
           <Link href={withWorkspace("/app", workspaceId)} className="appChromeLogo">
-            Outbound Copilot
+            OutFlow
           </Link>
           <p className="appChromeWorkspace">
             {workspaceName ?? "Workspace"}
-            {userEmail ? ` · ${userEmail}` : ""}
+            {userEmail ? ` - ${userEmail}` : ""}
           </p>
         </div>
 
         {campaignQuickLinks.length > 0 ? (
           <div className="appChromeQuickSwitch" aria-label="Quick campaign switching">
-            <span className="cardLabel">Jump to campaign</span>
+            <span className="cardLabel">Jump to client campaign</span>
             <div className="inlineActions compactInlineActions">
               {campaignQuickLinks.map((campaign) => (
                 <Link key={campaign.href} href={campaign.href} className="buttonSecondary quickSwitchLink">
@@ -78,4 +78,3 @@ export function AppShellNav({
     </header>
   );
 }
-

@@ -181,9 +181,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     <main className="shell">
       <section className="hero">
         <p className="eyebrow">Settings</p>
-        <h1>Workspace, team, billing, and inbox settings</h1>
+        <h1>Workspace operations, team, billing, and inbox settings</h1>
         <p className="lede">
-          Keep workspace details current, control who can operate inside the account, and manage billing and inbox connections from one place.
+          Keep workspace details current, control who can operate inside the account, and manage billing, inbox connections, and shared client-workflow settings from one place.
         </p>
       </section>
 
@@ -215,7 +215,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Workspace</p>
             <h2>Workspace profile</h2>
             <p>
-              Keep the operating context clear for your team. Owners and admins can update the workspace name and a few practical details.
+              Keep the operating context clear for your team. Owners and admins can update the workspace name and the practical details that keep client work organized. This becomes shared workspace context for the rest of the product and helps preserve how the team runs client work over time.
             </p>
             <form action={updateWorkspaceProfileAction} className="stack">
               <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
@@ -279,7 +279,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Operational controls</p>
             <h2>Institutional controls</h2>
             <p>
-              This section makes the current operational posture visible. It is intentionally honest: useful controls and readiness summaries now, deeper policy automation later.
+              This section makes the current operational posture visible. It is intentionally honest: useful controls and readiness summaries now, deeper policy automation later. It also makes the stored operational record around requests, access, provider posture, and usage evidence easier to understand.
             </p>
             <div className="pillRow">
               <span className="pill">{formatRetentionPreference(controls.dataRetention.preference)}</span>
@@ -431,7 +431,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Team</p>
             <h2>Workspace members</h2>
             <p>
-              Owners and admins can control who has access. Invitations stay scoped to this workspace and become active when the invited person signs in with the same email.
+              Owners and admins can control who has access. Invitations stay scoped to this workspace so the right operators and reviewers can work inside the same client-facing system.
             </p>
             <div className="pillRow">
               <span className="pill">Your role: {workspace.role}</span>
@@ -518,7 +518,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p>
               {billing.currentSubscription
                 ? `Subscription status: ${billing.currentSubscription.status.replaceAll("_", " ")}.`
-                : "No paid subscription is synced yet. This workspace is using the default free plan."}
+                : "No paid subscription is synced yet. This workspace is using the default Starter plan."}
             </p>
             <p>Billing period end: {formatPeriodEnd(billing.currentSubscription?.currentPeriodEnd ?? null)}</p>
           </div>
@@ -534,7 +534,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Inbox</p>
             <h2>Gmail connection</h2>
             <p>
-              Connect one Gmail inbox to import recent threads into matched prospect timelines. Tokens stay server-side and encrypted.
+              Connect one Gmail inbox to import recent threads into matched prospect timelines. Tokens stay server-side and encrypted, and generated emails only move into Gmail as reviewable drafts rather than auto-sent messages. Imported thread and message references become part of the stored workspace context.
             </p>
             {!inboxState.gmailConfigured ? (
               <p className="statusMessage">
@@ -597,7 +597,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </div>
 
           <div className="dashboardCard">
-            <p className="cardLabel">Current workspace allowances</p>
+            <p className="cardLabel">Current workflow allowances</p>
             <h2>What this plan supports right now</h2>
             <ul className="researchList compactResearchList">
               <li>
@@ -630,7 +630,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Data handling</p>
             <h2>Export and deletion requests</h2>
             <p>
-              Export produces a structured workspace snapshot for responsible handoff and review. Deletion stays explicit and auditable: owners can request it here, but nothing is silently removed.
+              Export produces a structured workspace snapshot for responsible handoff and review, including the operational history the product stores around sender context, campaign briefs, research, drafts, edits, and approvals. Deletion stays explicit and auditable: owners can request it here, but nothing is silently removed.
             </p>
             <div className="stack">
               <div className="dashboardCard nestedCard">
@@ -687,7 +687,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="cardLabel">Feedback</p>
             <h2>Report an issue or early-user friction</h2>
             <p>
-              Keep it concise. We log the workspace, page, and category automatically so early launch feedback stays easy to review.
+              Keep it concise. We log the workspace, page, and category automatically so early launch feedback stays easy to review and later recommendation work can stay grounded in real usage signals rather than guesswork.
             </p>
             <form action={submitWorkspaceFeedbackAction} className="stack">
               <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
@@ -744,7 +744,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
             if (plan.code === "free") {
               actions = active ? null : (
-                <p className="statusMessage">This workspace falls back to Free automatically when no paid subscription is active.</p>
+                <p className="statusMessage">This workspace falls back to Starter automatically when no paid subscription is active.</p>
               );
             } else if (active) {
               actions = billing.currentSubscription?.providerCustomerId ? (
@@ -764,7 +764,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
                     pendingLabel="Starting checkout..."
                   >
-                    {plan.code === "pro" ? "Upgrade to Pro" : "Upgrade to Agency"}
+                    {plan.code === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise"}
                   </SubmitButton>
                 </form>
               );
@@ -793,9 +793,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </div>
         <div className="pricingComparisonHeader">
           <span>Capability</span>
-          <span>Free</span>
-          <span>Pro</span>
-          <span>Agency</span>
+          <span>Starter</span>
+          <span>Growth</span>
+          <span>Enterprise</span>
         </div>
         {pricingFeatureRows.map((row) => (
           <div key={row.feature} className="pricingComparisonRow">
@@ -809,6 +809,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     </main>
   );
 }
+
+
 
 
 

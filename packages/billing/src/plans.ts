@@ -31,8 +31,8 @@ export type BillingPlanDefinition = {
 export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   free: {
     code: "free",
-    label: "Free",
-    description: "Foundational workspace with guarded usage and basic mode fallback.",
+    label: "Starter",
+    description: "Core agency workspace with guarded usage and basic mode fallback.",
     features: {
       sender_aware_profiles: false,
       website_research: true,
@@ -51,8 +51,8 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   },
   pro: {
     code: "pro",
-    label: "Pro",
-    description: "Single-team workspace with sender-aware flows and healthier monthly headroom.",
+    label: "Growth",
+    description: "Growing agency workspace with sender-aware flows and healthier monthly headroom.",
     features: {
       sender_aware_profiles: true,
       website_research: true,
@@ -71,8 +71,8 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   },
   agency: {
     code: "agency",
-    label: "Agency",
-    description: "Higher-throughput workspace for multi-client outbound operations.",
+    label: "Enterprise",
+    description: "Larger-scale workspace for higher-throughput multi-client outbound operations.",
     features: {
       sender_aware_profiles: true,
       website_research: true,

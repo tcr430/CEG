@@ -15,7 +15,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Compare Free, Pro, and Agency plans for Outbound Copilot.",
+  description: "Compare workflow plans for OutFlow's agency-grade cold email system.",
 };
 
 type PricingPageProps = {
@@ -46,10 +46,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       <section className="landingHero pricingHero">
         <div className="landingHeroCopy">
           <p className="eyebrow">Pricing</p>
-          <h1>Choose the plan that matches the outbound motion you are actually running.</h1>
+          <h1>Choose the plan that matches the way your outbound workflow actually operates.</h1>
           <p className="landingLead">
-            Start lean in basic mode, move into sender-aware workflows when the team is ready,
-            and scale research, sequence generation, and reply handling without changing the operating model.
+            The product keeps the same core workflow across plans: sender and campaign context,
+            prospect research, sequence work, reply handling, and human review. Higher plans add
+            more operational headroom for agencies running heavier client delivery.
           </p>
           <div className="landingHeroActions">
             <Link href={auth.user ? "/app/settings" : "/sign-in"} className="buttonPrimary">
@@ -64,11 +65,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="landingHeroPanel">
           <div className="landingSignalCard">
             <p className="cardLabel">Plan design</p>
-            <h2>Pricing is framed around workflow access and team headroom.</h2>
+            <h2>Pricing is framed around workflow depth and team headroom.</h2>
             <ul className="landingSignalList">
-              <li>Basic mode gives a credible place to start without blocking live use.</li>
+              <li>Basic mode gives agencies and solo operators a credible place to start without blocking live use.</li>
               <li>Sender-aware personalization becomes available when the workflow is ready for it.</li>
-              <li>Higher plans expand research, generation, and regeneration capacity rather than exposing token math.</li>
+              <li>Higher plans expand research, generation, regeneration, and operating room rather than exposing token math.</li>
             </ul>
           </div>
         </div>
@@ -82,7 +83,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
           <h2 id="pricing-plans-title">Three plans, one product model.</h2>
           <p>
             Every plan uses the same sender, campaign, prospect, research, sequence, and reply structure.
-            The difference is how much context and operating headroom the workspace gets.
+            The difference is how much workflow depth and operating headroom the workspace gets.
           </p>
         </div>
         <div className="pricingGrid pricingPlanGrid">
@@ -98,7 +99,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                 </Link>
               ) : (
                 <Link href="/sign-in" className="buttonSecondary">
-                  Start free
+                  Start with Starter
                 </Link>
               );
             } else if (defaultWorkspace) {
@@ -114,7 +115,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                     className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
                     pendingLabel="Starting checkout..."
                   >
-                    {plan.code === "pro" ? "Upgrade to Pro" : "Upgrade to Agency"}
+                    {plan.code === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise"}
                   </SubmitButton>
                 </form>
               );
@@ -152,9 +153,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="panel pricingComparisonPanel">
           <div className="pricingComparisonHeader">
             <span>Capability</span>
-            <span>Free</span>
-            <span>Pro</span>
-            <span>Agency</span>
+            <span>Starter</span>
+            <span>Growth</span>
+            <span>Enterprise</span>
           </div>
           {pricingFeatureRows.map((row) => (
             <div key={row.feature} className="pricingComparisonRow">
@@ -171,10 +172,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="panel landingCtaPanel">
           <div>
             <p className="eyebrow">Next Step</p>
-            <h2 id="pricing-cta-title">Pick the plan that matches your current outbound maturity.</h2>
+            <h2 id="pricing-cta-title">Pick the plan that matches your current operating shape.</h2>
             <p>
-              Start in free when the team is still validating the motion, move to Pro for sender-aware execution,
-              and use Agency when the work needs more throughput and fewer ceilings.
+              Start with the leanest plan that still fits the way the team works today, then add headroom as client load, collaboration, and workflow demands expand.
             </p>
           </div>
           <div className="landingHeroActions">
@@ -190,5 +190,3 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
     </main>
   );
 }
-
-

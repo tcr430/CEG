@@ -10,9 +10,9 @@ function resolveAudienceContext(userType: SenderProfileType | null | undefined) 
   switch (userType) {
     case "sdr":
       return {
-        sender: "Capture the rep, company positioning, and proof points before SDR outreach scales.",
+        sender: "Capture the rep, company positioning, and proof points before SDR outreach scales across accounts.",
         campaign:
-          "Turn the offer, ICP, and talk track into one campaign brief your SDR workflow can reuse.",
+          "Turn the offer, ICP, and talk track into one campaign brief your SDR workflow can reuse and review.",
         prospect:
           "Add one live account so SDR research and sequencing stay tied to a real buying context.",
       };
@@ -28,9 +28,9 @@ function resolveAudienceContext(userType: SenderProfileType | null | undefined) 
     case "agency":
       return {
         sender:
-          "Capture the agency offer, delivery model, and proof points before you run client-facing outbound.",
+          "Capture the agency offer, client positioning, delivery model, and proof points before you run client-facing outbound.",
         campaign:
-          "Turn the offer, ICP, and delivery angle into a reusable campaign brief for agency execution.",
+          "Turn the offer, ICP, and delivery angle into a reusable campaign brief for agency execution across client work.",
         prospect:
           "Add one account so research, sequences, and reply handling stay grounded in a real client target.",
       };
@@ -46,7 +46,7 @@ function resolveAudienceContext(userType: SenderProfileType | null | undefined) 
     default:
       return {
         sender:
-          "Capture sender context early so later outreach stays sharper, more credible, and easier to review.",
+          "Capture sender context early so later outreach stays sharper, more credible, and easier for a team to review.",
         campaign:
           "Turn the offer, ICP, and tone into a reusable campaign brief before generation begins.",
         prospect:
@@ -73,9 +73,9 @@ export function getCampaignsEmptyState(
   const audience = resolveAudienceContext(userType);
 
   return {
-    title: "Create the first campaign brief",
+    title: "Create the first client campaign brief",
     description: audience.campaign,
-    nextAction: "Create one campaign so research and sequence generation have a clear operating brief.",
+    nextAction: "Create one campaign so the workflow can move from setup into target accounts, research, drafting, review, and later reply handling.",
   };
 }
 
@@ -87,7 +87,7 @@ export function getProspectsEmptyState(
   return {
     title: "Add the first prospect",
     description: audience.prospect,
-    nextAction: "Add a company and website so this campaign can move into research and outreach preparation.",
+    nextAction: "Add a company and website so this campaign can move into research, reviewed drafts, and later thread handling.",
   };
 }
 
@@ -98,13 +98,13 @@ export function getResearchEmptyState(input: {
   const audience = resolveAudienceContext(input.userType);
 
   return {
-    title: input.hasWebsite ? "Run the first website pass" : "Add a public website, then run research",
+    title: input.hasWebsite ? "Start the research stage" : "Add a public website, then start research",
     description: input.hasWebsite
       ? `${audience.prospect} The first pass will preserve grounded company context, evidence, and confidence flags.`
       : "Website research starts from one public company URL and stores a structured snapshot with evidence and confidence signals.",
     nextAction: input.hasWebsite
-      ? "Run website research to capture a structured company profile before personalizing outreach."
-      : "Add the prospect website and run one research pass to establish a grounded company profile.",
+      ? "Run website research to capture a structured company profile before drafting and review."
+      : "Add the prospect website and run one research pass to establish grounded context for the rest of the workflow.",
   };
 }
 
@@ -115,13 +115,13 @@ export function getSequenceEmptyState(input: {
   const audience = resolveAudienceContext(input.userType);
 
   return {
-    title: "Generate the first sequence",
+    title: "Create the first sequence draft",
     description: input.hasResearch
       ? `${audience.campaign} The stored research snapshot will help keep the sequence more specific to this prospect.`
       : `${audience.campaign} You can generate now in basic mode, but output quality improves once research is available.`,
     nextAction: input.hasResearch
-      ? "Generate a sequence from the campaign brief, sender context, and latest research snapshot."
-      : "Run research first if possible, then generate a sequence with better grounded personalization.",
+      ? "Create a sequence draft from the campaign brief, sender context, and latest research snapshot, then review it before use."
+      : "Run research first if possible, then draft the sequence with better grounded personalization and a clearer review path.",
   };
 }
 
@@ -135,7 +135,7 @@ export function getReplyDraftsEmptyState(input: {
     return {
       title: "Store the first inbound reply",
       description: `${audience.prospect} Once an inbound message is saved, the thread can classify intent and prepare response options.`,
-      nextAction: "Paste the latest prospect reply so analysis and drafting can start from the real thread.",
+      nextAction: "Paste the latest prospect reply so analysis, reply drafting, and thread history stay connected to the real conversation.",
     };
   }
 
@@ -144,14 +144,15 @@ export function getReplyDraftsEmptyState(input: {
       title: "Analyze the latest reply",
       description:
         "Reply analysis classifies intent, identifies objections where present, and recommends the next action before any draft is generated.",
-      nextAction: "Run reply analysis first so draft responses stay grounded in the actual inbound message.",
+      nextAction: "Run reply analysis first so the workflow can classify the reply before anyone drafts the response.",
     };
   }
 
   return {
-    title: "Generate the first reply drafts",
+    title: "Create the first reply-draft set",
     description:
-      "Draft replies stay versioned, quality-checked, and aligned to the latest stored analysis so manual review stays efficient.",
-    nextAction: "Generate reply drafts to create three response options for the latest analyzed inbound message.",
+      "Draft replies stay versioned, quality-checked, and aligned to the latest stored analysis so manual review stays efficient across client work.",
+    nextAction: "Create reply draft options so the team can review response paths and decide what gets used.",
   };
 }
+

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 
@@ -26,9 +26,9 @@ export function PerformanceSummaryCard({
         await navigator.clipboard.writeText(
           formatShareablePerformanceSummaryText(summary),
         );
-        setMessage("Summary copied.");
+        setMessage("Performance summary copied.");
       } catch {
-        setMessage("Could not copy the summary.");
+        setMessage("Could not copy the performance summary.");
       }
     });
   }
@@ -37,9 +37,12 @@ export function PerformanceSummaryCard({
     <div className="dashboardCard performanceSummaryCard">
       <div className="performanceSummaryHeader">
         <div>
-          <p className="cardLabel">Shareable summary</p>
+          <p className="cardLabel">Performance summary</p>
           <h3>{summary.title}</h3>
           {summary.subtitle ? <p>{summary.subtitle}</p> : null}
+          <p className="compactStatusMessage">
+            Built from current sent-message and reply-classification history so teams can review performance with safe, structured signals.
+          </p>
         </div>
         <button
           type="button"
@@ -86,3 +89,5 @@ export function PerformanceSummaryCard({
     </div>
   );
 }
+
+

@@ -5,54 +5,57 @@ import { getServerAuthContext } from "../lib/server/auth";
 
 const audienceCards = [
   {
-    label: "For SDR teams",
+    label: "For outbound agencies",
+    title: "Run multi-client outbound with tighter workflow control.",
+    description:
+      "Keep client context, sender positioning, prospect research, thread history, and reply handling in one workspace-scoped system so operators can move faster without losing reviewability.",
+    example:
+      "Move from client brief to prospect-specific outreach and reply handling without mixing positioning, evidence, or thread context across accounts.",
+  },
+  {
+    label: "Also supports SDR teams",
     title: "Standardize outreach quality across reps.",
     description:
-      "Keep sender context, campaign brief, prospect research, and reply handling in one system so every rep works from the same standard.",
-    example: "Turn one ICP and one sender profile into prospect-specific sequences that stay credible under review.",
+      "Keep sender context, campaign brief, prospect research, and reply handling in one system so every rep works from the same operating standard.",
+    example:
+      "Turn a campaign brief and sender profile into prospect-specific sequences that still hold up under manager review.",
   },
   {
-    label: "For SaaS founders",
-    title: "Keep founder-led outbound sharp and personal.",
+    label: "Also supports founder-led outbound",
+    title: "Keep founder voice intact without losing workflow discipline.",
     description:
-      "Capture product positioning, proof points, and founder tone once, then apply that context to research-backed outreach without sounding templated.",
-    example: "Move from a target account list to usable first-touch copy and reply drafts without losing the founder voice.",
-  },
-  {
-    label: "For lead gen agencies",
-    title: "Run client outbound with tighter controls.",
-    description:
-      "Separate workspace, sender, campaign, prospect, and thread context so teams can review quality, track changes, and preserve a clean audit trail.",
-    example: "Manage multiple motions without mixing client positioning, reply handling, or research evidence across accounts.",
+      "Capture offer, proof points, and tone once, then keep research, sequence drafting, and reply handling inside a human-reviewed operating flow.",
+    example:
+      "Move from a target account list to usable outreach and reply drafts without reducing the workflow to generic AI writing.",
   },
 ];
 
 const workflowSteps = [
   {
     step: "01",
-    title: "Set the sender context",
+    title: "Set client, sender, and campaign context",
     description:
-      "Use a sender profile for SDR, founder, or agency motions, or stay in basic mode when the workflow needs to start fast.",
+      "Anchor the workflow in the active sender profile and campaign brief, or use basic mode when the team needs to start lean.",
   },
   {
     step: "02",
-    title: "Ground every prospect in public research",
+    title: "Ground each prospect in public research",
     description:
       "Run a safe website pass to build a structured company profile with evidence, confidence signals, and usable personalization hooks.",
   },
   {
     step: "03",
-    title: "Generate sequences and handle replies",
+    title: "Generate, review, and handle replies",
     description:
-      "Create outreach sequences, classify inbound replies, and draft response options with stored quality checks and version history.",
+      "Create outreach sequences, classify inbound replies, and draft response options with stored quality checks, version history, and human control over the next action.",
   },
 ];
 
 const capabilities = [
   {
-    title: "Sender-aware personalization",
+    title: "Workflow-aware personalization",
     description:
-      "Tie messaging back to the actual company, offer, positioning, proof points, and tone behind the sender.",
+      "Tie messaging back to the actual client, sender, offer, positioning, proof points, and tone behind the campaign.",
   },
   {
     title: "Prospect research that stays grounded",
@@ -60,35 +63,35 @@ const capabilities = [
       "Use public website evidence and confidence-aware summaries instead of vague AI assumptions.",
   },
   {
-    title: "Sequences and reply intelligence together",
+    title: "Sequences and reply intelligence in one operating flow",
     description:
-      "Manage first touch through response drafting inside the same workspace-scoped system.",
+      "Manage first touch through response drafting inside the same workspace-scoped system rather than splitting work across disconnected tools.",
   },
   {
-    title: "Quality checks before output gets trusted",
+    title: "Operational memory and quality checks",
     description:
-      "Review personalization, CTA quality, tone fit, fluff risk, and unsupported-claim risk on stored artifacts.",
+      "Review personalization, CTA quality, tone fit, fluff risk, and unsupported-claim risk on stored artifacts with campaign history and outcome-aware signals preserved for later learning and more informed recommendations.",
   },
 ];
 
 const differentiators = [
-  "Built for teams that need sender context, prospect context, and thread history to stay connected.",
-  "Structured records for campaigns, research, sequences, analyses, and drafts make review easier and cleaner.",
+  "Built for agency workflows where sender context, prospect context, thread history, and client separation all need to stay connected.",
+  "Structured records for campaigns, research, sequences, analyses, edits, and drafts make review easier and operational memory more useful.",
   "Quality, auditability, and version history are first-class product concerns rather than afterthoughts.",
 ];
 
 const pricingTeaser = [
   {
-    tier: "Free",
-    summary: "Start in basic mode and prove the workflow on live prospects.",
+    tier: "Starter",
+    summary: "Start in basic mode and prove the workflow on live client or prospect work.",
   },
   {
-    tier: "Pro",
-    summary: "Unlock sender-aware workflows, research depth, and higher sequence volume.",
+    tier: "Growth",
+    summary: "Expand sender-aware workflow depth, research headroom, and collaborative operating room.",
   },
   {
-    tier: "Agency",
-    summary: "Expand usage, controls, and operational headroom for multi-client outbound.",
+    tier: "Enterprise",
+    summary: "Increase controls and headroom for multi-client campaign execution.",
   },
 ];
 
@@ -111,12 +114,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <main className="landingShell">
       <section className="landingHero">
         <div className="landingHeroCopy">
-          <p className="eyebrow">AI Outbound Copilot</p>
-          <h1>Institutional-grade outbound for teams that cannot afford generic messaging.</h1>
+          <p className="eyebrow">Agency-grade cold email workflow</p>
+          <h1>The operating system for agency-grade hyperpersonalized cold email.</h1>
           <p className="landingLead">
-            Outbound Copilot helps SDRs, SaaS founders, and lead generation agencies
-            run sender-aware outreach, grounded prospect research, and high-quality
-            sequence plus reply workflows from one controlled system.
+            OutFlow helps outbound agencies create better, more personalized cold email
+            faster by keeping sender context, prospect research, sequence workflow, and reply
+            handling inside one human-reviewed operating system. AI proposes research-backed
+            outreach and reply options; operators review, edit, and approve what gets used.
           </p>
           <div className="landingHeroActions">
             <Link href={primaryHref} className="buttonPrimary">
@@ -127,33 +131,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </Link>
           </div>
           <div className="landingProofRow" aria-label="Product strengths">
-            <span className="pill">Sender-aware personalization</span>
+            <span className="pill">AI proposes, human approves</span>
             <span className="pill">Prospect research</span>
-            <span className="pill">Sequences and replies</span>
-            <span className="pill">Quality controls</span>
+            <span className="pill">Operational memory</span>
+            <span className="pill">Campaign learning</span>
           </div>
         </div>
 
         <div className="landingHeroPanel">
           <div className="landingSignalCard">
             <p className="cardLabel">What teams get</p>
-            <h2>One operating surface for outbound quality.</h2>
+            <h2>One operating surface for controlled outbound execution.</h2>
             <ul className="landingSignalList">
-              <li>Structured sender context for SDR, founder, agency, or basic mode workflows.</li>
+              <li>Structured sender and campaign context for agency, SDR, founder, or basic mode workflows.</li>
               <li>Confidence-aware research snapshots built from public websites.</li>
-              <li>Versioned sequences, reply analysis, and draft responses with visible checks.</li>
+              <li>Versioned sequences, reply analysis, and draft responses with visible checks and human approval points.</li>
             </ul>
           </div>
           <div className="landingMetricGrid">
             <div className="dashboardCard landingMetricCard">
               <p className="cardLabel">Research</p>
               <h2>Evidence-first</h2>
-              <p>Public website context preserved for personalization and review.</p>
+              <p>Public website context is preserved for personalization, review, and later reuse.</p>
             </div>
             <div className="dashboardCard landingMetricCard">
-              <p className="cardLabel">Replies</p>
-              <h2>Intent-aware</h2>
-              <p>Inbound replies are analyzed before draft responses are proposed.</p>
+              <p className="cardLabel">Workflow</p>
+              <h2>Human-controlled</h2>
+              <p>AI proposes research, sequence, and reply actions. Teams review, edit, and approve what actually moves into client work.</p>
             </div>
           </div>
         </div>
@@ -164,9 +168,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="landingSection" id="who-it-is-for" aria-labelledby="who-it-is-for-title">
         <div className="landingSectionIntro">
           <p className="eyebrow">Who It Is For</p>
-          <h2 id="who-it-is-for-title">Built for different outbound operating models, not one generic persona.</h2>
+          <h2 id="who-it-is-for-title">Built for agency operators first, while still supporting adjacent outbound motions.</h2>
           <p>
-            The system adapts to the way SDR teams, founder-led sales motions, and lead gen agencies actually work.
+            The primary fit is small-to-mid outbound agencies serving B2B clients with manual-heavy personalization workflows.
           </p>
         </div>
         <div className="landingGrid landingAudienceGrid">
@@ -184,7 +188,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="landingSection" id="how-it-works" aria-labelledby="how-it-works-title">
         <div className="landingSectionIntro">
           <p className="eyebrow">How It Works</p>
-          <h2 id="how-it-works-title">A compact workflow from context to outreach to reply handling.</h2>
+          <h2 id="how-it-works-title">A compact workflow from client context to outbound execution to reply handling.</h2>
         </div>
         <div className="landingGrid landingWorkflowGrid">
           {workflowSteps.map((item) => (
@@ -200,7 +204,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="landingSection" id="capabilities" aria-labelledby="capabilities-title">
         <div className="landingSectionIntro">
           <p className="eyebrow">Core Capabilities</p>
-          <h2 id="capabilities-title">Everything needed to move from a target account to an informed response.</h2>
+          <h2 id="capabilities-title">Everything needed to move from a target account to a reviewed outbound action.</h2>
         </div>
         <div className="landingGrid landingCapabilitiesGrid">
           {capabilities.map((capability) => (
@@ -215,9 +219,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="landingSection landingSplitSection" id="differentiation" aria-labelledby="differentiation-title">
         <div className="landingSectionIntro">
           <p className="eyebrow">Differentiation</p>
-          <h2 id="differentiation-title">Designed for credible outbound, not just fast text generation.</h2>
+          <h2 id="differentiation-title">Designed for credible campaign workflow, not just fast text generation.</h2>
           <p>
-            The product is structured around sender context, prospect evidence, version history, and visible quality review.
+            The product is structured around workflow ownership, operational memory, campaign learning informed by history, and visible quality review.
           </p>
         </div>
         <div className="panel landingDifferentiationPanel">
@@ -232,9 +236,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="landingSection" id="pricing" aria-labelledby="pricing-title">
         <div className="landingSectionIntro">
           <p className="eyebrow">Pricing</p>
-          <h2 id="pricing-title">Start lean, then unlock more control as the workflow expands.</h2>
+          <h2 id="pricing-title">Start lean, then add headroom as the workflow expands.</h2>
           <p>
-            Plans are designed around workflow access and operational headroom rather than noisy credit mechanics.
+            Plans are designed around workflow access and operational headroom rather than credit-style pricing language.
           </p>
         </div>
         <div className="pricingGrid">
@@ -255,9 +259,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="panel landingCtaPanel">
           <div>
             <p className="eyebrow">Get Started</p>
-            <h2 id="cta-title">Bring sender context, prospect research, and reply handling into one system.</h2>
+            <h2 id="cta-title">Bring sender context, prospect research, and reply handling into one controlled system.</h2>
             <p>
-              Start with a workspace, create the first sender profile or campaign, and move directly into research-backed outbound.
+              Start with a workspace, create the first sender profile or campaign, and move directly into research-backed outbound with review and approval built in.
             </p>
           </div>
           <div className="landingHeroActions">
@@ -265,7 +269,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               {primaryLabel}
             </Link>
             <Link href="/pricing" className="buttonSecondary">
-View pricing
+              View pricing
             </Link>
           </div>
         </div>
@@ -273,4 +277,3 @@ View pricing
     </main>
   );
 }
-

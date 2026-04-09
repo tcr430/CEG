@@ -1,9 +1,11 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ActionEmptyState } from "../../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { PerformanceSummaryCard } from "../../../../components/performance-summary-card";
+import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
+import { WorkflowStageStrip } from "../../../../components/workflow-stage-strip";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import {
   getCampaignForWorkspace,
@@ -18,8 +20,11 @@ import { createProspectAction, updateCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
 import { ProspectForm } from "../prospect-form";
 import { getUpgradePrompt } from "../../../../lib/upgrade-prompts";
-import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
 import { getWorkspaceBillingState } from "../../../../lib/server/billing";
+import {
+  buildVisibleWorkflowStages,
+  getVisibleWorkflowNextAction,
+} from "../../../../lib/workflow-visibility";
 
 type CampaignDetailPageProps = {
   params: Promise<{
@@ -87,6 +92,17 @@ export default async function CampaignDetailPage({
         version: 1,
       },
   });
+  const workflowStages = buildVisibleWorkflowStages({
+    setupReady: campaign.senderProfileId != null || onboarding.selectedUserType === "basic",
+    campaignReady: true,
+    prospectReady: prospects.length > 0,
+    researchReady: prospects.length > 0,
+    draftReady: (performance?.outboundMessages ?? 0) > 0,
+    reviewReady: (performance?.outboundMessages ?? 0) > 0,
+    replyReady: (performance?.replies ?? 0) > 0,
+    iterationReady: (performance?.replies ?? 0) > 0,
+  });
+  const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
 
   return (
     <main className="shell">
@@ -94,9 +110,7 @@ export default async function CampaignDetailPage({
         <p className="eyebrow">Campaigns</p>
         <h1>{campaign.name}</h1>
         <p className="lede">
-          Keep the campaign brief, sender-profile choice, and prospect list in
-          one protected workspace-scoped place before adding research or
-          generation later on.
+          Keep the campaign brief, sender-profile choice, target account list, and workflow history in one protected workspace-scoped place before adding research, generation, reply handling, and performance-aware iteration.
         </p>
       </section>
 
@@ -113,13 +127,23 @@ export default async function CampaignDetailPage({
 
       <section className="profileDetailGrid">
         <div className="stack">
+          <WorkflowStageStrip
+            label="Workflow progression"
+            title="This campaign should carry the full outbound path"
+            description="A campaign is more than a brief. It is the operational spine that links setup context, target accounts, research, drafting, review, reply handling, and later iteration in one place, with campaign history preserved for more informed guidance."
+            stages={workflowStages}
+            nextActionLabel={workflowNextAction ? "Current focus" : undefined}
+            nextActionTitle={workflowNextAction?.label}
+            nextActionNote={workflowNextAction?.note}
+          />
+
           <div className="dashboardCard">
-            <p className="cardLabel">Campaign summary</p>
+            <p className="cardLabel">Workflow brief</p>
             <h2>{campaign.status}</h2>
             <p>{campaign.offerSummary ?? "No offer summary yet."}</p>
             <p>
               {campaign.targetIcp ??
-                "Add ICP detail so future prospecting and generation stay focused."}
+                "Add ICP detail so future research, personalization, and review stay focused."}
             </p>
             <div className="pillRow">
               <span className="pill">
@@ -134,22 +158,30 @@ export default async function CampaignDetailPage({
           </div>
 
           <div className="dashboardCard">
-            <p className="cardLabel">Prospects</p>
-            <h2>{prospects.length} in this campaign</h2>
+            <p className="cardLabel">Workflow queue</p>
+            <h2>{prospects.length} target account(s)</h2>
             <p>
-              Add prospects directly inside the campaign so workspace scoping and
-              campaign membership remain explicit from the start.
+              Add target accounts directly inside the campaign so workspace scoping,
+              campaign membership, and client context remain explicit from the start.
+            </p>
+            <p className="statusMessage">
+              Next best action: {prospects.length > 0
+                ? "Open a live target account and move into research, drafts, review, and reply handling."
+                : "Add the first target account so this campaign can move beyond briefing and into live execution."}
             </p>
           </div>
 
           <div className="dashboardCard">
-            <p className="cardLabel">Outbound performance</p>
+            <p className="cardLabel">Performance signals</p>
             <h2>{performance?.outboundMessages ?? 0} outbound message(s)</h2>
             <p>Replies: {performance?.replies ?? 0}. Positive replies: {performance?.positiveReplies ?? 0}.</p>
             <div className="pillRow">
               <span className="pill">Reply rate: {performance?.replyRate === null || performance?.replyRate === undefined ? "n/a" : `${Math.round(performance.replyRate * 100)}%`}</span>
               <span className="pill">Positive reply rate: {performance?.positiveReplyRate === null || performance?.positiveReplyRate === undefined ? "n/a" : `${Math.round(performance.positiveReplyRate * 100)}%`}</span>
             </div>
+            <p>
+              These metrics are intentionally lightweight today, but they give the campaign real performance history that can inform comparisons, prompts, and next-step recommendations over time.
+            </p>
           </div>
 
           <PerformanceSummaryCard summary={shareablePerformanceSummary} />
@@ -193,6 +225,9 @@ export default async function CampaignDetailPage({
                   </div>
                   <p>{prospect.companyWebsite ?? "No website yet"}</p>
                   <p>{prospect.email ?? "No contact email yet"}</p>
+                  <p>
+                    Open this target account to run the rest of the workflow in order: research, draft, review, reply handling, and outcome-aware iteration informed by the campaign history around it.
+                  </p>
                 </Link>
               ))
             ) : (
@@ -203,7 +238,7 @@ export default async function CampaignDetailPage({
                 nextAction={emptyState.nextAction}
                 actions={
                   <a href="#prospect-form" className="buttonPrimary">
-                    Add prospect
+                    Add target account to workflow
                   </a>
                 }
               />
@@ -215,11 +250,13 @@ export default async function CampaignDetailPage({
           action={updateCampaignAction}
           workspaceId={workspace.workspaceId}
           senderProfiles={senderProfiles}
-          submitLabel="Save campaign"
+          submitLabel="Save workflow brief"
           campaign={campaign}
         />
       </section>
     </main>
   );
 }
+
+
 

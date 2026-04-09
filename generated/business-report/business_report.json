@@ -1,0 +1,330 @@
+{
+  "product_name": "Outbound Copilot",
+  "product_summary": "Outbound Copilot is a workspace-based web application for AI-assisted outbound sales execution. Based on the repository, it supports sender setup, campaigns, prospects, website research, outbound sequence generation, reply analysis, reply drafting, Gmail inbox connection/import, billing, and internal operational tooling. It is best described as an advanced MVP rather than a fully complete outbound operating platform.",
+  "target_users": [
+    {
+      "segment": "SDRs",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/README.md",
+        "D:/Project/CEG/apps/web/app/page.tsx",
+        "D:/Project/CEG/infrastructure/demo-data/fixtures.ts"
+      ]
+    },
+    {
+      "segment": "SaaS founders",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/README.md",
+        "D:/Project/CEG/apps/web/app/page.tsx",
+        "D:/Project/CEG/infrastructure/demo-data/fixtures.ts"
+      ]
+    },
+    {
+      "segment": "Lead generation agencies",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/README.md",
+        "D:/Project/CEG/apps/web/app/page.tsx",
+        "D:/Project/CEG/apps/web/app/app/campaigns/page.tsx"
+      ]
+    },
+    {
+      "segment": "Basic fallback mode users",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/README.md",
+        "D:/Project/CEG/apps/web/app/app/onboarding/page.tsx",
+        "D:/Project/CEG/infrastructure/demo-data/fixtures.ts"
+      ]
+    }
+  ],
+  "current_features": [
+    {
+      "area": "Authentication",
+      "feature": "Supabase magic-link sign-in",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/sign-in/page.tsx",
+        "D:/Project/CEG/apps/web/lib/server/auth.ts"
+      ]
+    },
+    {
+      "area": "Onboarding",
+      "feature": "First-run onboarding",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/onboarding/page.tsx"
+      ]
+    },
+    {
+      "area": "Sender setup",
+      "feature": "Sender profiles and basic mode",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/sender-profiles/page.tsx",
+        "D:/Project/CEG/packages/validation/src/entities.ts"
+      ]
+    },
+    {
+      "area": "Campaigns and prospects",
+      "feature": "Campaign/prospect CRUD",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/campaigns/page.tsx",
+        "D:/Project/CEG/apps/web/app/app/campaigns/[campaignId]/page.tsx",
+        "D:/Project/CEG/packages/database/migrations/0001_initial_schema.sql"
+      ]
+    },
+    {
+      "area": "Research",
+      "feature": "Prospect website research and structured company profile extraction",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/prospect-research.ts",
+        "D:/Project/CEG/packages/research-engine/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/openai-research-provider.ts"
+      ]
+    },
+    {
+      "area": "AI generation",
+      "feature": "Outbound sequence generation and regeneration",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/sequences.ts",
+        "D:/Project/CEG/packages/sequence-engine/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/openai-sequence-provider.ts"
+      ]
+    },
+    {
+      "area": "Reply intelligence",
+      "feature": "Reply analysis, strategy recommendation, and draft generation",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/replies.ts",
+        "D:/Project/CEG/packages/reply-engine/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/openai-reply-provider.ts"
+      ]
+    },
+    {
+      "area": "Inbox",
+      "feature": "Gmail OAuth connection and recent thread/message import",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/inbox/service.ts",
+        "D:/Project/CEG/apps/web/lib/server/inbox/gmail-provider.ts",
+        "D:/Project/CEG/supabase/migrations/20260404200000_inbox_integration_foundation.sql"
+      ]
+    },
+    {
+      "area": "Inbox",
+      "feature": "Draft-to-Gmail workflow",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/inbox/service.ts",
+        "D:/Project/CEG/packages/inbox/src/contracts.ts"
+      ]
+    },
+    {
+      "area": "Inbox",
+      "feature": "Send via provider",
+      "status": "Partially implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/inbox/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/inbox/service.ts"
+      ]
+    },
+    {
+      "area": "Billing",
+      "feature": "Plan definitions, Stripe checkout/portal, webhook sync, gating",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/billing/src/plans.ts",
+        "D:/Project/CEG/packages/billing/src/entitlements.ts",
+        "D:/Project/CEG/apps/web/lib/server/billing.ts",
+        "D:/Project/CEG/apps/web/app/pricing/page.tsx"
+      ]
+    },
+    {
+      "area": "Team/workspace",
+      "feature": "Workspace members, roles, invites, settings",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/settings/page.tsx",
+        "D:/Project/CEG/packages/database/migrations/0001_initial_schema.sql"
+      ]
+    },
+    {
+      "area": "Governance and operations",
+      "feature": "Institutional controls, export/delete requests, admin/debug surfaces",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/settings/page.tsx",
+        "D:/Project/CEG/apps/web/app/app/settings/debug/page.tsx",
+        "D:/Project/CEG/DATA_STRATEGY.md"
+      ]
+    },
+    {
+      "area": "Performance and signals",
+      "feature": "Campaign metrics, shareable summaries, usage/audit/training signals",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/page.tsx",
+        "D:/Project/CEG/packages/database/migrations/0001_initial_schema.sql",
+        "D:/Project/CEG/DATA_STRATEGY.md"
+      ]
+    },
+    {
+      "area": "Evaluation readiness",
+      "feature": "Eval fixtures, workflow eval harness, dataset export foundation",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/testing/tests/run-evals.ts",
+        "D:/Project/CEG/DATA_STRATEGY.md"
+      ]
+    },
+    {
+      "area": "Second provider support",
+      "feature": "Anthropic scaffold behind provider abstraction",
+      "status": "Implemented",
+      "evidence": [
+        "D:/Project/CEG/apps/web/lib/server/model-providers.ts",
+        "D:/Project/CEG/.env.example"
+      ]
+    },
+    {
+      "area": "Inbox providers",
+      "feature": "Microsoft 365 support",
+      "status": "Partially implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/inbox/src/contracts.ts",
+        "D:/Project/CEG/supabase/migrations/20260404200000_inbox_integration_foundation.sql"
+      ]
+    }
+  ],
+  "workflow_steps": [
+    "User lands on the marketing homepage and can navigate to sign-in or pricing.",
+    "User signs in through a Supabase-backed magic-link flow.",
+    "If the workspace is not set up, onboarding guides workspace confirmation, user type selection, sender profile/basic mode, first campaign, and first prospect.",
+    "User creates or selects a campaign and manages prospects.",
+    "User runs website research for a prospect, producing a structured company profile with evidence and confidence.",
+    "User generates an outbound sequence using sender context, campaign context, prospect context, and prompt constraints.",
+    "User reviews, regenerates, or manually edits generated sequence content.",
+    "User can link generated outbound messages into a conversation thread and create a Gmail draft.",
+    "Inbound replies enter by manual paste or Gmail import.",
+    "The system stores the reply as a normalized message, classifies intent/objection/recommended action, and generates draft replies.",
+    "User reviews or edits reply drafts and can push a selected draft into Gmail.",
+    "The system updates metrics, usage/audit events, and outcome-aware learning signals."
+  ],
+  "architecture_summary": {
+    "frontend": "Next.js App Router application in apps/web with public marketing pages and protected workspace pages.",
+    "backend": "Server-side flows and route handlers live in apps/web/lib/server and app/api; business logic is intentionally kept outside React components.",
+    "database": "Relational schema with workspace-scoped entities for users, workspaces, memberships, campaigns, prospects, research snapshots, sequences, threads/messages, reply analyses, draft replies, subscriptions, usage events, audit events, and inbox synchronization tables.",
+    "validation": "Shared Zod contracts in packages/validation define entity and workflow shapes across the app.",
+    "ai_layer": "Research, sequence generation, and reply intelligence use provider adapters behind internal contracts; OpenAI is default and Anthropic is scaffolded.",
+    "async": "Slow operations persist explicit run states through a jobs contract but are not yet extracted into a dedicated queue/worker system.",
+    "integrations": [
+      "Supabase",
+      "Stripe",
+      "Gmail",
+      "OpenAI",
+      "Anthropic (internal scaffold)"
+    ],
+    "deployment_clues": [
+      "Vercel-oriented deployment guide",
+      "env-driven configuration",
+      "Next.js 15 / React 19 app package"
+    ]
+  },
+  "gaps_and_limitations": [
+    {
+      "gap": "No true email sending workflow yet",
+      "status": "Missing",
+      "evidence": [
+        "D:/Project/CEG/packages/inbox/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/inbox/service.ts"
+      ]
+    },
+    {
+      "gap": "Microsoft 365 provider is only scaffolded",
+      "status": "Partially implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/inbox/src/contracts.ts",
+        "D:/Project/CEG/apps/web/lib/server/inbox/gmail-provider.ts"
+      ]
+    },
+    {
+      "gap": "Queue extraction is not yet implemented",
+      "status": "Partially implemented",
+      "evidence": [
+        "D:/Project/CEG/packages/jobs/src/index.ts",
+        "D:/Project/CEG/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "gap": "Not every repository path is Postgres-backed yet",
+      "status": "Partially implemented",
+      "evidence": [
+        "D:/Project/CEG/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "gap": "No public share pages for summaries",
+      "status": "Not present",
+      "evidence": [
+        "D:/Project/CEG/apps/web/app/app/page.tsx"
+      ]
+    }
+  ],
+  "maturity_assessment": {
+    "label": "Advanced MVP",
+    "reason": "The repository shows multiple connected user-facing workflows, billing, inbox connection/import, structured data capture, and evaluation readiness, but not yet full provider send, full queue extraction, or a completely finished production architecture in every persistence path."
+  },
+  "evidence_files": [
+    "D:/Project/CEG/README.md",
+    "D:/Project/CEG/ARCHITECTURE.md",
+    "D:/Project/CEG/DATA_STRATEGY.md",
+    "D:/Project/CEG/DEPLOYMENT.md",
+    "D:/Project/CEG/apps/web/app/page.tsx",
+    "D:/Project/CEG/apps/web/app/pricing/page.tsx",
+    "D:/Project/CEG/apps/web/app/sign-in/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/onboarding/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/sender-profiles/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/campaigns/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/campaigns/[campaignId]/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/settings/page.tsx",
+    "D:/Project/CEG/apps/web/app/app/settings/debug/page.tsx",
+    "D:/Project/CEG/apps/web/lib/server/auth.ts",
+    "D:/Project/CEG/apps/web/lib/server/billing.ts",
+    "D:/Project/CEG/apps/web/lib/server/prospect-research.ts",
+    "D:/Project/CEG/apps/web/lib/server/sequences.ts",
+    "D:/Project/CEG/apps/web/lib/server/replies.ts",
+    "D:/Project/CEG/apps/web/lib/server/model-providers.ts",
+    "D:/Project/CEG/apps/web/lib/server/openai-research-provider.ts",
+    "D:/Project/CEG/apps/web/lib/server/openai-sequence-provider.ts",
+    "D:/Project/CEG/apps/web/lib/server/openai-reply-provider.ts",
+    "D:/Project/CEG/apps/web/lib/server/inbox/service.ts",
+    "D:/Project/CEG/apps/web/lib/server/inbox/gmail-provider.ts",
+    "D:/Project/CEG/packages/billing/src/plans.ts",
+    "D:/Project/CEG/packages/billing/src/entitlements.ts",
+    "D:/Project/CEG/packages/research-engine/src/contracts.ts",
+    "D:/Project/CEG/packages/sequence-engine/src/contracts.ts",
+    "D:/Project/CEG/packages/reply-engine/src/contracts.ts",
+    "D:/Project/CEG/packages/inbox/src/contracts.ts",
+    "D:/Project/CEG/packages/jobs/src/index.ts",
+    "D:/Project/CEG/packages/validation/src/entities.ts",
+    "D:/Project/CEG/packages/database/migrations/0001_initial_schema.sql",
+    "D:/Project/CEG/supabase/migrations/20260328133000_quality_checks_json.sql",
+    "D:/Project/CEG/supabase/migrations/20260404121500_workspace_rls.sql",
+    "D:/Project/CEG/supabase/migrations/20260404200000_inbox_integration_foundation.sql",
+    "D:/Project/CEG/supabase/migrations/20260405091500_inbox_oauth_credentials.sql",
+    "D:/Project/CEG/supabase/migrations/20260406131500_inbox_reply_ingestion.sql",
+    "D:/Project/CEG/infrastructure/demo-data/fixtures.ts",
+    "D:/Project/CEG/packages/testing/tests/run-evals.ts",
+    "D:/Project/CEG/.env.example",
+    "D:/Project/CEG/apps/web/package.json",
+    "D:/Project/CEG/apps/web/next.config.ts"
+  ]
+}

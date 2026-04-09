@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Outbound Copilot | AI outbound copilot for SDRs, founders, and agencies",
+  title: "OutFlow | Operating system for agency-grade hyperpersonalized cold email",
   description:
-    "Sender-aware outbound copilot with prospect research, sequences, reply intelligence, and institutional-grade quality controls.",
+    "Agency-first cold email workflow system with sender-aware research, sequence and reply workflows, human review, and structured campaign memory.",
 };
 
 type RootLayoutProps = {
