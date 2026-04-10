@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import type { AuthenticatedUser, WorkspaceMembership } from "@ceg/auth";
 import type { WorkspaceMember } from "@ceg/validation";
 
@@ -43,6 +45,31 @@ function resolveWorkspaceName(membership: WorkspaceMembership): string {
     membership.workspaceSlug ??
     `Workspace ${membership.workspaceId.slice(0, 8)}`
   );
+}
+
+function normalizeSelfServeWorkspaceSlug(input: {
+  email?: string;
+  userId: string;
+}): string {
+  const emailLocalPart = input.email?.split("@")[0] ?? "workspace";
+  const normalized = emailLocalPart
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const prefix = normalized.length > 0 ? normalized : "workspace";
+
+  return `${prefix}-${input.userId.slice(0, 8)}`;
+}
+
+function resolveSelfServeWorkspaceName(email?: string): string {
+  const emailLocalPart = email?.split("@")[0];
+
+  if (emailLocalPart && emailLocalPart.trim().length > 0) {
+    return `${emailLocalPart.trim()}'s workspace`;
+  }
+
+  return "New OutFlow workspace";
 }
 
 function readFullName(user: SupabaseAuthUserLike): string | null {
@@ -139,9 +166,33 @@ export async function syncSupabaseUserToDatabase(input: {
     });
   }
 
-  const memberships = await membershipRepository.listWorkspaceMembershipsByUserId(
-    localUserId,
-  );
+  let memberships = await membershipRepository.listWorkspaceMembershipsByUserId(localUserId);
+
+  if (memberships.length === 0 && metadataMemberships.length === 0) {
+    const workspaceId = randomUUID();
+
+    await workspaceRepository.createWorkspaceRecord({
+      id: workspaceId,
+      slug: normalizeSelfServeWorkspaceSlug({
+        email: input.user.email,
+        userId: localUserId,
+      }),
+      name: resolveSelfServeWorkspaceName(input.user.email),
+      ownerUserId: localUserId,
+      status: "active",
+      settings: {},
+    });
+
+    await membershipRepository.upsertWorkspaceMember({
+      workspaceId,
+      userId: localUserId,
+      role: "owner",
+      status: "active",
+      joinedAt: new Date(),
+    });
+
+    memberships = await membershipRepository.listWorkspaceMembershipsByUserId(localUserId);
+  }
 
   if (memberships.length === 0) {
     operation.logger.warn(

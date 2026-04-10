@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
+import { buildAuthCallbackBridgeHtml } from "../../../lib/auth-callback-bridge";
 import { createOperationContext } from "../../../lib/server/observability";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
 import { syncSupabaseUserToDatabase } from "../../../lib/server/user-sync";
@@ -16,14 +17,13 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
 
   if (code === null) {
-    operation.logger.warn("Auth callback reached without code");
-    return NextResponse.redirect(
-      new URL(
-        `/sign-in?error=${encodeUserFacingError("auth callback missing code", "We could not complete sign-in. Please try again.")}`,
-        request.url,
-      ),
-      303,
-    );
+    operation.logger.warn("Auth callback reached without code; returning fragment bridge");
+    return new NextResponse(buildAuthCallbackBridgeHtml(), {
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-store",
+      },
+    });
   }
 
   const supabase = await createSupabaseServerClient();

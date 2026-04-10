@@ -22,6 +22,7 @@ const replyOutcomesModuleUrl = new URL("../lib/reply-outcomes.ts", import.meta.u
 const generationPerformanceHintsModuleUrl = new URL("../lib/generation-performance-hints.ts", import.meta.url);
 const upgradePromptsModuleUrl = new URL("../lib/upgrade-prompts.ts", import.meta.url);
 const workflowVisibilityModuleUrl = new URL("../lib/workflow-visibility.ts", import.meta.url);
+const authCallbackBridgeModuleUrl = new URL("../lib/auth-callback-bridge.ts", import.meta.url);
 const {
   decodeUserFacingMessage,
   toUserFacingError,
@@ -122,6 +123,9 @@ const {
   buildVisibleWorkflowStages,
   getVisibleWorkflowNextAction,
 } = await import(workflowVisibilityModuleUrl.href);
+const {
+  buildAuthCallbackBridgeHtml,
+} = await import(authCallbackBridgeModuleUrl.href);
 const gated = toUserFacingError(new Error("Current workspace plan does not include sender-aware lrofiles."));
 assert.equal(gated.code, "feature-not-included");
 assert.match(gated.message, /not included/i);
@@ -385,6 +389,12 @@ assert.equal(demoReplyThreads.some((thread) => thread.analysis.intent === "objec
 process.env.NEXT_PUBLIC_APP_URL = "https://app.example.com";
 assert.equal(getOptionalAppOrigin(), "https://app.example.com");
 assert.equal(createAppUrl("/auth/callback"), "https://app.example.com/auth/callback");
+
+const authCallbackBridgeHtml = buildAuthCallbackBridgeHtml();
+assert.match(authCallbackBridgeHtml, /access_token/);
+assert.match(authCallbackBridgeHtml, /refresh_token/);
+assert.match(authCallbackBridgeHtml, /\/auth\/session/);
+assert.match(authCallbackBridgeHtml, /Completing sign-in/);
 
 delete process.env.NEXT_PUBLIC_APP_URL;
 process.env.VERCEL_TARGET_ENV = "preview";
