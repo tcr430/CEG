@@ -1301,6 +1301,7 @@ h2 {
 
 .landingV2Brand,
 .landingV2NavLinks,
+.landingV2NavActions,
 .landingV2Actions,
 .landingV2TrustCue,
 .landingV2WindowTop,
@@ -1337,6 +1338,7 @@ h2 {
 }
 
 .landingV2NavLinks a,
+.landingV2NavLogin,
 .landingV2NavCta {
   min-height: 40px;
   padding: 10px 14px;
@@ -1344,15 +1346,29 @@ h2 {
 }
 
 .landingV2NavLinks a:hover,
+.landingV2NavLogin:hover,
 .landingV2NavCta:hover {
   background: rgba(17, 24, 39, 0.06);
 }
 
-.landingV2NavCta {
+.landingV2NavActions {
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.landingV2NavLogin {
   border: 1px solid rgba(17, 24, 39, 0.1);
   color: #111827;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.72);
   font-weight: 700;
+}
+
+.landingV2NavCta {
+  border: 1px solid rgba(55, 92, 255, 0.42);
+  color: #ffffff;
+  background: linear-gradient(135deg, #375cff, #1738d4);
+  box-shadow: 0 12px 28px rgba(55, 92, 255, 0.26);
+  font-weight: 800;
 }
 
 .landingV2Hero {
@@ -1893,6 +1909,11 @@ h2 {
     overflow-x: auto;
   }
 
+  .landingV2NavActions {
+    width: 100%;
+  }
+
+  .landingV2NavLogin,
   .landingV2NavCta {
     width: 100%;
     text-align: center;

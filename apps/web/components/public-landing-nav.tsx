@@ -17,9 +17,16 @@ export function PublicLandingNav({ isAuthenticated }: PublicLandingNavProps) {
         <Link href="/#trust">Trust</Link>
         <Link href="/pricing">Pricing</Link>
       </div>
-      <Link href={isAuthenticated ? "/app" : "/sign-up"} className="landingV2NavCta">
-        {isAuthenticated ? "Dashboard" : "Create account"}
-      </Link>
+      <div className="landingV2NavActions">
+        {isAuthenticated ? null : (
+          <Link href="/sign-in" className="landingV2NavLogin">
+            Log in
+          </Link>
+        )}
+        <Link href={isAuthenticated ? "/app" : "/sign-up"} className="landingV2NavCta">
+          {isAuthenticated ? "Dashboard" : "Create account"}
+        </Link>
+      </div>
     </nav>
   );
 }
