@@ -141,7 +141,7 @@ export function SenderProfileForm({
           <input
             name="toneStyle"
             defaultValue={profile?.tonePreferences.style ?? ""}
-            placeholder="Direct, consultative, warm"
+            placeholder="Direct, consultative, measured"
           />
         </label>
 

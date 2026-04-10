@@ -1,13 +1,13 @@
 :root {
   color-scheme: light;
-  --background: #f4efe6;
-  --foreground: #1f1b16;
-  --muted: #6e6558;
-  --accent: #a65d24;
-  --accent-soft: rgba(166, 93, 36, 0.12);
-  --panel: rgba(255, 251, 245, 0.9);
-  --border: rgba(31, 27, 22, 0.12);
-  --shadow: 0 24px 60px rgba(60, 35, 12, 0.12);
+  --background: #eef1f5;
+  --foreground: #101318;
+  --muted: #606a78;
+  --accent: #375cff;
+  --accent-soft: rgba(55, 92, 255, 0.1);
+  --panel: rgba(255, 255, 255, 0.86);
+  --border: rgba(17, 24, 39, 0.1);
+  --shadow: 0 22px 60px rgba(30, 41, 59, 0.11);
 }
 
 * {
@@ -21,11 +21,12 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Aptos", "Sohne", "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   color: var(--foreground);
   background:
-    radial-gradient(circle at top, rgba(166, 93, 36, 0.18), transparent 34%),
-    linear-gradient(180deg, #faf6ef 0%, var(--background) 100%);
+    radial-gradient(circle at 15% 0%, rgba(55, 92, 255, 0.14), transparent 34%),
+    radial-gradient(circle at 85% 0%, rgba(28, 137, 103, 0.1), transparent 30%),
+    linear-gradient(180deg, #f8fafc 0%, var(--background) 100%);
 }
 
 button,
@@ -47,7 +48,7 @@ a {
 code {
   padding: 0.1rem 0.35rem;
   border-radius: 999px;
-  background: rgba(31, 27, 22, 0.07);
+  background: rgba(17, 24, 39, 0.07);
 }
 
 small {
@@ -168,7 +169,7 @@ h2 {
 
 .buttonPrimary {
   background: var(--foreground);
-  color: #fff8f0;
+  color: #ffffff;
 }
 
 .buttonSecondary {
@@ -530,7 +531,7 @@ h2 {
 }
 
 .warningCard {
-  border-color: rgba(145, 88, 25, 0.3);
+  border-color: rgba(202, 138, 4, 0.34);
 }
 
 @media (max-width: 900px) {
@@ -565,7 +566,7 @@ h2 {
 .loadingSkeleton {
   min-height: 22px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(166, 93, 36, 0.08), rgba(166, 93, 36, 0.2), rgba(166, 93, 36, 0.08));
+  background: linear-gradient(90deg, rgba(55, 92, 255, 0.08), rgba(55, 92, 255, 0.2), rgba(55, 92, 255, 0.08));
   background-size: 200% 100%;
   animation: loadingPulse 1.2s ease-in-out infinite;
 }
@@ -673,13 +674,13 @@ h2 {
 
 .onboardingProgressDot-current,
 .onboardingStatusPill-current {
-  background: rgba(166, 93, 36, 0.14);
-  border-color: rgba(166, 93, 36, 0.24);
+  background: rgba(55, 92, 255, 0.12);
+  border-color: rgba(55, 92, 255, 0.24);
 }
 
 .onboardingProgressDot-upcoming,
 .onboardingStatusPill-upcoming {
-  background: rgba(31, 27, 22, 0.04);
+  background: rgba(17, 24, 39, 0.04);
 }
 
 .onboardingStepCard {
@@ -722,15 +723,11 @@ h2 {
 }
 
 .emptyStateHint {
-  background: rgba(168, 99, 53, 0.14);
+  background: rgba(55, 92, 255, 0.08);
 }
 
 .emptyStateActions {
   padding-top: 4px;
-}
-
-body {
-  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
 }
 
 .landingShell {
@@ -798,11 +795,11 @@ body {
 
 .landingSignalCard {
   padding: 28px;
-  border: 1px solid rgba(31, 27, 22, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.1);
   border-radius: 30px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.48)),
-    radial-gradient(circle at top right, rgba(166, 93, 36, 0.14), transparent 42%);
+    radial-gradient(circle at top right, rgba(55, 92, 255, 0.14), transparent 42%);
   box-shadow: var(--shadow);
 }
 
@@ -1007,7 +1004,7 @@ body {
 
 .pricingComparisonRow {
   padding: 14px 0;
-  border-bottom: 1px solid rgba(31, 27, 22, 0.08);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
   color: var(--muted);
 }
 
@@ -1038,9 +1035,9 @@ body {
   width: min(1160px, calc(100% - 40px));
   margin: 24px auto 0;
   padding: 16px 18px;
-  border: 1px solid rgba(31, 27, 22, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 22px;
-  background: rgba(255, 250, 244, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   display: flex;
   justify-content: space-between;
@@ -1173,7 +1170,7 @@ body {
   display: grid;
   gap: 4px;
   padding: 12px;
-  border: 1px solid rgba(31, 27, 22, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.56);
 }
@@ -1247,8 +1244,8 @@ body {
 }
 
 .workflowStageItem-current {
-  border-color: rgba(166, 93, 36, 0.28);
-  background: rgba(166, 93, 36, 0.1);
+  border-color: rgba(55, 92, 255, 0.28);
+  background: rgba(55, 92, 255, 0.1);
 }
 
 .workflowStageItem-upcoming {
@@ -1257,4 +1254,713 @@ body {
 
 .workflowStageHint {
   margin-top: 0;
+}
+
+.landingV2Shell {
+  min-height: 100vh;
+  padding: 24px;
+  font-family: "Aptos", "Sohne", "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  color: #101318;
+  background:
+    radial-gradient(circle at 16% 8%, rgba(56, 91, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 84% 4%, rgba(28, 137, 103, 0.12), transparent 28%),
+    linear-gradient(180deg, #f7f8fb 0%, #eef1f5 45%, #f8f9fb 100%);
+}
+
+.landingV2Shell h1,
+.landingV2Shell h2,
+.landingV2Shell h3,
+.landingV2Shell p {
+  margin-top: 0;
+}
+
+.landingV2Nav,
+.landingV2Hero,
+.landingV2Section,
+.landingV2FinalCta {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.landingV2Nav {
+  position: sticky;
+  top: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid rgba(18, 24, 38, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 50px rgba(22, 30, 44, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.landingV2Brand,
+.landingV2NavLinks,
+.landingV2Actions,
+.landingV2TrustCue,
+.landingV2WindowTop,
+.landingV2MockHeader,
+.landingV2FinalActions {
+  display: flex;
+  align-items: center;
+}
+
+.landingV2Brand {
+  gap: 10px;
+  padding: 6px 8px;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+.landingV2BrandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #111827, #375cff);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.landingV2NavLinks {
+  gap: 6px;
+  color: #5a6270;
+  font-size: 0.94rem;
+}
+
+.landingV2NavLinks a,
+.landingV2NavCta {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+}
+
+.landingV2NavLinks a:hover,
+.landingV2NavCta:hover {
+  background: rgba(17, 24, 39, 0.06);
+}
+
+.landingV2NavCta {
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  color: #111827;
+  background: #ffffff;
+  font-weight: 700;
+}
+
+.landingV2Hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+  gap: 34px;
+  align-items: center;
+  padding: 86px 0 56px;
+}
+
+.landingV2HeroCopy,
+.landingV2HeroVisual,
+.landingV2SectionIntro,
+.landingV2MemoryPanel,
+.landingV2TrustPanel,
+.landingV2FinalCta {
+  display: grid;
+  gap: 18px;
+}
+
+.landingV2Eyebrow {
+  margin-bottom: 0;
+  color: #375cff;
+  font-size: 0.76rem;
+  font-weight: 780;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.landingV2Hero h1 {
+  max-width: 11ch;
+  margin-bottom: 0;
+  font-size: clamp(3.5rem, 8vw, 6.8rem);
+  line-height: 0.88;
+  letter-spacing: -0.075em;
+}
+
+.landingV2Lead,
+.landingV2SectionIntro p,
+.landingV2FinalCta p,
+.landingV2TrustPanel p,
+.landingV2PillarCard p,
+.landingV2WorkflowStage p,
+.landingV2MemoryRow span,
+.landingV2SurfaceCard small,
+.landingV2MockCard span {
+  color: #606a78;
+  line-height: 1.68;
+}
+
+.landingV2Lead {
+  max-width: 47rem;
+  font-size: 1.12rem;
+}
+
+.landingV2Actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.landingV2ButtonPrimary,
+.landingV2ButtonSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 750;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.landingV2ButtonPrimary {
+  color: #ffffff;
+  background: #111827;
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.18);
+}
+
+.landingV2ButtonSecondary {
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  color: #121826;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.landingV2ButtonPrimary:hover,
+.landingV2ButtonSecondary:hover {
+  transform: translateY(-2px);
+}
+
+.landingV2TrustCue {
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #4f5967;
+  font-size: 0.92rem;
+}
+
+.landingV2TrustCue span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.landingV2TrustCue span[aria-hidden="true"] {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9aa3b2;
+}
+
+.landingV2Window {
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 247, 251, 0.9));
+  box-shadow: 0 34px 80px rgba(30, 41, 59, 0.18);
+}
+
+.landingV2WindowTop {
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  color: #6b7280;
+  font-size: 0.84rem;
+}
+
+.landingV2WindowTop span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #cfd5df;
+}
+
+.landingV2WindowTop strong {
+  margin-left: 8px;
+  color: #111827;
+}
+
+.landingV2WorkspaceMock {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  min-height: 470px;
+}
+
+.landingV2MockSidebar,
+.landingV2MockMain,
+.landingV2MockGrid,
+.landingV2PillarGrid,
+.landingV2WorkflowRail,
+.landingV2SurfaceGrid {
+  display: grid;
+}
+
+.landingV2MockSidebar {
+  gap: 10px;
+  align-content: start;
+  padding: 20px;
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(248, 250, 252, 0.76);
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.landingV2MockSidebar span {
+  padding: 9px 10px;
+  border-radius: 12px;
+}
+
+.landingV2MockLogo {
+  color: #111827;
+  font-weight: 800;
+}
+
+.landingV2MockActive {
+  color: #111827;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.06);
+}
+
+.landingV2MockMain {
+  gap: 16px;
+  padding: 22px;
+}
+
+.landingV2MockHeader {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.landingV2MockHeader p,
+.landingV2MockCard p,
+.landingV2DraftPanel p,
+.landingV2SurfaceCard p {
+  margin: 0 0 5px;
+  color: #375cff;
+  font-size: 0.74rem;
+  font-weight: 780;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.landingV2MockHeader h2,
+.landingV2MockCard h3,
+.landingV2DraftPanel h3,
+.landingV2PillarCard h3,
+.landingV2WorkflowStage h3,
+.landingV2SurfaceCard h3 {
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.landingV2MockHeader > span,
+.landingV2DraftPanel > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #175f46;
+  background: rgba(28, 137, 103, 0.1);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.landingV2MockGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.landingV2MockCard,
+.landingV2DraftPanel,
+.landingV2PillarCard,
+.landingV2WorkflowStage,
+.landingV2MemoryPanel,
+.landingV2SurfaceCard,
+.landingV2TrustPanel,
+.landingV2FinalCta {
+  border: 1px solid rgba(17, 24, 39, 0.09);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 42px rgba(30, 41, 59, 0.08);
+}
+
+.landingV2MockCard {
+  min-height: 174px;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.landingV2DraftPanel {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-top: auto;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(55, 92, 255, 0.9));
+  color: #ffffff;
+}
+
+.landingV2DraftPanel p,
+.landingV2DraftPanel h3 {
+  color: #ffffff;
+}
+
+.landingV2DraftPanel > span {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.landingV2Section {
+  padding: 60px 0;
+}
+
+.landingV2TightSection {
+  padding-top: 30px;
+}
+
+.landingV2SectionIntro {
+  max-width: 760px;
+}
+
+.landingV2SectionIntro h2,
+.landingV2TrustPanel h2,
+.landingV2FinalCta h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.landingV2CenteredIntro {
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.landingV2PillarGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.landingV2PillarCard,
+.landingV2WorkflowStage,
+.landingV2SurfaceCard {
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.landingV2WorkflowRail {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.09);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 20px 56px rgba(30, 41, 59, 0.08);
+}
+
+.landingV2WorkflowStage {
+  position: relative;
+  border: 0;
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landingV2WorkflowStage:last-child {
+  border-right: 0;
+}
+
+.landingV2WorkflowStage span {
+  display: inline-flex;
+  margin-bottom: 44px;
+  color: #375cff;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.landingV2WorkflowStage::before {
+  content: "";
+  position: absolute;
+  top: 56px;
+  left: 22px;
+  right: -1px;
+  height: 1px;
+  background: rgba(55, 92, 255, 0.22);
+}
+
+.landingV2WorkflowStage::after {
+  content: "";
+  position: absolute;
+  top: 49px;
+  left: 22px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: #375cff;
+  box-shadow: 0 0 0 1px rgba(55, 92, 255, 0.25);
+}
+
+.landingV2Split,
+.landingV2TrustPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.landingV2MemoryPanel {
+  padding: 12px;
+  border-radius: 28px;
+}
+
+.landingV2MemoryRow {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 18px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.landingV2MemoryRow:last-child {
+  border-bottom: 0;
+}
+
+.landingV2MemoryRow strong {
+  letter-spacing: -0.02em;
+}
+
+.landingV2SurfaceSection {
+  padding-top: 72px;
+}
+
+.landingV2SurfaceGrid {
+  grid-template-columns: 1.35fr repeat(2, minmax(0, 0.82fr));
+  gap: 14px;
+}
+
+.landingV2SurfaceCard {
+  min-height: 230px;
+}
+
+.landingV2SurfaceCardWide {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 247, 251, 0.82)),
+    radial-gradient(circle at 10% 10%, rgba(55, 92, 255, 0.12), transparent 34%);
+}
+
+.landingV2ProgressLine {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 32px 0 20px;
+}
+
+.landingV2ProgressLine span {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #375cff, #1c8967);
+}
+
+.landingV2ProgressLine span:nth-child(n + 3) {
+  opacity: 0.34;
+}
+
+.landingV2TrustPanel {
+  padding: 30px;
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(33, 43, 62, 0.98)),
+    radial-gradient(circle at 85% 20%, rgba(55, 92, 255, 0.36), transparent 34%);
+}
+
+.landingV2TrustPanel h2,
+.landingV2TrustPanel p,
+.landingV2TrustPanel .landingV2Eyebrow {
+  color: #ffffff;
+}
+
+.landingV2TrustPanel p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.landingV2CheckList {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.landingV2CheckList li {
+  position: relative;
+  padding: 14px 14px 14px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.landingV2CheckList li::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: 18px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #7ee2b8;
+  box-shadow: 0 0 0 4px rgba(126, 226, 184, 0.14);
+}
+
+.landingV2FinalCta {
+  margin-bottom: 44px;
+  padding: 42px;
+  border-radius: 34px;
+  text-align: center;
+  place-items: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 252, 0.86)),
+    radial-gradient(circle at 50% 0%, rgba(55, 92, 255, 0.14), transparent 38%);
+}
+
+.landingV2FinalCta p {
+  max-width: 680px;
+}
+
+@media (max-width: 1120px) {
+  .landingV2Hero,
+  .landingV2Split,
+  .landingV2TrustPanel,
+  .landingV2SurfaceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .landingV2Hero {
+    padding-top: 54px;
+  }
+
+  .landingV2Hero h1 {
+    max-width: 13ch;
+  }
+
+  .landingV2PillarGrid,
+  .landingV2WorkflowRail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landingV2WorkflowStage:nth-child(2n) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .landingV2Shell {
+    padding: 14px;
+  }
+
+  .landingV2Nav {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .landingV2NavLinks {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  .landingV2NavCta {
+    width: 100%;
+    text-align: center;
+  }
+
+  .landingV2Hero {
+    padding: 38px 0 30px;
+  }
+
+  .landingV2Hero h1 {
+    font-size: clamp(3rem, 17vw, 4.4rem);
+  }
+
+  .landingV2Actions,
+  .landingV2FinalActions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .landingV2ButtonPrimary,
+  .landingV2ButtonSecondary {
+    width: 100%;
+  }
+
+  .landingV2WorkspaceMock {
+    grid-template-columns: 1fr;
+  }
+
+  .landingV2MockSidebar {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  }
+
+  .landingV2MockGrid,
+  .landingV2PillarGrid,
+  .landingV2WorkflowRail {
+    grid-template-columns: 1fr;
+  }
+
+  .landingV2WorkflowStage {
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  }
+
+  .landingV2WorkflowStage:last-child {
+    border-bottom: 0;
+  }
+
+  .landingV2WorkflowStage::before {
+    right: auto;
+    width: 1px;
+    height: 46px;
+  }
+
+  .landingV2MemoryRow {
+    grid-template-columns: 1fr;
+  }
+
+  .landingV2DraftPanel,
+  .landingV2MockHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .landingV2FinalCta {
+    padding: 28px 18px;
+  }
 }

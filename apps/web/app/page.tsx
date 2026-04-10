@@ -3,96 +3,79 @@ import Link from "next/link";
 import { FeedbackBanner } from "../components/feedback-banner";
 import { getServerAuthContext } from "../lib/server/auth";
 
-const audienceCards = [
+const workflowStages = [
   {
-    label: "For outbound agencies",
-    title: "Run multi-client outbound with tighter workflow control.",
-    description:
-      "Keep client context, sender positioning, prospect research, thread history, and reply handling in one workspace-scoped system so operators can move faster without losing reviewability.",
-    example:
-      "Move from client brief to prospect-specific outreach and reply handling without mixing positioning, evidence, or thread context across accounts.",
+    label: "Context",
+    description: "Capture sender voice, client positioning, offer, ICP, and review preferences.",
   },
   {
-    label: "Also supports SDR teams",
-    title: "Standardize outreach quality across reps.",
-    description:
-      "Keep sender context, campaign brief, prospect research, and reply handling in one system so every rep works from the same operating standard.",
-    example:
-      "Turn a campaign brief and sender profile into prospect-specific sequences that still hold up under manager review.",
+    label: "Research",
+    description: "Ground each target account in public website evidence and confidence-aware summaries.",
   },
   {
-    label: "Also supports founder-led outbound",
-    title: "Keep founder voice intact without losing workflow discipline.",
-    description:
-      "Capture offer, proof points, and tone once, then keep research, sequence drafting, and reply handling inside a human-reviewed operating flow.",
-    example:
-      "Move from a target account list to usable outreach and reply drafts without reducing the workflow to generic AI writing.",
-  },
-];
-
-const workflowSteps = [
-  {
-    step: "01",
-    title: "Set client, sender, and campaign context",
-    description:
-      "Anchor the workflow in the active sender profile and campaign brief, or use basic mode when the team needs to start lean.",
+    label: "Draft",
+    description: "Generate sequence and reply options from stored campaign and prospect context.",
   },
   {
-    step: "02",
-    title: "Ground each prospect in public research",
-    description:
-      "Run a safe website pass to build a structured company profile with evidence, confidence signals, and usable personalization hooks.",
+    label: "Review",
+    description: "Edit, approve, and decide what should move into inbox drafts or live workflow.",
   },
   {
-    step: "03",
-    title: "Generate, review, and handle replies",
-    description:
-      "Create outreach sequences, classify inbound replies, and draft response options with stored quality checks, version history, and human control over the next action.",
+    label: "Replies",
+    description: "Classify inbound replies, preserve thread history, and draft response options.",
+  },
+  {
+    label: "Learning",
+    description: "Use campaign history, edits, selections, and outcomes to inform future guidance.",
   },
 ];
 
-const capabilities = [
+const valuePillars = [
   {
-    title: "Workflow-aware personalization",
+    title: "Workflow ownership",
     description:
-      "Tie messaging back to the actual client, sender, offer, positioning, proof points, and tone behind the campaign.",
+      "Move client work from brief to prospect research to reviewed outreach without splitting context across disconnected tools.",
   },
   {
-    title: "Prospect research that stays grounded",
+    title: "Evidence-first personalization",
     description:
-      "Use public website evidence and confidence-aware summaries instead of vague AI assumptions.",
+      "Research snapshots keep personalization tied to public website evidence, confidence signals, and reviewable claims.",
   },
   {
-    title: "Sequences and reply intelligence in one operating flow",
+    title: "Operational memory",
     description:
-      "Manage first touch through response drafting inside the same workspace-scoped system rather than splitting work across disconnected tools.",
+      "Sender profiles, campaign briefs, threads, edits, and approved artifacts remain attached to the workspace over time.",
   },
   {
-    title: "Operational memory and quality checks",
+    title: "Human-reviewed execution",
     description:
-      "Review personalization, CTA quality, tone fit, fluff risk, and unsupported-claim risk on stored artifacts with campaign history and outcome-aware signals preserved for later learning and more informed recommendations.",
+      "AI proposes research, classifications, and drafts. Your team reviews, edits, approves, and decides what gets used.",
   },
 ];
 
-const differentiators = [
-  "Built for agency workflows where sender context, prospect context, thread history, and client separation all need to stay connected.",
-  "Structured records for campaigns, research, sequences, analyses, edits, and drafts make review easier and operational memory more useful.",
-  "Quality, auditability, and version history are first-class product concerns rather than afterthoughts.",
+const surfaceRows = [
+  {
+    label: "Client brief",
+    title: "Pipeline efficiency launch",
+    detail: "Offer, ICP, tone, framework, and sender context stay reusable across target accounts.",
+  },
+  {
+    label: "Research snapshot",
+    title: "Evidence attached",
+    detail: "Public website observations, confidence flags, and personalization hooks are stored for review.",
+  },
+  {
+    label: "Reply handling",
+    title: "Intent: needs more info",
+    detail: "Inbound replies can be classified and turned into response draft options for human review.",
+  },
 ];
 
-const pricingTeaser = [
-  {
-    tier: "Starter",
-    summary: "Start in basic mode and prove the workflow on live client or prospect work.",
-  },
-  {
-    tier: "Growth",
-    summary: "Expand sender-aware workflow depth, research headroom, and collaborative operating room.",
-  },
-  {
-    tier: "Enterprise",
-    summary: "Increase controls and headroom for multi-client campaign execution.",
-  },
+const trustChecks = [
+  "No autonomous sending in the current workflow",
+  "Drafts and replies stay reviewable before use",
+  "Quality checks flag unsupported claims and tone risk",
+  "Workspace-scoped records preserve client separation",
 ];
 
 type HomePageProps = {
@@ -108,56 +91,93 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
   ]);
   const primaryHref = context.user === null ? "/sign-in" : "/app";
-  const primaryLabel = context.user === null ? "Start with your workspace" : "Open dashboard";
+  const primaryLabel = context.user === null ? "Start workspace" : "Open workspace";
 
   return (
-    <main className="landingShell">
-      <section className="landingHero">
-        <div className="landingHeroCopy">
-          <p className="eyebrow">Agency-grade cold email workflow</p>
-          <h1>The operating system for agency-grade hyperpersonalized cold email.</h1>
-          <p className="landingLead">
-            OutFlow helps outbound agencies create better, more personalized cold email
-            faster by keeping sender context, prospect research, sequence workflow, and reply
-            handling inside one human-reviewed operating system. AI proposes research-backed
-            outreach and reply options; operators review, edit, and approve what gets used.
+    <main className="landingV2Shell">
+      <nav className="landingV2Nav" aria-label="Public navigation">
+        <Link href="/" className="landingV2Brand" aria-label="OutFlow home">
+          <span className="landingV2BrandMark">OF</span>
+          <span>OutFlow</span>
+        </Link>
+        <div className="landingV2NavLinks">
+          <Link href="#workflow">Workflow</Link>
+          <Link href="#memory">Memory</Link>
+          <Link href="#trust">Trust</Link>
+          <Link href="/pricing">Pricing</Link>
+        </div>
+        <Link href={primaryHref} className="landingV2NavCta">
+          {context.user === null ? "Sign in" : "Dashboard"}
+        </Link>
+      </nav>
+
+      <section className="landingV2Hero" aria-labelledby="landing-title">
+        <div className="landingV2HeroCopy">
+          <p className="landingV2Eyebrow">Agency-grade outbound workflow</p>
+          <h1 id="landing-title">The operating system for hyperpersonalized cold email.</h1>
+          <p className="landingV2Lead">
+            OutFlow helps outbound agencies build better client campaign workflows: set context,
+            research target accounts, draft outreach, review with human control, handle replies,
+            and learn from campaign history over time.
           </p>
-          <div className="landingHeroActions">
-            <Link href={primaryHref} className="buttonPrimary">
+          <div className="landingV2Actions">
+            <Link href={primaryHref} className="landingV2ButtonPrimary">
               {primaryLabel}
             </Link>
-            <Link href="#how-it-works" className="buttonSecondary">
-              See how it works
+            <Link href="#product-surface" className="landingV2ButtonSecondary">
+              View product flow
             </Link>
           </div>
-          <div className="landingProofRow" aria-label="Product strengths">
-            <span className="pill">AI proposes, human approves</span>
-            <span className="pill">Prospect research</span>
-            <span className="pill">Operational memory</span>
-            <span className="pill">Campaign learning</span>
+          <div className="landingV2TrustCue" aria-label="Trust principle">
+            <span>AI proposes</span>
+            <span aria-hidden="true">→</span>
+            <span>humans review</span>
+            <span aria-hidden="true">→</span>
+            <span>teams approve</span>
           </div>
         </div>
 
-        <div className="landingHeroPanel">
-          <div className="landingSignalCard">
-            <p className="cardLabel">What teams get</p>
-            <h2>One operating surface for controlled outbound execution.</h2>
-            <ul className="landingSignalList">
-              <li>Structured sender and campaign context for agency, SDR, founder, or basic mode workflows.</li>
-              <li>Confidence-aware research snapshots built from public websites.</li>
-              <li>Versioned sequences, reply analysis, and draft responses with visible checks and human approval points.</li>
-            </ul>
-          </div>
-          <div className="landingMetricGrid">
-            <div className="dashboardCard landingMetricCard">
-              <p className="cardLabel">Research</p>
-              <h2>Evidence-first</h2>
-              <p>Public website context is preserved for personalization, review, and later reuse.</p>
+        <div className="landingV2HeroVisual" aria-label="Product workflow preview">
+          <div className="landingV2Window">
+            <div className="landingV2WindowTop">
+              <span />
+              <span />
+              <span />
+              <strong>Client campaign workflow</strong>
             </div>
-            <div className="dashboardCard landingMetricCard">
-              <p className="cardLabel">Workflow</p>
-              <h2>Human-controlled</h2>
-              <p>AI proposes research, sequence, and reply actions. Teams review, edit, and approve what actually moves into client work.</p>
+            <div className="landingV2WorkspaceMock">
+              <aside className="landingV2MockSidebar">
+                <span className="landingV2MockLogo">OutFlow</span>
+                <span className="landingV2MockActive">Campaign brief</span>
+                <span>Prospect research</span>
+                <span>Sequence review</span>
+                <span>Reply handling</span>
+              </aside>
+              <div className="landingV2MockMain">
+                <div className="landingV2MockHeader">
+                  <div>
+                    <p>Agency client launch</p>
+                    <h2>Pipeline efficiency campaign</h2>
+                  </div>
+                  <span>Human review required</span>
+                </div>
+                <div className="landingV2MockGrid">
+                  {surfaceRows.map((row) => (
+                    <article key={row.label} className="landingV2MockCard">
+                      <p>{row.label}</p>
+                      <h3>{row.title}</h3>
+                      <span>{row.detail}</span>
+                    </article>
+                  ))}
+                </div>
+                <div className="landingV2DraftPanel">
+                  <div>
+                    <p>Next recommended step</p>
+                    <h3>Review sequence draft before use</h3>
+                  </div>
+                  <span>Draft only</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -165,113 +185,139 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <FeedbackBanner error={params.error} notice={params.notice} />
 
-      <section className="landingSection" id="who-it-is-for" aria-labelledby="who-it-is-for-title">
-        <div className="landingSectionIntro">
-          <p className="eyebrow">Who It Is For</p>
-          <h2 id="who-it-is-for-title">Built for agency operators first, while still supporting adjacent outbound motions.</h2>
+      <section className="landingV2Section landingV2TightSection" aria-labelledby="operator-title">
+        <div className="landingV2SectionIntro">
+          <p className="landingV2Eyebrow">Built for agency operators</p>
+          <h2 id="operator-title">For teams managing client outbound where personalization is still manual-heavy.</h2>
           <p>
-            The primary fit is small-to-mid outbound agencies serving B2B clients with manual-heavy personalization workflows.
+            OutFlow is focused on the work between a client brief and a reviewed outbound action:
+            preserving context, reducing rework, and keeping approvals visible.
           </p>
         </div>
-        <div className="landingGrid landingAudienceGrid">
-          {audienceCards.map((card) => (
-            <article key={card.label} className="dashboardCard landingAudienceCard">
-              <p className="cardLabel">{card.label}</p>
-              <h3>{card.title}</h3>
-              <p>{card.description}</p>
-              <p className="landingExample">{card.example}</p>
+        <div className="landingV2PillarGrid">
+          {valuePillars.map((pillar) => (
+            <article key={pillar.title} className="landingV2PillarCard">
+              <h3>{pillar.title}</h3>
+              <p>{pillar.description}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="landingSection" id="how-it-works" aria-labelledby="how-it-works-title">
-        <div className="landingSectionIntro">
-          <p className="eyebrow">How It Works</p>
-          <h2 id="how-it-works-title">A compact workflow from client context to outbound execution to reply handling.</h2>
-        </div>
-        <div className="landingGrid landingWorkflowGrid">
-          {workflowSteps.map((item) => (
-            <article key={item.step} className="panel landingWorkflowCard">
-              <p className="cardLabel">Step {item.step}</p>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="landingSection" id="capabilities" aria-labelledby="capabilities-title">
-        <div className="landingSectionIntro">
-          <p className="eyebrow">Core Capabilities</p>
-          <h2 id="capabilities-title">Everything needed to move from a target account to a reviewed outbound action.</h2>
-        </div>
-        <div className="landingGrid landingCapabilitiesGrid">
-          {capabilities.map((capability) => (
-            <article key={capability.title} className="dashboardCard landingCapabilityCard">
-              <h3>{capability.title}</h3>
-              <p>{capability.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="landingSection landingSplitSection" id="differentiation" aria-labelledby="differentiation-title">
-        <div className="landingSectionIntro">
-          <p className="eyebrow">Differentiation</p>
-          <h2 id="differentiation-title">Designed for credible campaign workflow, not just fast text generation.</h2>
+      <section className="landingV2Section" id="workflow" aria-labelledby="workflow-title">
+        <div className="landingV2SectionIntro landingV2CenteredIntro">
+          <p className="landingV2Eyebrow">Workflow moat</p>
+          <h2 id="workflow-title">One visible path from setup to replies and iteration.</h2>
           <p>
-            The product is structured around workflow ownership, operational memory, campaign learning informed by history, and visible quality review.
+            The product is structured as a workflow system, not a one-shot generator. Every stage
+            keeps the next handoff easier to inspect, reuse, and improve.
           </p>
         </div>
-        <div className="panel landingDifferentiationPanel">
-          <ul className="milestoneList landingDifferentiationList">
-            {differentiators.map((item) => (
-              <li key={item}>{item}</li>
+        <div className="landingV2WorkflowRail">
+          {workflowStages.map((stage, index) => (
+            <article key={stage.label} className="landingV2WorkflowStage">
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h3>{stage.label}</h3>
+              <p>{stage.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="landingV2Section landingV2Split" id="memory" aria-labelledby="memory-title">
+        <div className="landingV2SectionIntro">
+          <p className="landingV2Eyebrow">Memory and learning</p>
+          <h2 id="memory-title">Campaign context becomes more useful as the workspace history grows.</h2>
+          <p>
+            OutFlow stores operational context across sender profiles, campaign briefs, research
+            snapshots, sequences, replies, edits, and outcome-aware signals. The current system uses
+            that history conservatively to support more informed guidance, not autonomous optimization.
+          </p>
+        </div>
+        <div className="landingV2MemoryPanel">
+          <div className="landingV2MemoryRow">
+            <strong>Reusable context</strong>
+            <span>Sender voice, offer, ICP, proof points, tone, and campaign preferences.</span>
+          </div>
+          <div className="landingV2MemoryRow">
+            <strong>Stored evidence</strong>
+            <span>Research snapshots with source evidence, confidence signals, and personalization hooks.</span>
+          </div>
+          <div className="landingV2MemoryRow">
+            <strong>Outcome-aware history</strong>
+            <span>Sent-message tracking, replies, classifications, edits, selections, and usage events.</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="landingV2Section landingV2SurfaceSection" id="product-surface" aria-labelledby="surface-title">
+        <div className="landingV2SectionIntro landingV2CenteredIntro">
+          <p className="landingV2Eyebrow">Operating surface</p>
+          <h2 id="surface-title">Research, drafts, replies, and performance belong in the same review loop.</h2>
+          <p>
+            The implemented product includes sender profiles, campaigns, prospects, research
+            snapshots, generated sequences, reply analysis, draft replies, Gmail draft creation, and
+            lightweight performance summaries.
+          </p>
+        </div>
+        <div className="landingV2SurfaceGrid">
+          <article className="landingV2SurfaceCard landingV2SurfaceCardWide">
+            <p>Prospect workflow</p>
+            <h3>Research → sequence draft → review → thread handling</h3>
+            <div className="landingV2ProgressLine" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <small>Designed to keep context attached through the full outbound workflow.</small>
+          </article>
+          <article className="landingV2SurfaceCard">
+            <p>Inbox draft</p>
+            <h3>Create draft in Gmail</h3>
+            <small>Selected generated artifacts can be pushed as drafts. Sending remains a human decision.</small>
+          </article>
+          <article className="landingV2SurfaceCard">
+            <p>Performance summary</p>
+            <h3>Reply and positive-reply rates</h3>
+            <small>Aggregate campaign snapshots are visible without exposing prospect names or thread content.</small>
+          </article>
+        </div>
+      </section>
+
+      <section className="landingV2Section landingV2TrustSection" id="trust" aria-labelledby="trust-title">
+        <div className="landingV2TrustPanel">
+          <div>
+            <p className="landingV2Eyebrow">Trust model</p>
+            <h2 id="trust-title">AI proposes. Human teams approve.</h2>
+            <p>
+              OutFlow is designed for controlled agency work. The system can suggest research,
+              classify replies, and draft messaging, but operators remain responsible for review,
+              edits, approvals, and final use.
+            </p>
+          </div>
+          <ul className="landingV2CheckList">
+            {trustChecks.map((check) => (
+              <li key={check}>{check}</li>
             ))}
           </ul>
         </div>
       </section>
 
-      <section className="landingSection" id="pricing" aria-labelledby="pricing-title">
-        <div className="landingSectionIntro">
-          <p className="eyebrow">Pricing</p>
-          <h2 id="pricing-title">Start lean, then add headroom as the workflow expands.</h2>
-          <p>
-            Plans are designed around workflow access and operational headroom rather than credit-style pricing language.
-          </p>
-        </div>
-        <div className="pricingGrid">
-          {pricingTeaser.map((plan, index) => (
-            <article
-              key={plan.tier}
-              className={`pricingCard ${index === 1 ? "featuredPricingCard" : ""}`.trim()}
-            >
-              <p className="cardLabel">{plan.tier}</p>
-              <h3>{plan.tier}</h3>
-              <p>{plan.summary}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="landingSection landingCtaSection" aria-labelledby="cta-title">
-        <div className="panel landingCtaPanel">
-          <div>
-            <p className="eyebrow">Get Started</p>
-            <h2 id="cta-title">Bring sender context, prospect research, and reply handling into one controlled system.</h2>
-            <p>
-              Start with a workspace, create the first sender profile or campaign, and move directly into research-backed outbound with review and approval built in.
-            </p>
-          </div>
-          <div className="landingHeroActions">
-            <Link href={primaryHref} className="buttonPrimary">
-              {primaryLabel}
-            </Link>
-            <Link href="/pricing" className="buttonSecondary">
-              View pricing
-            </Link>
-          </div>
+      <section className="landingV2FinalCta" aria-labelledby="final-cta-title">
+        <p className="landingV2Eyebrow">Start with the workflow</p>
+        <h2 id="final-cta-title">Bring context, research, review, replies, and learning into one operating system.</h2>
+        <p>
+          Start lean with a workspace, then build from sender context to client campaign execution
+          as your agency workflow matures.
+        </p>
+        <div className="landingV2Actions landingV2FinalActions">
+          <Link href={primaryHref} className="landingV2ButtonPrimary">
+            {primaryLabel}
+          </Link>
+          <Link href="/pricing" className="landingV2ButtonSecondary">
+            View Starter, Growth, and Enterprise
+          </Link>
         </div>
       </section>
     </main>

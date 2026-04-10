@@ -1,6 +1,7 @@
 {
   "name": "ceg",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.6.5",
   "scripts": {
     "build": "turbo run build",
