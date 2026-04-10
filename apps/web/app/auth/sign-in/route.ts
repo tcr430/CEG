@@ -8,6 +8,12 @@ import {
   createSupabaseServerClient,
 } from "../../../lib/server/supabase";
 import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
+import {
+  createDefaultPostAuthRedirectPath,
+  normalizeAuthMode,
+  normalizePostAuthRedirectPath,
+  normalizeSignupPlanCode,
+} from "../../../lib/auth-redirects";
 
 export async function POST(request: Request) {
   const requestId = request.headers.get("x-request-id") ?? randomUUID();
@@ -33,6 +39,15 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const email = formData.get("email");
+  const mode = normalizeAuthMode(formData.get("mode"));
+  const planCode = normalizeSignupPlanCode(formData.get("planCode"));
+  const next = formData.get("next");
+  const postAuthRedirectPath =
+    (typeof next === "string" ? normalizePostAuthRedirectPath(next) : null) ??
+    createDefaultPostAuthRedirectPath({
+      mode,
+      planCode,
+    });
 
   if (typeof email !== "string" || email.trim() === "") {
     return NextResponse.redirect(
@@ -57,9 +72,10 @@ export async function POST(request: Request) {
     );
   }
 
+  const callbackPath = `/auth/callback?next=${encodeURIComponent(postAuthRedirectPath)}`;
   const emailRedirectTo =
-    createRedirectUrl("/auth/callback") ??
-    new URL("/auth/callback", request.url).toString();
+    createRedirectUrl(callbackPath) ??
+    new URL(callbackPath, request.url).toString();
 
   const { error } = await supabase.auth.signInWithOtp({
     email: normalizedEmail,
@@ -85,6 +101,9 @@ export async function POST(request: Request) {
   operation.logger.info("Supabase sign-in started", {
     emailDomain: normalizedEmail.split("@")[1] ?? null,
     emailRedirectHost: new URL(emailRedirectTo).host,
+    mode,
+    planCode,
   });
-  return NextResponse.redirect(new URL("/sign-in?check-email=1", request.url), 303);
+  const checkEmailPath = mode === "sign-up" ? "/sign-up?check-email=1" : "/sign-in?check-email=1";
+  return NextResponse.redirect(new URL(checkEmailPath, request.url), 303);
 }

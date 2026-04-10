@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicLandingNav } from "../../components/public-landing-nav";
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
 import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Access your OutFlow workspace with a secure magic-link flow.",
+  description: "Access an existing OutFlow workspace with a secure magic-link flow.",
 };
 
 type SignInPageProps = {
@@ -44,11 +45,13 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <main className="shell">
+      <PublicLandingNav isAuthenticated={context.user !== null} />
+
       <section className="hero">
         <p className="eyebrow">Sign In</p>
-        <h1>Access your workspace</h1>
+        <h1>Access your existing workspace</h1>
         <p className="lede">
-          Use a secure magic link to open the protected workspace area. Once signed in,
+          Use a secure magic link to open an existing workspace. Once signed in,
           the app resolves workspace scope on the server before loading sender, campaign,
           prospect, and workflow data.
         </p>
@@ -58,7 +61,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <div>
           <h2 id="sign-in-title">Continue with email</h2>
           <p>
-            Keep this simple for launch: enter your work email and continue straight into the workflow system.
+            Enter the email connected to your OutFlow workspace. Creating a new
+            workspace? Use the self-service account flow instead.
           </p>
         </div>
 
@@ -93,6 +97,15 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             </form>
           </div>
         ) : null}
+
+        <div className="inlineActions">
+          <Link href="/sign-up" className="buttonSecondary">
+            Create a new account
+          </Link>
+          <Link href="/pricing" className="buttonGhost">
+            View plans
+          </Link>
+        </div>
       </section>
     </main>
   );

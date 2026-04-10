@@ -1,6 +1,8 @@
-const callbackBridgeScript = String.raw`
+function buildCallbackBridgeScript(redirectPath: string) {
+  return String.raw`
 (function () {
   var status = document.getElementById("auth-callback-status");
+  var redirectPath = ${JSON.stringify(redirectPath)};
   var params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   var accessToken = params.get("access_token");
   var refreshToken = params.get("refresh_token");
@@ -37,14 +39,15 @@ const callbackBridgeScript = String.raw`
     if (!response.ok) {
       throw new Error("Session could not be saved.");
     }
-    window.location.replace("/app?notice=Welcome%20back.");
+    window.location.replace(redirectPath);
   }).catch(function () {
     show("We could not save your session. Request a fresh magic link and try again.");
   });
 })();
 `;
+}
 
-export function buildAuthCallbackBridgeHtml(): string {
+export function buildAuthCallbackBridgeHtml(redirectPath: string = "/app?notice=Welcome%20back."): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -88,7 +91,7 @@ export function buildAuthCallbackBridgeHtml(): string {
       <p id="auth-callback-status">Checking the email link...</p>
       <p><a href="/sign-in">Request a new magic link</a></p>
     </main>
-    <script>${callbackBridgeScript}</script>
+    <script>${buildCallbackBridgeScript(redirectPath)}</script>
   </body>
 </html>`;
 }

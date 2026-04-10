@@ -46,6 +46,8 @@ type SettingsPageProps = {
     billingError?: string;
     success?: string;
     error?: string;
+    notice?: string;
+    upgrade?: string;
   }>;
 };
 
@@ -168,6 +170,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     supportEmail: teamState.profile.supportEmail,
   });
   const currentPlan = getPricingPlanPresentation(billing.planCode);
+  const selectedUpgradePlanCode =
+    params.upgrade === "pro" || params.upgrade === "agency"
+      ? params.upgrade
+      : null;
   const roleOptions = getRoleOptions(workspace.role);
   const billingUpgradePrompt = getUpgradePrompt({
     surface: "settings_billing",
@@ -189,6 +195,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
       <FeedbackBanner
         success={params.success ?? (params.billing === "success" ? encodeURIComponent("Stripe checkout completed. Subscription state will sync automatically through the webhook.") : undefined)}
+        notice={params.notice}
         error={params.error ?? params.billingError}
       />
 
@@ -775,7 +782,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 key={plan.code}
                 plan={plan}
                 active={active}
-                badge={active ? "Current plan" : plan.featured ? "Recommended" : undefined}
+                badge={
+                  active
+                    ? "Current plan"
+                    : selectedUpgradePlanCode === plan.code
+                      ? "Selected from signup"
+                      : plan.featured
+                        ? "Recommended"
+                        : undefined
+                }
                 actions={actions}
               />
             );

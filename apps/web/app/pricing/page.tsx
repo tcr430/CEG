@@ -5,6 +5,7 @@ import { getDefaultWorkspaceMembership } from "@ceg/auth";
 
 import { FeedbackBanner } from "../../components/feedback-banner";
 import { PricingPlanCard } from "../../components/pricing-plan-card";
+import { PublicLandingNav } from "../../components/public-landing-nav";
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
 import { getWorkspaceBillingState } from "../../lib/server/billing";
@@ -43,6 +44,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
 
   return (
     <main className="landingShell pricingPageShell">
+      <PublicLandingNav isAuthenticated={auth.user !== null} />
+
       <section className="landingHero pricingHero">
         <div className="landingHeroCopy">
           <p className="eyebrow">Pricing</p>
@@ -53,8 +56,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             more operational headroom for agencies running heavier client delivery.
           </p>
           <div className="landingHeroActions">
-            <Link href={auth.user ? "/app/settings" : "/sign-in"} className="buttonPrimary">
-              {auth.user ? "Open billing settings" : "Sign in to get started"}
+            <Link href={auth.user ? "/app/settings" : "/sign-up"} className="buttonPrimary">
+              {auth.user ? "Open billing settings" : "Create account"}
             </Link>
             <Link href="/" className="buttonSecondary">
               Back to homepage
@@ -98,7 +101,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                   Open workspace
                 </Link>
               ) : (
-                <Link href="/sign-in" className="buttonSecondary">
+                <Link href="/sign-up?plan=free" className="buttonSecondary">
                   Start with Starter
                 </Link>
               );
@@ -121,8 +124,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               );
             } else {
               actions = (
-                <Link href="/sign-in" className={plan.featured ? "buttonPrimary" : "buttonSecondary"}>
-                  Sign in to upgrade
+                <Link href={`/sign-up?plan=${plan.code}`} className={plan.featured ? "buttonPrimary" : "buttonSecondary"}>
+                  {plan.code === "pro" ? "Create account for Growth" : "Create account for Enterprise"}
                 </Link>
               );
             }
@@ -178,8 +181,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             </p>
           </div>
           <div className="landingHeroActions">
-            <Link href={auth.user ? "/app/settings" : "/sign-in"} className="buttonPrimary">
-              {auth.user ? "Open billing settings" : "Start with your workspace"}
+            <Link href={auth.user ? "/app/settings" : "/sign-up"} className="buttonPrimary">
+              {auth.user ? "Open billing settings" : "Create your workspace"}
             </Link>
             <Link href="/" className="buttonSecondary">
               Back to homepage

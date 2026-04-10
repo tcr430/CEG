@@ -23,6 +23,7 @@ const generationPerformanceHintsModuleUrl = new URL("../lib/generation-performan
 const upgradePromptsModuleUrl = new URL("../lib/upgrade-prompts.ts", import.meta.url);
 const workflowVisibilityModuleUrl = new URL("../lib/workflow-visibility.ts", import.meta.url);
 const authCallbackBridgeModuleUrl = new URL("../lib/auth-callback-bridge.ts", import.meta.url);
+const authRedirectsModuleUrl = new URL("../lib/auth-redirects.ts", import.meta.url);
 const {
   decodeUserFacingMessage,
   toUserFacingError,
@@ -126,6 +127,11 @@ const {
 const {
   buildAuthCallbackBridgeHtml,
 } = await import(authCallbackBridgeModuleUrl.href);
+const {
+  createDefaultPostAuthRedirectPath,
+  normalizePostAuthRedirectPath,
+  normalizeSignupPlanCode,
+} = await import(authRedirectsModuleUrl.href);
 const gated = toUserFacingError(new Error("Current workspace plan does not include sender-aware lrofiles."));
 assert.equal(gated.code, "feature-not-included");
 assert.match(gated.message, /not included/i);
@@ -399,6 +405,21 @@ assert.match(authCallbackBridgeHtml, /access_token/);
 assert.match(authCallbackBridgeHtml, /refresh_token/);
 assert.match(authCallbackBridgeHtml, /\/auth\/session/);
 assert.match(authCallbackBridgeHtml, /Completing sign-in/);
+
+const signupGrowthRedirect = createDefaultPostAuthRedirectPath({
+  mode: "sign-up",
+  planCode: "pro",
+});
+assert.match(signupGrowthRedirect, /^\/app\/settings\?upgrade=pro/);
+assert.match(signupGrowthRedirect, /#billing-plans$/);
+assert.equal(normalizeSignupPlanCode("agency"), "agency");
+assert.equal(normalizeSignupPlanCode("enterprise"), null);
+assert.equal(
+  normalizePostAuthRedirectPath("/app/settings?upgrade=pro#billing-plans"),
+  "/app/settings?upgrade=pro#billing-plans",
+);
+assert.equal(normalizePostAuthRedirectPath("https://evil.test/app"), null);
+assert.equal(normalizePostAuthRedirectPath("//evil.test/app"), null);
 
 delete process.env.NEXT_PUBLIC_APP_URL;
 process.env.VERCEL_TARGET_ENV = "preview";

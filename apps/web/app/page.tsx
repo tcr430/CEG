@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FeedbackBanner } from "../components/feedback-banner";
+import { PublicLandingNav } from "../components/public-landing-nav";
 import { getServerAuthContext } from "../lib/server/auth";
 
 const workflowStages = [
@@ -90,26 +91,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     getServerAuthContext(),
     searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
   ]);
-  const primaryHref = context.user === null ? "/sign-in" : "/app";
-  const primaryLabel = context.user === null ? "Start workspace" : "Open workspace";
+  const primaryHref = context.user === null ? "/sign-up" : "/app";
+  const primaryLabel = context.user === null ? "Create workspace" : "Open workspace";
 
   return (
     <main className="landingV2Shell">
-      <nav className="landingV2Nav" aria-label="Public navigation">
-        <Link href="/" className="landingV2Brand" aria-label="OutFlow home">
-          <span className="landingV2BrandMark">OF</span>
-          <span>OutFlow</span>
-        </Link>
-        <div className="landingV2NavLinks">
-          <Link href="#workflow">Workflow</Link>
-          <Link href="#memory">Memory</Link>
-          <Link href="#trust">Trust</Link>
-          <Link href="/pricing">Pricing</Link>
-        </div>
-        <Link href={primaryHref} className="landingV2NavCta">
-          {context.user === null ? "Sign in" : "Dashboard"}
-        </Link>
-      </nav>
+      <PublicLandingNav isAuthenticated={context.user !== null} />
 
       <section className="landingV2Hero" aria-labelledby="landing-title">
         <div className="landingV2HeroCopy">

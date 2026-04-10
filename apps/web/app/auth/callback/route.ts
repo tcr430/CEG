@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { buildAuthCallbackBridgeHtml } from "../../../lib/auth-callback-bridge";
+import { normalizePostAuthRedirectPath } from "../../../lib/auth-redirects";
 import { createOperationContext } from "../../../lib/server/observability";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
 import { syncSupabaseUserToDatabase } from "../../../lib/server/user-sync";
@@ -15,10 +16,13 @@ export async function GET(request: Request) {
   });
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const postAuthRedirectPath =
+    normalizePostAuthRedirectPath(requestUrl.searchParams.get("next")) ??
+    "/app?notice=Welcome%20back.";
 
   if (code === null) {
     operation.logger.warn("Auth callback reached without code; returning fragment bridge");
-    return new NextResponse(buildAuthCallbackBridgeHtml(), {
+    return new NextResponse(buildAuthCallbackBridgeHtml(postAuthRedirectPath), {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
@@ -80,5 +84,5 @@ export async function GET(request: Request) {
   }
 
   operation.logger.info("Supabase code exchange completed");
-  return NextResponse.redirect(new URL("/app?notice=Welcome%20back.", request.url), 303);
+  return NextResponse.redirect(new URL(postAuthRedirectPath, request.url), 303);
 }
