@@ -82,6 +82,9 @@ export default async function DashboardPage({
     iterationReady: performance.replies > 0 || performance.positiveReplies > 0,
   });
   const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
+  const subscriptionLocked =
+    onboarding.billing.subscriptionRequired &&
+    !onboarding.billing.hasActiveSubscription;
 
   return (
     <main className="appShell">
@@ -128,6 +131,32 @@ export default async function DashboardPage({
 
       <section className="dashboardPanel">
         <FeedbackBanner error={params.error} notice={params.notice} />
+
+        {subscriptionLocked ? (
+          <div className="dashboardCard warningCard">
+            <p className="cardLabel">Subscription required</p>
+            <h2>Your account is active. Choose a plan to unlock workflow execution.</h2>
+            <p>
+              You can review the workspace, settings, team, and billing areas now. Creating sender
+              profiles, campaigns, prospects, research, sequences, reply intelligence, and inbox
+              imports requires an active subscription so paid workflow usage stays explicit.
+            </p>
+            <div className="inlineActions">
+              <Link
+                href={`/app/settings?workspace=${workspace.workspaceId}&upgrade=pro#billing-plans`}
+                className="buttonPrimary"
+              >
+                Review Growth plan
+              </Link>
+              <Link
+                href={`/app/settings?workspace=${workspace.workspaceId}#billing-plans`}
+                className="buttonSecondary"
+              >
+                Compare plans
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         <WorkflowStageStrip
           label="Workflow moat"

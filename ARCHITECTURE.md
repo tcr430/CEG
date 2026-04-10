@@ -168,9 +168,15 @@ Billing and usage gating should stay server side:
 
 Authentication should stay server side and modular:
   Supabase backed session handling happens in server entrypoints only
+  self service sign up uses email and password with Supabase email confirmation before local product account provisioning
+  sign in is reserved for already confirmed product accounts and supports password sign in plus magic link sign in without creating new product accounts
   workspace membership and role guards live in `@ceg/auth`
   protected routes resolve workspace context before rendering app surfaces
   UI components consume already resolved auth and workspace state instead of talking to auth providers directly
+
+Billing access principle:
+  confirmed users can enter the app shell and billing/settings areas before subscribing
+  core workflow execution is server gated behind an active synced subscription so account creation and paid product usage remain separate lifecycle steps
 
 ## Migration Strategy
 
@@ -202,7 +208,7 @@ Policy intent:
 This keeps the first policy layer understandable while preserving room for stricter role separation later.
 
 Current state:
-  authenticated users are synced into local `users` and `workspace_members` records so workspace access resolves from database truth first, with auth metadata only as a bootstrap fallback
+  confirmed sign ups are synced into local `users` and `workspace_members` records so workspace access resolves from database truth first, with auth metadata only as a legacy/bootstrap fallback where explicitly allowed
   the migration set now includes additive workspace integrity constraints so key optional relationships must stay inside the same workspace
   repository access for thread history, reply artifacts, research snapshots, imported thread refs, and destructive campaign/prospect deletes is now explicitly workspace scoped instead of relying on bare ids alone
 

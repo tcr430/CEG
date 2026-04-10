@@ -45,7 +45,10 @@ Environment variables:
 
 Auth setup notes:
 - the current app uses Supabase server-side session handling
-- workspace membership is now resolved from local `workspace_members` records first; auth metadata is only used to bootstrap memberships during sign-in sync when needed
+- self-service sign-up uses email and password, sends a confirmation email, and only provisions local `users`, `workspaces`, and `workspace_members` records after the confirmation callback succeeds
+- sign-in is only for already confirmed product accounts; password sign-in starts a session immediately, while magic-link sign-in uses Supabase OTP with user creation disabled
+- workspace membership is now resolved from local `workspace_members` records first; auth metadata is only a legacy/bootstrap fallback where explicitly allowed
+- `DATABASE_URL` is required in production for product account creation and workspace membership lookup; Supabase auth variables alone are not sufficient
 - `SUPABASE_SERVICE_ROLE_KEY` is reserved for future admin/server flows and is not required for the current sign-in path
 
 ## Stripe Setup
@@ -133,6 +136,9 @@ Required for auth:
 Required for database operations:
 - `DATABASE_URL`
 
+Production behavior note:
+- missing `DATABASE_URL` now fails clearly in production instead of silently falling back to development in-memory repositories
+
 Required only if Gmail inbox import is enabled:
 - `GOOGLE_GMAIL_CLIENT_ID`
 - `GOOGLE_GMAIL_CLIENT_SECRET`
@@ -206,7 +212,7 @@ Set:
 - `NEXT_PUBLIC_APP_URL=https://your-domain.com`
 
 Also configure these redirect URLs:
-- Supabase magic-link callback: `https://your-domain.com/auth/callback`
+- Supabase email confirmation and magic-link callback: `https://your-domain.com/auth/callback`
 - Google OAuth callback for Gmail import: `https://your-domain.com/api/inbox/gmail/callback`
 
 If you use Vercel preview deployments, preview sign-in can fall back to the deployment URL, but production should always use the canonical domain.
@@ -231,9 +237,11 @@ Commercial naming note:
 
 After deploy:
 - open the landing page
-- verify sign-in page loads
+- verify sign-up and sign-in pages load
+- create a test account from `/sign-up`, confirm the email, and verify a local product user, workspace, and owner membership are created
 - verify authenticated app route protection works
 - verify one workspace resolves correctly
+- verify unsubscribed accounts can open `/app/settings` and plan checkout but cannot create sender profiles, campaigns, prospects, research, sequences, inbox imports, or reply intelligence
 - verify one sender profile, campaign, and prospect can load
 
 ## Operations Checklist
@@ -261,9 +269,13 @@ After deploy:
 
 ### Verify Auth
 
-- request a magic link from `/sign-in`
-- confirm redirect lands on `/auth/callback`
-- confirm authenticated user reaches `/app`
+- create an account from `/sign-up` with email, password, and repeated password
+- confirm the Supabase email link lands on `/auth/callback`
+- confirm local `users`, `workspaces`, and `workspace_members` rows exist after confirmation
+- sign out, then sign in with email and password from `/sign-in`
+- request a magic link from `/sign-in` for the confirmed account
+- confirm the magic-link redirect lands on `/auth/callback` and reaches `/app`
+- confirm magic-link sign-in does not create accounts for unconfirmed or unknown emails
 - confirm unauthorized access still redirects to `/sign-in`
 - confirm workspace selection/default workspace behavior is correct
 
@@ -300,6 +312,7 @@ After deploy:
 ## Access Control Notes
 
 - Workspace membership now resolves from local `workspace_members` records first, with auth metadata only used as a bootstrap fallback when needed.
+- Product account creation is deliberately separated from sign-in: sign-up confirmation provisions the account; sign-in only authenticates existing confirmed accounts.
 - The migration set now includes a workspace-scoped Supabase/Postgres RLS foundation in [0003_workspace_rls.sql](D:/Project/CEG/packages/database/migrations/0003_workspace_rls.sql).
 - `SUPABASE_SERVICE_ROLE_KEY` is reserved for trusted server/admin flows only and must never be exposed through `NEXT_PUBLIC_*` variables or client imports.
 

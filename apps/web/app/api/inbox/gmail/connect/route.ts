@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireWorkspaceAccess } from "@ceg/auth";
 
 import { getServerAuthContext } from "../../../../../lib/server/auth";
+import { assertWorkspaceSubscriptionActive } from "../../../../../lib/server/billing";
 import { buildGmailConnectUrl } from "../../../../../lib/server/inbox/service";
 import { createOperationContext } from "../../../../../lib/server/observability";
 import { assertTrustedAppRequest } from "../../../../../lib/server/request-security";
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
 
   try {
     requireWorkspaceAccess(auth, workspaceId);
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const url = buildGmailConnectUrl({
       workspaceId,
       userId: auth.user.userId,

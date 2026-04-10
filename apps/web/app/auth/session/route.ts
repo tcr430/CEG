@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createOperationContext } from "../../../lib/server/observability";
 import { assertTrustedAppRequest } from "../../../lib/server/request-security";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
-import { syncSupabaseUserToDatabase } from "../../../lib/server/user-sync";
+import { getSupabaseProductAccount } from "../../../lib/server/user-sync";
 
 const authSessionRequestSchema = z.object({
   accessToken: z.string().min(1),
@@ -67,12 +67,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    await syncSupabaseUserToDatabase({
+    const productAccount = await getSupabaseProductAccount({
       user,
       requestId: operation.requestId,
     });
+
+    if (productAccount === null) {
+      await supabase.auth.signOut();
+      return NextResponse.json(
+        { error: "Create and confirm an OutFlow account before signing in." },
+        { status: 403 },
+      );
+    }
   } catch (syncError) {
-    operation.logger.error("Supabase user sync failed after fragment session persistence", {
+    operation.logger.error("Product account lookup failed after fragment session persistence", {
       error: syncError instanceof Error ? syncError.message : "Unknown error",
     });
     await supabase.auth.signOut();

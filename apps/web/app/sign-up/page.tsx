@@ -35,7 +35,7 @@ function getMessage(params: {
   "check-email"?: string;
 }) {
   if (params["check-email"] === "1") {
-    return "Magic link sent. Check your inbox to create your workspace.";
+    return "Confirmation email sent. Check your inbox to finish creating your workspace.";
   }
 
   return (
@@ -77,8 +77,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
           </p>
         </div>
 
-        <form action="/auth/sign-in" method="post" className="stack">
-          <input type="hidden" name="mode" value="sign-up" />
+        <form action="/auth/sign-up" method="post" className="stack">
           <input type="hidden" name="planCode" value={selectedPlanCode} />
           <label className="field">
             <span>Work email</span>
@@ -89,7 +88,27 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
               required
             />
           </label>
-          <SubmitButton className="buttonPrimary" pendingLabel="Sending magic link...">
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              name="password"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Confirm password</span>
+            <input
+              type="password"
+              name="passwordConfirmation"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <SubmitButton className="buttonPrimary" pendingLabel="Sending confirmation...">
             Create account
           </SubmitButton>
         </form>

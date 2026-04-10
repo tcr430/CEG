@@ -83,7 +83,13 @@ function getDatabaseModule(): DatabaseModule | null {
 }
 
 function getDatabaseClient() {
-  return getDatabaseModule()?.getClient() ?? null;
+  const databaseModule = getDatabaseModule();
+
+  if (databaseModule === null && process.env.NODE_ENV === "production") {
+    throw new Error("DATABASE_URL is required in production.");
+  }
+
+  return databaseModule?.getClient() ?? null;
 }
 
 export function getWorkspaceRepository(): WorkspaceRepository {

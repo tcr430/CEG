@@ -239,5 +239,72 @@ export async function syncSupabaseUserToDatabase(input: {
   };
 }
 
+export async function getSupabaseProductAccount(input: {
+  user: SupabaseAuthUserLike;
+  requestId?: string;
+}): Promise<SyncResult | null> {
+  const metadataUser = mapSupabaseUserToMetadataAuthUser(input.user);
+  const userRepository = getUserRepository();
+  const membershipRepository = getWorkspaceMemberRepository();
+
+  if (userRepository === null || membershipRepository === null) {
+    return metadataUser.memberships.length > 0
+      ? {
+          user: metadataUser,
+          source: "metadata",
+        }
+      : null;
+  }
+
+  const operation = createOperationContext({
+    operation: "auth.product_account_lookup",
+    requestId: input.requestId,
+    userId: input.user.id,
+  });
+  const localUser =
+    (await userRepository.getUserById(input.user.id)) ??
+    (input.user.email ? await userRepository.getUserByEmail(input.user.email) : null);
+
+  if (localUser === null || localUser.status !== "active") {
+    operation.logger.warn("No active product account found for authenticated identity");
+    return null;
+  }
+
+  const workspaceRepository = getWorkspaceRepository();
+  const memberships = await membershipRepository.listWorkspaceMembershipsByUserId(localUser.id);
+
+  if (memberships.length === 0) {
+    operation.logger.warn("Product account has no active workspace memberships");
+    return null;
+  }
+
+  const workspaceNames = new Map<string, { slug: string; name: string }>();
+  await Promise.all(
+    memberships.map(async (membership) => {
+      const workspace = await workspaceRepository.getWorkspaceById(
+        membership.workspaceId,
+      );
+      if (workspace !== null) {
+        workspaceNames.set(membership.workspaceId, {
+          slug: workspace.slug,
+          name: workspace.name,
+        });
+      }
+    }),
+  );
+
+  return {
+    user: {
+      userId: localUser.id,
+      email: localUser.email,
+      memberships: mapDatabaseMemberships({
+        memberships,
+        workspaceNames,
+      }),
+    },
+    source: "database",
+  };
+}
+
 
 

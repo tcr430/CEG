@@ -9,6 +9,7 @@ import {
   createSenderProfileForWorkspace,
   updateSenderProfileForWorkspace,
 } from "../../../lib/server/sender-profiles";
+import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
 import { getServerAuthContext } from "../../../lib/server/auth";
 import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
@@ -59,6 +60,7 @@ export async function createSenderProfileAction(formData: FormData) {
   const requestId = randomUUID();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createSenderProfileForWorkspace({
       workspaceId,
       name: String(formData.get("name") ?? ""),
@@ -114,6 +116,7 @@ export async function updateSenderProfileAction(formData: FormData) {
   const requestId = randomUUID();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await updateSenderProfileForWorkspace({
       senderProfileId,
       workspaceId,

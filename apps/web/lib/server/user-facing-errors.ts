@@ -16,6 +16,21 @@ const USER_FACING_ERROR_MAP: Array<{
     message: "Enter a work email to continue.",
   },
   {
+    pattern: /missing password/i,
+    code: "missing-password",
+    message: "Enter your password to continue.",
+  },
+  {
+    pattern: /passwords do not match/i,
+    code: "passwords-do-not-match",
+    message: "Passwords do not match.",
+  },
+  {
+    pattern: /email not confirmed|confirm.*email/i,
+    code: "email-not-confirmed",
+    message: "Confirm your email before signing in.",
+  },
+  {
     pattern: /auth session missing|not authenticated/i,
     code: "auth-required",
     message: "Sign in to continue.",
@@ -39,6 +54,11 @@ const USER_FACING_ERROR_MAP: Array<{
     pattern: /workspace sync failed|workspace bootstrap failed|prepare workspace/i,
     code: "workspace-sync-failed",
     message: "We signed you in, but could not prepare your workspace. Please try again.",
+  },
+  {
+    pattern: /active subscription is required|subscription.*required/i,
+    code: "subscription-required",
+    message: "Choose a plan to unlock workspace workflow actions.",
   },
   {
     pattern: /sender profile not found/i,

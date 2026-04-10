@@ -7,7 +7,7 @@ import {
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "./supabase";
-import { syncSupabaseUserToDatabase } from "./user-sync";
+import { getSupabaseProductAccount } from "./user-sync";
 
 export async function getServerAuthContext(): Promise<AuthContext> {
   const supabase = await createSupabaseServerClient();
@@ -28,9 +28,15 @@ export async function getServerAuthContext(): Promise<AuthContext> {
     };
   }
 
-  const synced = await syncSupabaseUserToDatabase({
+  const synced = await getSupabaseProductAccount({
     user,
   });
+
+  if (synced === null) {
+    return {
+      user: null,
+    };
+  }
 
   return {
     user: synced.user,

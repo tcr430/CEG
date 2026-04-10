@@ -26,6 +26,8 @@ import { getSharedUsageEventRepository } from "./usage-events";
 export type WorkspaceBillingState = {
   planCode: BillingPlanCode;
   planLabel: string;
+  subscriptionRequired: boolean;
+  hasActiveSubscription: boolean;
   usage: ReturnType<typeof summarizeWorkspaceUsage>;
   currentSubscription: Subscription | null;
   features: {
@@ -47,6 +49,10 @@ export type WorkspaceBillingState = {
 
 declare global {
   var __cegStripeBillingProvider: StripeBillingProvider | undefined;
+}
+
+function isActiveSubscription(subscription: Subscription | null): boolean {
+  return subscription?.status === "active" || subscription?.status === "trialing";
 }
 
 function resolvePlanCode(input: {
@@ -103,6 +109,8 @@ export async function getWorkspaceBillingState(input: {
   return {
     planCode,
     planLabel: plan.label,
+    subscriptionRequired: true,
+    hasActiveSubscription: isActiveSubscription(currentSubscription),
     usage,
     currentSubscription,
     features: {
@@ -141,6 +149,16 @@ export async function getWorkspaceBillingState(input: {
       }),
     },
   };
+}
+
+export async function assertWorkspaceSubscriptionActive(input: {
+  workspaceId: string;
+}): Promise<void> {
+  const currentSubscription = await getWorkspaceCurrentSubscription(input.workspaceId);
+
+  if (!isActiveSubscription(currentSubscription)) {
+    throw new Error("An active subscription is required to use workspace workflows.");
+  }
 }
 
 export async function assertWorkspaceFeatureAccess(input: {

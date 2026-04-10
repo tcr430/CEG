@@ -1,6 +1,6 @@
 import type { BillingPlanCode } from "@ceg/billing";
 
-type AuthMode = "sign-in" | "sign-up";
+export type AuthMode = "password-sign-in" | "magic-link" | "sign-up";
 type PaidPlanCode = Exclude<BillingPlanCode, "free">;
 
 const paidPlanCodes = new Set<string>(["pro", "agency"]);
@@ -12,7 +12,11 @@ const allowedPostAuthPathPrefixes = [
 ];
 
 export function normalizeAuthMode(value: FormDataEntryValue | string | null): AuthMode {
-  return value === "sign-up" ? "sign-up" : "sign-in";
+  if (value === "sign-up" || value === "magic-link") {
+    return value;
+  }
+
+  return "password-sign-in";
 }
 
 export function normalizeSignupPlanCode(value: FormDataEntryValue | string | null): BillingPlanCode | null {

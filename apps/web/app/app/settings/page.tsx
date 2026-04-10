@@ -180,6 +180,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     billing,
     performance: null,
   });
+  const subscriptionLocked =
+    billing.subscriptionRequired && !billing.hasActiveSubscription;
   const controls = institutionalControlsState.controls;
   const dataHandling = readWorkspaceDataHandling(teamState.workspace.settings);
 
@@ -525,8 +527,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p>
               {billing.currentSubscription
                 ? `Subscription status: ${billing.currentSubscription.status.replaceAll("_", " ")}.`
-                : "No paid subscription is synced yet. This workspace is using the default Starter plan."}
+                : "No paid subscription is synced yet. The workspace account exists, but core workflow execution stays locked until checkout completes."}
             </p>
+            {subscriptionLocked ? (
+              <p className="statusMessage">
+                Account access is active. Choose Growth or Enterprise below to unlock sender profiles, campaigns, prospects, research, generation, reply intelligence, and inbox imports.
+              </p>
+            ) : null}
             <p>Billing period end: {formatPeriodEnd(billing.currentSubscription?.currentPeriodEnd ?? null)}</p>
           </div>
 
@@ -751,7 +758,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
             if (plan.code === "free") {
               actions = active ? null : (
-                <p className="statusMessage">This workspace falls back to Starter automatically when no paid subscription is active.</p>
+                <p className="statusMessage">This workspace shows Starter as the default account tier when no paid subscription is active, but workflow execution still requires checkout.</p>
               );
             } else if (active) {
               actions = billing.currentSubscription?.providerCustomerId ? (

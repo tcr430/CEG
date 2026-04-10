@@ -61,12 +61,14 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <div>
           <h2 id="sign-in-title">Continue with email</h2>
           <p>
-            Enter the email connected to your OutFlow workspace. Creating a new
-            workspace? Use the self-service account flow instead.
+            Enter the email and password for a confirmed OutFlow account, or request a
+            magic link for an existing account. Creating a new workspace? Use the
+            self-service account flow instead.
           </p>
         </div>
 
         <form action="/auth/sign-in" method="post" className="stack">
+          <input type="hidden" name="mode" value="password-sign-in" />
           <label className="field">
             <span>Work email</span>
             <input
@@ -76,7 +78,33 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               required
             />
           </label>
-          <SubmitButton className="buttonPrimary" pendingLabel="Sending magic link...">
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              name="password"
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <SubmitButton className="buttonPrimary" pendingLabel="Signing in...">
+            Sign in
+          </SubmitButton>
+        </form>
+
+        <form action="/auth/sign-in" method="post" className="stack">
+          <input type="hidden" name="mode" value="magic-link" />
+          <label className="field">
+            <span>Or send a magic link</span>
+            <input
+              type="email"
+              name="email"
+              placeholder="you@company.com"
+              autoComplete="email"
+              required
+            />
+          </label>
+          <SubmitButton className="buttonSecondary" pendingLabel="Sending magic link...">
             Send magic link
           </SubmitButton>
         </form>

@@ -87,6 +87,7 @@ For local demos, trusted internal admins can opt into development-only sample da
 
 The app is designed to stay portable, but it is ready for Vercel deployment with a few explicit expectations:
 - set `NEXT_PUBLIC_APP_URL` to the canonical public app origin in production
+- set `DATABASE_URL` in production so confirmed auth identities can create and load local product accounts, workspaces, memberships, subscriptions, and workflow records
 - set Supabase, Stripe, and OpenAI variables only for the features you actually enable
 - keep server-only secrets in server modules; secret-bearing integrations live under [server](D:/Project/CEG/apps/web/lib/server)
 - Vercel preview deployments can fall back to `VERCEL_URL` when `NEXT_PUBLIC_APP_URL` is omitted, but production should use an explicit canonical origin

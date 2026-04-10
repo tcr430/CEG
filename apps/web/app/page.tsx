@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FeedbackBanner } from "../components/feedback-banner";
+import { HomeAuthFragmentBridge } from "../components/home-auth-fragment-bridge";
 import { PublicLandingNav } from "../components/public-landing-nav";
 import { getServerAuthContext } from "../lib/server/auth";
 
@@ -171,6 +172,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </section>
 
       <FeedbackBanner error={params.error} notice={params.notice} />
+      <HomeAuthFragmentBridge />
 
       <section className="landingV2Section landingV2TightSection" aria-labelledby="operator-title">
         <div className="landingV2SectionIntro">

@@ -6,7 +6,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
-import { getWorkspaceBillingState } from "../../../lib/server/billing";
+import {
+  assertWorkspaceSubscriptionActive,
+  getWorkspaceBillingState,
+} from "../../../lib/server/billing";
 import {
   createCampaignForWorkspace,
   createProspectForCampaign,
@@ -196,6 +199,7 @@ export async function createOnboardingSenderProfileAction(formData: FormData) {
   const context = await requireOnboardingWorkspace(workspaceId);
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createSenderProfileForWorkspace({
       workspaceId,
       name: String(formData.get("name") ?? ""),
@@ -248,6 +252,7 @@ export async function createOnboardingCampaignAction(formData: FormData) {
   const context = await requireOnboardingWorkspace(workspaceId);
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const senderProfiles = await listSenderProfilesForWorkspace(workspaceId);
     const defaultSenderProfile =
       senderProfiles.find((profile) => profile.isDefault) ?? senderProfiles[0] ?? null;
@@ -299,6 +304,7 @@ export async function createOnboardingProspectAction(formData: FormData) {
   const context = await requireOnboardingWorkspace(workspaceId);
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const campaigns = await listCampaignsForWorkspace(workspaceId);
     const firstCampaign = campaigns[0];
 

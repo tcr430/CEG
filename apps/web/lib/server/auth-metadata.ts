@@ -12,6 +12,7 @@ type SupabaseMetadataMembership = {
 export type SupabaseAuthUserLike = {
   id: string;
   email?: string;
+  email_confirmed_at?: string | null;
   app_metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;
 };

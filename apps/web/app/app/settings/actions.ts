@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
+import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
 import { requestWorkspaceDeletion } from "../../../lib/server/data-handling";
 import { submitWorkspaceFeedback } from "../../../lib/server/feedback";
 import { importRecentThreadsFromGmail } from "../../../lib/server/inbox/service";
@@ -92,6 +93,7 @@ export async function importRecentGmailThreadsAction(formData: FormData) {
       : Math.min(parsedMaxResults, 25);
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const result = await importRecentThreadsFromGmail({
       workspaceId,
       inboxAccountId,

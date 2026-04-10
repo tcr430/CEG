@@ -129,6 +129,7 @@ const {
 } = await import(authCallbackBridgeModuleUrl.href);
 const {
   createDefaultPostAuthRedirectPath,
+  normalizeAuthMode,
   normalizePostAuthRedirectPath,
   normalizeSignupPlanCode,
 } = await import(authRedirectsModuleUrl.href);
@@ -145,6 +146,12 @@ assert.equal(untrustedRequest.code, "request-not-verified");
 const workspaceSync = toUserFacingError(new Error("workspace sync failed"));
 assert.equal(workspaceSync.code, "workspace-sync-failed");
 assert.match(workspaceSync.message, /prepare your workspace/i);
+
+const subscriptionRequired = toUserFacingError(
+  new Error("An active subscription is required to use workspace workflows."),
+);
+assert.equal(subscriptionRequired.code, "subscription-required");
+assert.match(subscriptionRequired.message, /unlock workspace workflow/i);
 
 const fallback = toUserFacingError(new Error("Totally unknown failure"), "Friendly fallback.");
 assert.equal(fallback.code, "unknown-error");
@@ -412,6 +419,9 @@ const signupGrowthRedirect = createDefaultPostAuthRedirectPath({
 });
 assert.match(signupGrowthRedirect, /^\/app\/settings\?upgrade=pro/);
 assert.match(signupGrowthRedirect, /#billing-plans$/);
+assert.equal(normalizeAuthMode("sign-up"), "sign-up");
+assert.equal(normalizeAuthMode("magic-link"), "magic-link");
+assert.equal(normalizeAuthMode("anything-else"), "password-sign-in");
 assert.equal(normalizeSignupPlanCode("agency"), "agency");
 assert.equal(normalizeSignupPlanCode("enterprise"), null);
 assert.equal(
@@ -634,6 +644,8 @@ const limitUpgradePrompt = getUpgradePrompt({
   billing: {
     planCode: "free",
     planLabel: "Starter",
+    subscriptionRequired: true,
+    hasActiveSubscription: false,
     usage: {
       counters: {
         websiteResearchRuns: 12,
@@ -661,6 +673,8 @@ const performanceUpgradePrompt = getUpgradePrompt({
   billing: {
     planCode: "free",
     planLabel: "Starter",
+    subscriptionRequired: true,
+    hasActiveSubscription: false,
     usage: {
       counters: {
         websiteResearchRuns: 5,
@@ -696,6 +710,8 @@ const replyUpgradePrompt = getUpgradePrompt({
   billing: {
     planCode: "free",
     planLabel: "Starter",
+    subscriptionRequired: true,
+    hasActiveSubscription: false,
     usage: {
       counters: {
         websiteResearchRuns: 4,

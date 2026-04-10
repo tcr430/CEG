@@ -10,6 +10,7 @@ import {
   createProspectForCampaign,
   updateCampaignForWorkspace,
 } from "../../../lib/server/campaigns";
+import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
 import { getServerAuthContext } from "../../../lib/server/auth";
 import { runProspectResearchForCampaign } from "../../../lib/server/prospect-research";
 import {
@@ -83,6 +84,7 @@ export async function createCampaignAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createCampaignForWorkspace({
       workspaceId,
       senderProfileId: readOptionalText(formData, "senderProfileId") ?? null,
@@ -130,6 +132,7 @@ export async function updateCampaignAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await updateCampaignForWorkspace({
       campaignId,
       workspaceId,
@@ -178,6 +181,7 @@ export async function createProspectAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createProspectForCampaign({
       workspaceId,
       campaignId,
@@ -227,6 +231,7 @@ export async function runProspectResearchAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await runProspectResearchForCampaign({
       workspaceId,
       campaignId,
@@ -263,6 +268,7 @@ export async function generateProspectSequenceAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await generateSequenceForProspect({
       workspaceId,
       campaignId,
@@ -300,6 +306,7 @@ export async function createInboundReplyAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createInboundReplyForProspect({
       workspaceId,
       campaignId,
@@ -340,6 +347,7 @@ export async function createManualOutboundMessageAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await createManualOutboundMessageForProspect({
       workspaceId,
       campaignId,
@@ -375,6 +383,7 @@ export async function appendGeneratedSequenceMessagesAction(formData: FormData) 
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await appendLatestSequenceMessagesToProspectThread({
       workspaceId,
       campaignId,
@@ -408,6 +417,7 @@ export async function analyzeReplyAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await analyzeLatestReplyForProspect({
       workspaceId,
       campaignId,
@@ -443,6 +453,7 @@ export async function generateReplyDraftsAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await generateDraftRepliesForProspect({
       workspaceId,
       campaignId,
@@ -482,6 +493,7 @@ export async function regenerateReplyDraftAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await regenerateDraftReplyForProspect({
       workspaceId,
       campaignId,
@@ -527,6 +539,7 @@ export async function regenerateSequencePartAction(formData: FormData) {
       : undefined;
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await regenerateSequencePartForProspect({
       workspaceId,
       campaignId,
@@ -582,6 +595,7 @@ export async function editSequenceStepAction(formData: FormData) {
       : undefined;
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await editSequenceStepForProspect({
       workspaceId,
       campaignId,
@@ -629,6 +643,7 @@ export async function editReplyDraftAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await editDraftReplyForProspect({
       workspaceId,
       campaignId,
@@ -676,6 +691,7 @@ export async function createSequenceInboxDraftAction(formData: FormData) {
   let successMessage = "Draft created in Gmail.";
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const result = await createSequenceDraftInInbox({
       workspaceId,
       campaignId,
@@ -719,6 +735,7 @@ export async function createReplyInboxDraftAction(formData: FormData) {
   let successMessage = "Draft reply created in Gmail.";
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     const result = await createReplyDraftInInbox({
       workspaceId,
       campaignId,
@@ -761,6 +778,7 @@ export async function markOutboundMessageSentAction(formData: FormData) {
   const auth = await getServerAuthContext();
 
   try {
+    await assertWorkspaceSubscriptionActive({ workspaceId });
     await markProspectThreadMessageSent({
       workspaceId,
       campaignId,

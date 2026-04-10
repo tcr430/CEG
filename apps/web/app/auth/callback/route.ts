@@ -5,7 +5,10 @@ import { buildAuthCallbackBridgeHtml } from "../../../lib/auth-callback-bridge";
 import { normalizePostAuthRedirectPath } from "../../../lib/auth-redirects";
 import { createOperationContext } from "../../../lib/server/observability";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
-import { syncSupabaseUserToDatabase } from "../../../lib/server/user-sync";
+import {
+  getSupabaseProductAccount,
+  syncSupabaseUserToDatabase,
+} from "../../../lib/server/user-sync";
 import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
 export async function GET(request: Request) {
@@ -16,6 +19,7 @@ export async function GET(request: Request) {
   });
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const mode = requestUrl.searchParams.get("mode") === "sign-up" ? "sign-up" : "magic-link";
   const postAuthRedirectPath =
     normalizePostAuthRedirectPath(requestUrl.searchParams.get("next")) ??
     "/app?notice=Welcome%20back.";
@@ -59,7 +63,29 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user !== null) {
+  if (user === null) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(
+      new URL(
+        `/sign-in?error=${encodeUserFacingError("auth session missing", "We could not verify that account. Request a fresh link.")}`,
+        request.url,
+      ),
+      303,
+    );
+  }
+
+  if (mode === "sign-up") {
+    if (!user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        new URL(
+          `/sign-up?error=${encodeUserFacingError("email not confirmed", "Confirm your email before creating the workspace account.")}`,
+          request.url,
+        ),
+        303,
+      );
+    }
+
     try {
       await syncSupabaseUserToDatabase({
         user,
@@ -72,7 +98,7 @@ export async function GET(request: Request) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(
-          `/sign-in?error=${encodeUserFacingError(
+          `/sign-up?error=${encodeUserFacingError(
             new Error("workspace sync failed"),
             "We signed you in, but could not prepare your workspace. Please try again.",
           )}`,
@@ -81,8 +107,24 @@ export async function GET(request: Request) {
         303,
       );
     }
+  } else {
+    const productAccount = await getSupabaseProductAccount({
+      user,
+      requestId: operation.requestId,
+    });
+
+    if (productAccount === null) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        new URL(
+          `/sign-up?notice=${encodeURIComponent("Create and confirm an OutFlow account before signing in.")}`,
+          request.url,
+        ),
+        303,
+      );
+    }
   }
 
-  operation.logger.info("Supabase code exchange completed");
+  operation.logger.info("Supabase code exchange completed", { mode });
   return NextResponse.redirect(new URL(postAuthRedirectPath, request.url), 303);
 }
