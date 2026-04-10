@@ -75,6 +75,14 @@ export function createWorkspaceRepository(
             settings
           )
           VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (id)
+          DO UPDATE SET
+            slug = EXCLUDED.slug,
+            name = EXCLUDED.name,
+            owner_user_id = COALESCE(workspaces.owner_user_id, EXCLUDED.owner_user_id),
+            status = EXCLUDED.status,
+            settings = COALESCE(workspaces.settings, EXCLUDED.settings),
+            updated_at = NOW()
           RETURNING
             id,
             slug,

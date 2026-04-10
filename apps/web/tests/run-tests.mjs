@@ -136,6 +136,10 @@ assert.equal(invalidUrl.code, "invalid-website-url");
 const untrustedRequest = toUserFacingError(new Error("Request origin could not be verified."));
 assert.equal(untrustedRequest.code, "request-not-verified");
 
+const workspaceSync = toUserFacingError(new Error("workspace sync failed"));
+assert.equal(workspaceSync.code, "workspace-sync-failed");
+assert.match(workspaceSync.message, /prepare your workspace/i);
+
 const fallback = toUserFacingError(new Error("Totally unknown failure"), "Friendly fallback.");
 assert.equal(fallback.code, "unknown-error");
 assert.equal(fallback.message, "Friendly fallback.");

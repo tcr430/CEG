@@ -168,6 +168,38 @@ async function run(): Promise<void> {
   }
 
   {
+    const queries: DatabaseQuery[] = [];
+    const client = createMockClient(
+      [
+        [
+          {
+            id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+            slug: "acme-seeded",
+            name: "Acme Seeded",
+            owner_user_id: null,
+            status: "active",
+            settings: {},
+            created_at: "2026-03-27T10:00:00.000Z",
+            updated_at: "2026-03-27T10:00:00.000Z",
+          },
+        ],
+      ],
+      queries,
+    );
+
+    const repository = createWorkspaceRepository(client);
+    const workspace = await repository.createWorkspaceRecord({
+      id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+      slug: "acme-seeded",
+      name: "Acme Seeded",
+      settings: {},
+    });
+
+    assert.equal(workspace.id, "5f07db2d-8abd-49db-a5ca-a877ef2fe53c");
+    assert.match(queries[0]?.statement ?? "", /ON CONFLICT \(id\)/);
+  }
+
+  {
     const repository = createInMemoryWorkspaceRepository();
     const created = await repository.createWorkspaceRecord({
       id: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",

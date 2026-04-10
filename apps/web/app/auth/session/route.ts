@@ -66,10 +66,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Session user could not be verified." }, { status: 401 });
   }
 
-  await syncSupabaseUserToDatabase({
-    user,
-    requestId: operation.requestId,
-  });
+  try {
+    await syncSupabaseUserToDatabase({
+      user,
+      requestId: operation.requestId,
+    });
+  } catch (syncError) {
+    operation.logger.error("Supabase user sync failed after fragment session persistence", {
+      error: syncError instanceof Error ? syncError.message : "Unknown error",
+    });
+    await supabase.auth.signOut();
+    return NextResponse.json(
+      { error: "Workspace could not be prepared." },
+      { status: 500 },
+    );
+  }
 
   operation.logger.info("Supabase session persisted from callback fragment");
   return NextResponse.json({ ok: true });

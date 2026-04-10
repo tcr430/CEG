@@ -36,6 +36,11 @@ const USER_FACING_ERROR_MAP: Array<{
     message: "This account does not have a workspace yet.",
   },
   {
+    pattern: /workspace sync failed|workspace bootstrap failed|prepare workspace/i,
+    code: "workspace-sync-failed",
+    message: "We signed you in, but could not prepare your workspace. Please try again.",
+  },
+  {
     pattern: /sender profile not found/i,
     code: "sender-profile-not-found",
     message: "That sender profile could not be found.",

@@ -56,10 +56,27 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (user !== null) {
-    await syncSupabaseUserToDatabase({
-      user,
-      requestId: operation.requestId,
-    });
+    try {
+      await syncSupabaseUserToDatabase({
+        user,
+        requestId: operation.requestId,
+      });
+    } catch (syncError) {
+      operation.logger.error("Supabase user sync failed after code exchange", {
+        error: syncError instanceof Error ? syncError.message : "Unknown error",
+      });
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        new URL(
+          `/sign-in?error=${encodeUserFacingError(
+            new Error("workspace sync failed"),
+            "We signed you in, but could not prepare your workspace. Please try again.",
+          )}`,
+          request.url,
+        ),
+        303,
+      );
+    }
   }
 
   operation.logger.info("Supabase code exchange completed");

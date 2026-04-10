@@ -49,7 +49,7 @@ function resolveWorkspaceName(membership: WorkspaceMembership): string {
 
 function normalizeSelfServeWorkspaceSlug(input: {
   email?: string;
-  userId: string;
+  workspaceId: string;
 }): string {
   const emailLocalPart = input.email?.split("@")[0] ?? "workspace";
   const normalized = emailLocalPart
@@ -59,7 +59,7 @@ function normalizeSelfServeWorkspaceSlug(input: {
     .slice(0, 40);
   const prefix = normalized.length > 0 ? normalized : "workspace";
 
-  return `${prefix}-${input.userId.slice(0, 8)}`;
+  return `${prefix}-${input.workspaceId.slice(0, 8)}`;
 }
 
 function resolveSelfServeWorkspaceName(email?: string): string {
@@ -175,7 +175,7 @@ export async function syncSupabaseUserToDatabase(input: {
       id: workspaceId,
       slug: normalizeSelfServeWorkspaceSlug({
         email: input.user.email,
-        userId: localUserId,
+        workspaceId,
       }),
       name: resolveSelfServeWorkspaceName(input.user.email),
       ownerUserId: localUserId,
