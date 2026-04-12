@@ -39,9 +39,9 @@ const footerColumns: FooterColumnProps[] = [
   {
     title: "Solutions",
     links: [
-      { label: "Agencies", href: "/pricing" },
-      { label: "SDR teams", href: "/sign-up?plan=pro" },
-      { label: "Founders", href: "/sign-up?plan=free" },
+      { label: "Agencies", href: "/" },
+      { label: "SDR teams", href: "/pricing" },
+      { label: "Founders", href: "/pricing" },
       { label: "Reply handling", href: "/#product-surface" },
       { label: "Prospect research", href: "/#workflow" },
     ],
@@ -49,11 +49,11 @@ const footerColumns: FooterColumnProps[] = [
   {
     title: "Platform",
     links: [
-      { label: "Sender profiles", href: "/pricing" },
-      { label: "Campaign context", href: "/#memory" },
+      { label: "Sender profiles", href: "/#memory" },
+      { label: "Campaign context", href: "/#workflow" },
       { label: "Research snapshots", href: "/#product-surface" },
-      { label: "Draft handoff", href: "/#product-surface" },
-      { label: "Performance summaries", href: "/#product-surface" },
+      { label: "Draft handoff", href: "/#trust" },
+      { label: "Performance summaries", href: "/pricing" },
     ],
   },
   {
@@ -87,14 +87,14 @@ export function MarketingFooter() {
             <span>OutFlow</span>
           </Link>
           <p className="publicFooterPositioning">
-            Agency-grade outbound workflow for structured research, drafts, replies,
-            and review.
+            The operating system for agency-grade hyperpersonalized cold email.
           </p>
           <p className="publicFooterTrust">
-            Controlled execution for serious client work. AI proposes, human approves.
+            Structured research, reviewable drafts, reply handling, and controlled
+            execution for serious client work.
           </p>
           <div className="publicFooterMeta">
-            <span>© 2026 OutFlow</span>
+            <span>(c) 2026 OutFlow</span>
             <div className="publicFooterInlineLinks">
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>

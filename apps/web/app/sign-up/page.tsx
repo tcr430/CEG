@@ -53,37 +53,63 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   ]);
   const selectedPlanCode = normalizeSignupPlanCode(params.plan ?? null) ?? "free";
   const selectedPlan = getPricingPlanPresentation(selectedPlanCode);
-  const signupSteps = [
+  const reassurancePoints = [
     "Create the account with work email and password",
-    "Confirm the email to activate the workspace",
-    "Enter the app, then review billing before any paid workflow starts",
+    "Confirm the email once to activate the workspace",
+    "Enter the product before any paid workflow begins",
   ];
 
   return (
     <main className="publicSiteShell publicSignupShell">
       <PublicLandingNav isAuthenticated={context.user !== null} />
 
-      <section className="publicSignupIntro">
+      <section className="publicSignupIntro publicSignupIntroCompact">
         <div className="publicSignupIntroCopy">
           <p className="marketingEyebrow">Create account</p>
-          <h1>Start an OutFlow workspace</h1>
+          <h1>Start the workspace behind your outbound workflow.</h1>
           <p className="publicSignupLead">
-            Create the account first, confirm the email once, and enter the
-            workspace with your selected plan context already attached. Billing
-            can be reviewed separately before any paid workflow begins.
+            Create the account, confirm the email, and continue into a structured
+            workspace built for serious client work. Your selected plan stays attached
+            so billing can be reviewed without interrupting setup.
           </p>
-          <div className="publicSignupStepRow">
-            {signupSteps.map((step, index) => (
-              <div key={step} className="publicSignupStep">
-                <span>{index + 1}</span>
-                <p>{step}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
-      <section className="publicSignupGrid">
+      <section className="publicSignupGrid publicSignupGridBalanced">
+        <aside className="publicSignupSidebar publicSignupSidebarTop">
+          <section className="publicSignupPlanCard">
+            <p className="marketingSurfaceEyebrow">Selected plan</p>
+            <h2>{selectedPlan.label}</h2>
+            <p>{selectedPlan.summary}</p>
+            <ul className="researchList compactResearchList">
+              {selectedPlan.bullets.map((bullet) => (
+                <li key={bullet}>{bullet}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="publicSignupInfoCard">
+            <p className="marketingSurfaceEyebrow">What happens next</p>
+            <ul className="publicSignupChecklist">
+              {reassurancePoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </section>
+
+          <div className="pillRow">
+            {pricingPlans.map((plan) => (
+              <Link
+                key={plan.code}
+                href={`/sign-up?plan=${plan.code}`}
+                className={plan.code === selectedPlanCode ? "pill activePill" : "pill"}
+              >
+                {plan.label}
+              </Link>
+            ))}
+          </div>
+        </aside>
+
         <section className="publicSignupFormCard" aria-labelledby="sign-up-title">
           <div className="publicSignupFormHeader">
             <div>
@@ -91,7 +117,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
               <h2 id="sign-up-title">Create your workspace with email</h2>
               <p>
                 Selected plan: <strong>{selectedPlan.label}</strong>. You can review
-                billing before any paid checkout starts.
+                billing separately before any paid checkout starts.
               </p>
             </div>
             <span className="publicSignupPlanBadge">{selectedPlan.label}</span>
@@ -146,40 +172,6 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
             </Link>
           </div>
         </section>
-
-        <aside className="publicSignupSidebar">
-          <section className="publicSignupPlanCard">
-            <p className="marketingSurfaceEyebrow">Plan snapshot</p>
-            <h2>{selectedPlan.headline}</h2>
-            <p>{selectedPlan.summary}</p>
-            <ul className="researchList compactResearchList">
-              {selectedPlan.bullets.map((bullet) => (
-                <li key={bullet}>{bullet}</li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="publicSignupInfoCard">
-            <p className="marketingSurfaceEyebrow">What happens next</p>
-            <ul className="publicSignupChecklist">
-              <li>Your email confirmation activates the product account.</li>
-              <li>You can enter the app before subscribing.</li>
-              <li>Paid workflow execution stays blocked until checkout is complete.</li>
-            </ul>
-          </section>
-
-          <div className="pillRow">
-            {pricingPlans.map((plan) => (
-              <Link
-                key={plan.code}
-                href={`/sign-up?plan=${plan.code}`}
-                className={plan.code === selectedPlanCode ? "pill activePill" : "pill"}
-              >
-                {plan.label}
-              </Link>
-            ))}
-          </div>
-        </aside>
       </section>
       <MarketingFooter />
     </main>

@@ -19,16 +19,10 @@ export const metadata: Metadata = {
   description: "Compare workflow plans for OutFlow's agency-grade cold email system.",
 };
 
-const planPrinciples = [
-  "Every plan keeps the same product model: context, research, draft, review, replies, and history.",
-  "Plans differ by workflow depth, sender-aware support, and operating headroom rather than token math.",
-  "Teams can start lean, then add collaboration room and scale as client delivery grows.",
-];
-
-const includedAcrossPlans = [
-  "Shared workflow structure across campaigns, prospects, research, sequences, and replies",
-  "Human-reviewed operating model with drafts and reply intelligence kept inside a controlled workflow",
-  "Workspace-scoped context and campaign history rather than isolated one-off generation sessions",
+const pricingGuidance = [
+  "Each plan keeps the same product model: context, research, draft, review, replies, and history.",
+  "What changes is workflow depth, sender-aware support, and operating headroom.",
+  "Growth is the default fit for agencies actively running client campaigns.",
 ];
 
 type PricingPageProps = {
@@ -61,14 +55,12 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       <section className="publicPricingHero" aria-labelledby="pricing-title">
         <div className="publicPricingHeroCopy">
           <p className="marketingEyebrow">Pricing</p>
-          <h1 id="pricing-title">
-            Choose the workflow depth that matches how your agency actually operates.
-          </h1>
+          <h1 id="pricing-title">Choose the workflow depth your team actually needs.</h1>
           <p className="publicPricingLead">
-            OutFlow keeps the same core product model across plans: sender and
-            campaign context, prospect research, sequence work, reply handling,
-            and human review. Higher plans add more headroom for active client
-            delivery and team coordination.
+            OutFlow is priced around how much structured outbound work the team needs
+            to run, not around token language. Start lean, add sender-aware depth as
+            the workflow matures, and open up more headroom when client delivery gets
+            heavier.
           </p>
           <div className="publicActionRow">
             <Link
@@ -85,18 +77,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
 
         <div className="publicPricingHeroNotes">
           <div className="publicPricingNoteCard">
-            <p className="marketingSurfaceEyebrow">Plan design</p>
-            <h2>Three plans, one operating model.</h2>
+            <p className="marketingSurfaceEyebrow">How to choose</p>
             <ul className="pricingPrincipleList">
-              {planPrinciples.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="publicPricingNoteCard publicPricingNoteCardMuted">
-            <p className="marketingSurfaceEyebrow">Included across all plans</p>
-            <ul className="pricingPrincipleList">
-              {includedAcrossPlans.map((item) => (
+              {pricingGuidance.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -110,11 +93,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Plans"
-            title="Get to the plan decision quickly."
+            title="Pick the plan that matches the way the team operates today."
             description={
               <p>
-                Start lean, add sender-aware depth when the team needs it, and
-                step into higher operating headroom as client volume grows.
+                Start with the amount of workflow room you need now. The operating
+                model stays familiar as the workspace grows.
               </p>
             }
           />
@@ -194,11 +177,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel publicPricingMatrixPanel">
           <MarketingSectionHeader
             eyebrow="Comparison"
-            title="See where each plan opens up the workflow."
+            title="See where each tier opens up more room in the workflow."
             description={
               <p>
-                The comparison below is designed for scanability: what changes as
-                the workspace moves from initial use to heavier client delivery.
+                The matrix below focuses on the practical differences that matter
+                once the team starts running more client work.
               </p>
             }
           />
@@ -222,9 +205,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       </section>
 
       <PublicCtaBand
-        eyebrow="Choose the workflow depth"
+        eyebrow="Choose the right operating room"
         title="Start with the plan that fits the team today, then add headroom as delivery grows."
-        description="Keep the same controlled product model across plans while adding more workflow depth, collaboration room, and operating capacity."
+        description="Keep the same controlled workflow while adding more sender-aware context, more research and generation room, and more capacity for live client work."
         primaryLabel={auth.user ? "Open billing settings" : "Create your workspace"}
         primaryHref={auth.user ? "/app/settings" : "/sign-up"}
         secondaryLabel="Back to homepage"
