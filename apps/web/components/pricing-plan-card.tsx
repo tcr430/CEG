@@ -37,13 +37,15 @@ export function PricingPlanCard({
         </div>
         {badge ? <span className="pricingPlanBadge">{badge}</span> : null}
       </div>
-      <p className="pricingSummary">{plan.summary}</p>
-      <p className="pricingAudience">{plan.audience}</p>
-      <ul className="pricingBulletList">
-        {plan.bullets.map((bullet) => (
-          <li key={bullet}>{bullet}</li>
-        ))}
-      </ul>
+      <div className="pricingCardBody">
+        <p className="pricingSummary">{plan.summary}</p>
+        <p className="pricingAudience">{plan.audience}</p>
+        <ul className="pricingBulletList">
+          {plan.bullets.map((bullet) => (
+            <li key={bullet}>{bullet}</li>
+          ))}
+        </ul>
+      </div>
       {actions ? <div className="pricingActionRow">{actions}</div> : null}
       {footnote ? <p className="pricingFootnote">{footnote}</p> : null}
     </article>

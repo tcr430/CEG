@@ -4,8 +4,10 @@ import Link from "next/link";
 import { getDefaultWorkspaceMembership } from "@ceg/auth";
 
 import { FeedbackBanner } from "../../components/feedback-banner";
+import { MarketingFooter } from "../../components/marketing-footer";
 import { MarketingSectionHeader } from "../../components/marketing-section-header";
 import { PricingPlanCard } from "../../components/pricing-plan-card";
+import { PublicCtaBand } from "../../components/public-cta-band";
 import { PublicLandingNav } from "../../components/public-landing-nav";
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
@@ -53,22 +55,22 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
     : null;
 
   return (
-    <main className="marketingSite pricingSite">
+    <main className="publicSiteShell publicPricingShell">
       <PublicLandingNav isAuthenticated={auth.user !== null} />
 
-      <section className="marketingHero pricingHeroPanel" aria-labelledby="pricing-title">
-        <div className="marketingHeroCopy">
+      <section className="publicPricingHero" aria-labelledby="pricing-title">
+        <div className="publicPricingHeroCopy">
           <p className="marketingEyebrow">Pricing</p>
           <h1 id="pricing-title">
             Choose the workflow depth that matches how your agency actually operates.
           </h1>
-          <p className="marketingLead">
+          <p className="publicPricingLead">
             OutFlow keeps the same core product model across plans: sender and
             campaign context, prospect research, sequence work, reply handling,
             and human review. Higher plans add more headroom for active client
             delivery and team coordination.
           </p>
-          <div className="marketingHeroActions">
+          <div className="publicActionRow">
             <Link
               href={auth.user ? "/app/settings" : "/sign-up"}
               className="marketingPrimaryCta"
@@ -81,8 +83,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
           </div>
         </div>
 
-        <div className="pricingHeroAside">
-          <div className="pricingHeroCard">
+        <div className="publicPricingHeroNotes">
+          <div className="publicPricingNoteCard">
             <p className="marketingSurfaceEyebrow">Plan design</p>
             <h2>Three plans, one operating model.</h2>
             <ul className="pricingPrincipleList">
@@ -91,7 +93,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               ))}
             </ul>
           </div>
-          <div className="pricingHeroCard pricingHeroCardMuted">
+          <div className="publicPricingNoteCard publicPricingNoteCardMuted">
             <p className="marketingSurfaceEyebrow">Included across all plans</p>
             <ul className="pricingPrincipleList">
               {includedAcrossPlans.map((item) => (
@@ -104,19 +106,19 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
 
       <FeedbackBanner error={params.error} notice={params.notice} />
 
-      <section className="marketingSection">
-        <div className="marketingSectionPanel">
+      <section className="publicSection publicPricingPlansSection">
+        <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Plans"
-            title="Pick the operating shape that fits the team today."
+            title="Get to the plan decision quickly."
             description={
               <p>
-                Each plan is framed around how much workflow room the workspace
-                needs. The structure stays familiar; the headroom expands.
+                Start lean, add sender-aware depth when the team needs it, and
+                step into higher operating headroom as client volume grows.
               </p>
             }
           />
-          <div className="pricingCardGrid">
+          <div className="publicPricingCardGrid">
             {pricingPlans.map((plan) => {
               const active = billing?.planCode === plan.code;
               const badge = active ? "Current plan" : plan.featured ? "Recommended" : undefined;
@@ -188,8 +190,8 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         </div>
       </section>
 
-      <section className="marketingSection">
-        <div className="marketingSectionPanel pricingMatrixPanel">
+      <section className="publicSection">
+        <div className="publicPanel publicPricingMatrixPanel">
           <MarketingSectionHeader
             eyebrow="Comparison"
             title="See where each plan opens up the workflow."
@@ -200,7 +202,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               </p>
             }
           />
-          <div className="pricingMatrix">
+          <div className="publicPricingMatrix">
             <div className="pricingMatrixHeader">
               <span>Capability</span>
               <span>Starter</span>
@@ -219,33 +221,16 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         </div>
       </section>
 
-      <section className="marketingSection marketingFinalSection">
-        <div className="marketingFinalPanel">
-          <MarketingSectionHeader
-            eyebrow="Next step"
-            title="Choose the plan that fits current delivery load, then add headroom later."
-            description={
-              <p>
-                Start with the leanest plan that still matches how the team works
-                today. Add more room as campaign complexity, collaboration, and
-                client volume expand.
-              </p>
-            }
-            centered
-          />
-          <div className="marketingHeroActions marketingHeroActionsCentered">
-            <Link
-              href={auth.user ? "/app/settings" : "/sign-up"}
-              className="marketingPrimaryCta"
-            >
-              {auth.user ? "Open billing settings" : "Create your workspace"}
-            </Link>
-            <Link href="/" className="marketingSecondaryCta">
-              Back to homepage
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PublicCtaBand
+        eyebrow="Choose the workflow depth"
+        title="Start with the plan that fits the team today, then add headroom as delivery grows."
+        description="Keep the same controlled product model across plans while adding more workflow depth, collaboration room, and operating capacity."
+        primaryLabel={auth.user ? "Open billing settings" : "Create your workspace"}
+        primaryHref={auth.user ? "/app/settings" : "/sign-up"}
+        secondaryLabel="Back to homepage"
+        secondaryHref="/"
+      />
+      <MarketingFooter />
     </main>
   );
 }

@@ -2828,3 +2828,1062 @@ h2 {
     padding: 28px 18px;
   }
 }
+
+.publicSiteShell {
+  min-height: 100vh;
+  padding: 24px;
+  color: #101318;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(55, 92, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 86% 2%, rgba(28, 137, 103, 0.1), transparent 26%),
+    linear-gradient(180deg, #f7f8fb 0%, #eef1f5 42%, #f8f9fb 100%);
+}
+
+.publicNavWrap,
+.publicHeroSection,
+.publicSection,
+.publicPricingHero,
+.publicSignupIntro,
+.publicSignupGrid {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.publicNavWrap {
+  position: sticky;
+  top: 14px;
+  z-index: 20;
+  margin-bottom: 26px;
+}
+
+.publicNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 48px rgba(20, 28, 41, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.publicBrand,
+.publicNavLinks,
+.publicNavActions,
+.publicActionRow,
+.publicTrustLine {
+  display: flex;
+  align-items: center;
+}
+
+.publicBrand {
+  gap: 10px;
+  padding: 6px 8px;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}
+
+.publicBrandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #111827, #375cff);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.publicNavLinks {
+  gap: 6px;
+  color: #5a6270;
+  font-size: 0.94rem;
+}
+
+.publicNavLinks a,
+.publicNavLogin,
+.publicNavCta {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+}
+
+.publicNavLinks a:hover,
+.publicNavLogin:hover,
+.publicNavCta:hover {
+  background: rgba(17, 24, 39, 0.06);
+}
+
+.publicNavActions {
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.publicNavLogin {
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  color: #111827;
+  background: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+}
+
+.publicNavCta {
+  border: 1px solid rgba(55, 92, 255, 0.42);
+  color: #ffffff;
+  background: linear-gradient(135deg, #375cff, #1738d4);
+  box-shadow: 0 12px 28px rgba(55, 92, 255, 0.24);
+  font-weight: 800;
+}
+
+.publicHeroSection {
+  padding: 22px 0 10px;
+}
+
+.publicHeroGrid,
+.publicSplitGrid,
+.publicPricingHero,
+.publicSignupGrid {
+  display: grid;
+  gap: 24px;
+}
+
+.publicHeroGrid {
+  grid-template-columns: minmax(0, 0.98fr) minmax(420px, 0.92fr);
+  align-items: center;
+}
+
+.publicHeroCopy,
+.publicHeroVisual,
+.publicPanel,
+.publicCtaBand,
+.publicTrustPanel,
+.publicPricingHeroCopy,
+.publicPricingHeroNotes,
+.publicPricingNoteCard,
+.publicSignupIntroCopy,
+.publicSignupFormCard,
+.publicSignupPlanCard,
+.publicSignupInfoCard,
+.publicSignupSidebar {
+  display: grid;
+  gap: 18px;
+}
+
+.publicHeroCopy h1,
+.publicPricingHeroCopy h1,
+.publicSignupIntroCopy h1 {
+  margin: 0;
+  color: #101318;
+  letter-spacing: -0.07em;
+  line-height: 0.92;
+}
+
+.publicHeroCopy h1 {
+  max-width: 9.8ch;
+  font-size: clamp(3.15rem, 5.6vw, 5.3rem);
+}
+
+.publicPricingHeroCopy h1 {
+  max-width: 10.6ch;
+  font-size: clamp(2.9rem, 5vw, 4.8rem);
+}
+
+.publicSignupIntroCopy h1 {
+  max-width: 10ch;
+  font-size: clamp(2.8rem, 4.6vw, 4.3rem);
+}
+
+.publicHeroLead,
+.publicPricingLead,
+.publicSignupLead,
+.publicFeatureCard p,
+.publicWorkflowCard p,
+.publicNoteCard p,
+.publicSurfaceCard p,
+.publicSurfaceShowcasePrimary p,
+.publicSurfaceShowcaseSecondary p,
+.publicTrustPanel p,
+.publicRecommendationCard span,
+.publicSignupStep p,
+.publicSignupFormHeader p,
+.publicSignupPlanCard p,
+.publicSignupInfoCard p {
+  margin: 0;
+  color: #5f6877;
+  line-height: 1.7;
+}
+
+.publicHeroLead,
+.publicPricingLead,
+.publicSignupLead {
+  font-size: 1.05rem;
+  max-width: 40rem;
+}
+
+.publicActionRow {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.publicActionRowCentered {
+  justify-content: center;
+}
+
+.publicTrustLine {
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #4f5967;
+  font-size: 0.92rem;
+}
+
+.publicTrustLine span:not([aria-hidden="true"]),
+.publicSignalPill,
+.publicSignupPlanBadge,
+.publicStatusBadge,
+.publicRecommendationCard span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.publicTrustLine span[aria-hidden="true"] {
+  color: #8f97a5;
+}
+
+.publicSignalRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.publicWorkspaceWindow,
+.publicPanel,
+.publicCtaBand,
+.publicPricingNoteCard,
+.publicSignupFormCard,
+.publicSignupPlanCard,
+.publicSignupInfoCard {
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 24px 58px rgba(30, 41, 59, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.publicWorkspaceWindow {
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.publicWorkspaceTopbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  color: #6a7280;
+  font-size: 0.84rem;
+}
+
+.publicWorkspaceTopbar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #cfd5df;
+}
+
+.publicWorkspaceTopbar strong {
+  margin-left: 10px;
+  color: #101318;
+}
+
+.publicWorkspaceBody {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  min-height: 432px;
+}
+
+.publicWorkspaceSidebar {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px 16px;
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(248, 250, 252, 0.76);
+}
+
+.publicWorkspaceNav {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.publicWorkspaceNavItem {
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: #5f6877;
+}
+
+.publicWorkspaceNavItem.is-active {
+  color: #101318;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
+}
+
+.publicWorkspaceMain {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 20px;
+}
+
+.publicWorkspaceHeader,
+.publicRecommendationCard,
+.publicSignupFormHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.publicWorkspaceHeader h2,
+.publicSignupFormHeader h2,
+.publicPricingNoteCard h2,
+.publicTrustPanel h2,
+.publicCtaBand h2 {
+  margin: 0;
+  letter-spacing: -0.05em;
+}
+
+.publicWorkspaceHeader h2 {
+  font-size: clamp(1.7rem, 2.2vw, 2.25rem);
+  line-height: 1.02;
+}
+
+.publicPricingNoteCard h2,
+.publicTrustPanel h2,
+.publicCtaBand h2,
+.publicSignupFormHeader h2,
+.publicSignupPlanCard h2 {
+  font-size: clamp(1.65rem, 2.4vw, 2.35rem);
+  line-height: 1.02;
+}
+
+.publicStatusBadge,
+.publicRecommendationCard span {
+  color: #17654a;
+  background: rgba(28, 137, 103, 0.12);
+}
+
+.publicWorkspaceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.publicSurfaceCard,
+.publicFeatureCard,
+.publicWorkflowCard,
+.publicNoteCard,
+.publicSurfaceShowcasePrimary,
+.publicSurfaceShowcaseSecondary {
+  padding: 22px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.publicSurfaceCardWide {
+  grid-column: 1 / -1;
+}
+
+.publicRecommendationCard {
+  padding: 18px 20px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.97), rgba(55, 92, 255, 0.88));
+}
+
+.publicRecommendationCard h3,
+.publicRecommendationCard p,
+.publicRecommendationCard span {
+  color: #ffffff;
+}
+
+.publicRecommendationCard span {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.publicSection {
+  padding-top: 18px;
+}
+
+.publicPanel,
+.publicCtaBand,
+.publicTrustPanel,
+.publicPricingNoteCard,
+.publicSignupFormCard,
+.publicSignupPlanCard,
+.publicSignupInfoCard {
+  padding: 30px;
+  border-radius: 28px;
+}
+
+.publicPillarGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.publicWorkflowGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.publicWorkflowCard {
+  display: grid;
+  gap: 10px;
+}
+
+.publicWorkflowIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(53, 93, 255, 0.12);
+  color: #355dff;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.publicSplitGrid {
+  grid-template-columns: minmax(0, 1.04fr) minmax(340px, 0.9fr);
+  align-items: stretch;
+}
+
+.publicNoteStack,
+.publicSurfaceShowcaseSide,
+.publicPricingHeroNotes,
+.publicSignupSidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.publicTrustPanel {
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(32, 43, 61, 0.98)),
+    radial-gradient(circle at 85% 18%, rgba(53, 93, 255, 0.36), transparent 34%);
+}
+
+.publicTrustPanel .marketingEyebrow,
+.publicTrustPanel h2 {
+  color: #ffffff;
+}
+
+.publicTrustPanel p {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.publicTrustChecklist,
+.publicSignupChecklist,
+.pricingPrincipleList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.publicTrustChecklist li,
+.publicSignupChecklist li,
+.pricingPrincipleList li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.publicTrustChecklist li::before,
+.publicSignupChecklist li::before,
+.pricingPrincipleList li::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.publicTrustChecklist li::before {
+  background: #7ee2b8;
+  box-shadow: 0 0 0 4px rgba(126, 226, 184, 0.14);
+}
+
+.publicSignupChecklist li::before,
+.pricingPrincipleList li::before {
+  background: #355dff;
+  box-shadow: 0 0 0 4px rgba(53, 93, 255, 0.12);
+}
+
+.publicSurfaceShowcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(280px, 0.84fr);
+  gap: 16px;
+}
+
+.publicSurfaceShowcasePrimary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(245, 248, 252, 0.86)),
+    radial-gradient(circle at 12% 10%, rgba(53, 93, 255, 0.12), transparent 32%);
+}
+
+.publicFinalSection {
+  padding-bottom: 42px;
+}
+
+.publicCtaBand {
+  place-items: center;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.86)),
+    radial-gradient(circle at 50% 0%, rgba(53, 93, 255, 0.16), transparent 38%);
+}
+
+.publicPricingHero {
+  grid-template-columns: minmax(0, 0.98fr) minmax(300px, 0.84fr);
+  align-items: start;
+  padding: 8px 0 2px;
+}
+
+.publicPricingNoteCardMuted {
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.publicPricingPlansSection {
+  padding-top: 8px;
+}
+
+.publicPricingCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.pricingCard {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 16px;
+  min-height: 100%;
+  border-radius: 30px;
+}
+
+.pricingCardBody {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.pricingSummary {
+  margin-bottom: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pricingAudience {
+  margin-bottom: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.pricingBulletList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pricingBulletList li {
+  position: relative;
+  padding-left: 24px;
+  color: #5f6877;
+  line-height: 1.66;
+}
+
+.pricingBulletList li::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(53, 93, 255, 0.94);
+  box-shadow: 0 0 0 4px rgba(53, 93, 255, 0.12);
+}
+
+.pricingActionRow {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.pricingActionRow > *,
+.pricingActionRow form > * {
+  width: 100%;
+}
+
+.featuredPricingCard {
+  position: relative;
+  transform: translateY(-10px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 249, 255, 0.93)),
+    radial-gradient(circle at top right, rgba(53, 93, 255, 0.16), transparent 38%);
+  border-color: rgba(53, 93, 255, 0.26);
+  box-shadow: 0 30px 62px rgba(53, 93, 255, 0.14);
+}
+
+.activePricingCard {
+  border-color: rgba(28, 137, 103, 0.26);
+  box-shadow: 0 24px 54px rgba(28, 137, 103, 0.12);
+}
+
+.publicPricingMatrix {
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.publicPricingMatrixPanel {
+  gap: 22px;
+}
+
+.publicSignupIntro {
+  padding: 4px 0 8px;
+}
+
+.publicSignupStepRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.publicSignupStep {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.publicSignupStep span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(53, 93, 255, 0.12);
+  color: #355dff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.publicSignupGrid {
+  grid-template-columns: minmax(0, 0.98fr) minmax(300px, 0.82fr);
+  align-items: start;
+  padding-bottom: 42px;
+}
+
+.publicSignupForm {
+  display: grid;
+  gap: 16px;
+}
+
+.publicSignupPlanBadge {
+  color: #355dff;
+}
+
+.publicSignupShell .buttonPrimary {
+  width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .publicHeroGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 0.94fr);
+  }
+
+  .publicHeroCopy h1 {
+    max-width: 10.6ch;
+  }
+}
+
+@media (max-width: 1120px) {
+  .publicHeroGrid,
+  .publicSplitGrid,
+  .publicPricingHero,
+  .publicSignupGrid,
+  .publicSurfaceShowcase {
+    grid-template-columns: 1fr;
+  }
+
+  .publicHeroSection {
+    padding-top: 8px;
+  }
+
+  .publicPillarGrid,
+  .publicWorkflowGrid,
+  .publicPricingCardGrid,
+  .publicSignupStepRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .publicSiteShell {
+    padding: 16px;
+  }
+
+  .publicNavWrap {
+    position: static;
+    margin-bottom: 20px;
+  }
+
+  .publicNav,
+  .publicWorkspaceHeader,
+  .publicRecommendationCard,
+  .publicSignupFormHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .publicNavLinks {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  .publicNavActions,
+  .publicActionRow,
+  .publicSignalRow {
+    width: 100%;
+  }
+
+  .publicNavLogin,
+  .publicNavCta,
+  .marketingPrimaryCta,
+  .marketingSecondaryCta,
+  .marketingTertiaryCta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .publicWorkspaceBody {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .publicWorkspaceSidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  }
+
+  .publicWorkspaceGrid,
+  .publicPillarGrid,
+  .publicWorkflowGrid,
+  .publicPricingCardGrid,
+  .publicSignupStepRow {
+    grid-template-columns: 1fr;
+  }
+
+  .featuredPricingCard {
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .publicHeroCopy h1 {
+    font-size: clamp(2.7rem, 15vw, 4rem);
+  }
+
+  .publicPricingHeroCopy h1,
+  .publicSignupIntroCopy h1 {
+    font-size: clamp(2.5rem, 13vw, 3.6rem);
+  }
+
+  .publicPanel,
+  .publicCtaBand,
+  .publicTrustPanel,
+  .publicPricingNoteCard,
+  .publicSignupFormCard,
+  .publicSignupPlanCard,
+  .publicSignupInfoCard {
+    padding: 24px 20px;
+  }
+
+  .pricingMatrixHeader {
+    display: none;
+  }
+
+  .pricingMatrixRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 18px;
+  }
+
+  .pricingMatrixRow span {
+    padding-top: 8px;
+    border-top: 1px solid rgba(17, 24, 39, 0.06);
+  }
+
+  .pricingMatrixRow span[data-plan]::before {
+    content: attr(data-plan) ": ";
+    display: inline;
+    color: #355dff;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.74rem;
+  }
+}
+
+.publicPreFooterSection {
+  padding-top: 24px;
+}
+
+.publicPreFooterBand,
+.publicFooter,
+.publicInfoHero,
+.publicInfoPanel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.publicPreFooterBand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 28px 30px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.88)),
+    radial-gradient(circle at 78% 0%, rgba(53, 93, 255, 0.12), transparent 30%);
+  box-shadow: 0 22px 54px rgba(30, 41, 59, 0.08);
+}
+
+.publicPreFooterCopy {
+  display: grid;
+  gap: 10px;
+}
+
+.publicPreFooterCopy h2 {
+  margin: 0;
+  max-width: 12ch;
+  font-size: clamp(1.95rem, 3.2vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.publicPreFooterCopy p {
+  margin: 0;
+  max-width: 44rem;
+  color: #5f6877;
+  line-height: 1.7;
+}
+
+.publicPreFooterActions {
+  justify-content: flex-end;
+}
+
+.publicFooter {
+  padding: 34px 0 28px;
+}
+
+.publicFooterGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 36px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.publicFooterBrandBlock {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.publicFooterPositioning,
+.publicFooterTrust,
+.publicFooterMeta {
+  margin: 0;
+  color: #5f6877;
+  line-height: 1.7;
+}
+
+.publicFooterTrust {
+  max-width: 30rem;
+}
+
+.publicFooterMeta,
+.publicFooterInlineLinks {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.publicFooterInlineLinks a,
+.publicFooterColumn a,
+.publicInlineLink {
+  color: #384253;
+}
+
+.publicFooterInlineLinks a:hover,
+.publicFooterColumn a:hover,
+.publicInlineLink:hover {
+  color: #355dff;
+}
+
+.publicFooterColumns {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.publicFooterColumn {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.publicFooterColumn h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #355dff;
+}
+
+.publicFooterColumn ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.publicFooterColumn li {
+  line-height: 1.45;
+}
+
+.publicInfoIntro {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 12px 0 8px;
+}
+
+.publicInfoHero {
+  display: grid;
+  gap: 12px;
+}
+
+.publicInfoHero h1 {
+  margin: 0;
+  max-width: 12ch;
+  font-size: clamp(2.8rem, 5vw, 4.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.06em;
+}
+
+.publicInfoLead,
+.publicInfoPanel p {
+  margin: 0;
+  color: #5f6877;
+  line-height: 1.7;
+}
+
+.publicInfoLead {
+  max-width: 42rem;
+  font-size: 1.03rem;
+}
+
+.publicInfoPanel {
+  display: grid;
+  gap: 22px;
+}
+
+.publicInfoStack {
+  display: grid;
+  gap: 22px;
+}
+
+.publicInfoStack h2 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 1120px) {
+  .publicPreFooterBand,
+  .publicFooterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .publicPreFooterActions {
+    justify-content: flex-start;
+  }
+
+  .publicFooterColumns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .publicFooterColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .publicPreFooterBand {
+    padding: 24px 20px;
+  }
+
+  .publicPreFooterActions,
+  .publicFooterColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .publicFooter {
+    padding-top: 28px;
+  }
+
+  .publicFooterGrid {
+    gap: 26px;
+  }
+}

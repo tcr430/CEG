@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { FeedbackBanner } from "../components/feedback-banner";
 import { HomeAuthFragmentBridge } from "../components/home-auth-fragment-bridge";
+import { MarketingFooter } from "../components/marketing-footer";
 import { MarketingSectionHeader } from "../components/marketing-section-header";
+import { PublicCtaBand } from "../components/public-cta-band";
 import { PublicLandingNav } from "../components/public-landing-nav";
 import { getServerAuthContext } from "../lib/server/auth";
 
@@ -63,24 +65,6 @@ const workflowStages = [
   },
 ];
 
-const productSurfaces = [
-  {
-    eyebrow: "Campaign brief",
-    title: "Reusable client context",
-    body: "Offer, ICP, tone, framework, and sender context stay structured so the next prospect or campaign does not start from scratch.",
-  },
-  {
-    eyebrow: "Research snapshot",
-    title: "Evidence attached",
-    body: "Public website observations, confidence flags, and personalization hooks stay visible for review before they influence outreach.",
-  },
-  {
-    eyebrow: "Reply handling",
-    title: "Intent stays inspectable",
-    body: "Inbound replies can be classified and turned into response drafts without pretending the system should auto-send or auto-decide.",
-  },
-];
-
 const operatingNotes = [
   {
     title: "Stored memory",
@@ -112,86 +96,105 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const primaryLabel = context.user === null ? "Create workspace" : "Open workspace";
 
   return (
-    <main className="marketingSite">
+    <main className="publicSiteShell">
       <PublicLandingNav isAuthenticated={context.user !== null} />
 
-      <section className="marketingHero" aria-labelledby="landing-title">
-        <div className="marketingHeroCopy">
-          <p className="marketingEyebrow">Agency-grade outbound workflow</p>
-          <h1 id="landing-title">
-            The operating system for hyperpersonalized cold email.
-          </h1>
-          <p className="marketingLead">
-            OutFlow helps outbound agencies run a more disciplined client workflow:
-            establish context, research target accounts, draft outreach, review with
-            human control, handle replies, and carry campaign learning forward over
-            time.
-          </p>
-          <div className="marketingHeroActions">
-            <Link href={primaryHref} className="marketingPrimaryCta">
-              {primaryLabel}
-            </Link>
-            <Link href="/pricing" className="marketingSecondaryCta">
-              View plans
-            </Link>
-          </div>
-          <div className="marketingTrustLine" aria-label="Trust principle">
-            <span>AI proposes</span>
-            <span aria-hidden="true">/</span>
-            <span>humans review</span>
-            <span aria-hidden="true">/</span>
-            <span>teams approve</span>
-          </div>
-          <div className="marketingSignalRow">
-            {operatingSignals.map((signal) => (
-              <span key={signal} className="marketingSignalPill">
-                {signal}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="marketingHeroVisual" aria-label="OutFlow workflow preview">
-          <div className="marketingFrame">
-            <div className="marketingFrameTopbar">
-              <span />
-              <span />
-              <span />
-              <strong>Client campaign workspace</strong>
+      <section className="publicHeroSection" aria-labelledby="landing-title">
+        <div className="publicHeroGrid">
+          <div className="publicHeroCopy">
+            <p className="marketingEyebrow">Agency-grade outbound workflow</p>
+            <h1 id="landing-title">
+              The operating system for hyperpersonalized cold email.
+            </h1>
+            <p className="publicHeroLead">
+              OutFlow helps outbound agencies run a more disciplined client workflow:
+              establish context, research target accounts, draft outreach, review with
+              human control, handle replies, and carry campaign learning forward over
+              time.
+            </p>
+            <div className="publicActionRow">
+              <Link href={primaryHref} className="marketingPrimaryCta">
+                {primaryLabel}
+              </Link>
+              <Link href="/pricing" className="marketingSecondaryCta">
+                View plans
+              </Link>
             </div>
-            <div className="marketingFrameBody">
-              <aside className="marketingFrameSidebar">
-                <p className="marketingFrameLabel">Workspace flow</p>
-                <ul className="marketingSidebarList">
-                  <li className="marketingSidebarItem is-active">Campaign brief</li>
-                  <li className="marketingSidebarItem">Prospect research</li>
-                  <li className="marketingSidebarItem">Sequence review</li>
-                  <li className="marketingSidebarItem">Reply handling</li>
-                </ul>
-              </aside>
-              <div className="marketingFrameMain">
-                <div className="marketingSurfaceHeader">
-                  <div>
-                    <p className="marketingSurfaceEyebrow">Agency client launch</p>
-                    <h2>Pipeline efficiency campaign</h2>
+            <div className="publicTrustLine" aria-label="Trust principle">
+              <span>AI proposes</span>
+              <span aria-hidden="true">/</span>
+              <span>humans review</span>
+              <span aria-hidden="true">/</span>
+              <span>teams approve</span>
+            </div>
+            <div className="publicSignalRow">
+              {operatingSignals.map((signal) => (
+                <span key={signal} className="publicSignalPill">
+                  {signal}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="publicHeroVisual" aria-label="OutFlow workflow preview">
+            <div className="publicWorkspaceWindow">
+              <div className="publicWorkspaceTopbar">
+                <span />
+                <span />
+                <span />
+                <strong>Client campaign workspace</strong>
+              </div>
+              <div className="publicWorkspaceBody">
+                <aside className="publicWorkspaceSidebar">
+                  <p className="marketingSurfaceEyebrow">Workflow</p>
+                  <ul className="publicWorkspaceNav">
+                    <li className="publicWorkspaceNavItem is-active">Campaign brief</li>
+                    <li className="publicWorkspaceNavItem">Prospect research</li>
+                    <li className="publicWorkspaceNavItem">Sequence review</li>
+                    <li className="publicWorkspaceNavItem">Reply handling</li>
+                  </ul>
+                </aside>
+                <div className="publicWorkspaceMain">
+                  <div className="publicWorkspaceHeader">
+                    <div>
+                      <p className="marketingSurfaceEyebrow">Agency client launch</p>
+                      <h2>Pipeline efficiency campaign</h2>
+                    </div>
+                    <span className="publicStatusBadge">Human review required</span>
                   </div>
-                  <span className="marketingSurfaceStatus">Human review required</span>
-                </div>
-                <div className="marketingSurfaceGrid">
-                  {productSurfaces.map((surface) => (
-                    <article key={surface.title} className="marketingSurfaceCard">
-                      <p className="marketingSurfaceEyebrow">{surface.eyebrow}</p>
-                      <h3>{surface.title}</h3>
-                      <p>{surface.body}</p>
+                  <div className="publicWorkspaceGrid">
+                    <article className="publicSurfaceCard publicSurfaceCardWide">
+                      <p className="marketingSurfaceEyebrow">Campaign brief</p>
+                      <h3>Reusable client context</h3>
+                      <p>
+                        Offer, ICP, tone, framework, and sender context stay structured
+                        so the next prospect or campaign does not start from scratch.
+                      </p>
                     </article>
-                  ))}
-                </div>
-                <div className="marketingRecommendation">
-                  <div>
-                    <p className="marketingSurfaceEyebrow">Next recommended step</p>
-                    <h3>Review the draft before it reaches the inbox</h3>
+                    <article className="publicSurfaceCard">
+                      <p className="marketingSurfaceEyebrow">Research snapshot</p>
+                      <h3>Evidence attached</h3>
+                      <p>
+                        Public website observations and confidence flags stay visible
+                        for review before they influence outreach.
+                      </p>
+                    </article>
+                    <article className="publicSurfaceCard">
+                      <p className="marketingSurfaceEyebrow">Reply handling</p>
+                      <h3>Intent stays inspectable</h3>
+                      <p>
+                        Inbound replies can be classified and turned into response
+                        drafts without pretending the system should auto-send.
+                      </p>
+                    </article>
                   </div>
-                  <span>Draft only</span>
+                  <div className="publicRecommendationCard">
+                    <div>
+                      <p className="marketingSurfaceEyebrow">Next recommended step</p>
+                      <h3>Review the draft before it reaches the inbox</h3>
+                    </div>
+                    <span>Draft only</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,8 +205,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <FeedbackBanner error={params.error} notice={params.notice} />
       <HomeAuthFragmentBridge />
 
-      <section className="marketingSection">
-        <div className="marketingSectionPanel">
+      <section className="publicSection">
+        <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Why it feels different"
             title="Designed for agency operators, not one-off prompt work."
@@ -216,9 +219,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </p>
             }
           />
-          <div className="marketingPillarGrid">
+          <div className="publicPillarGrid">
             {valuePillars.map((pillar) => (
-              <article key={pillar.title} className="marketingPillarCard">
+              <article key={pillar.title} className="publicFeatureCard">
                 <h3>{pillar.title}</h3>
                 <p>{pillar.description}</p>
               </article>
@@ -227,8 +230,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      <section className="marketingSection" id="workflow">
-        <div className="marketingSectionPanel">
+      <section className="publicSection" id="workflow">
+        <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Workflow moat"
             title="One coherent operating path from setup to reply handling."
@@ -241,10 +244,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             }
             centered
           />
-          <div className="marketingWorkflowGrid">
+          <div className="publicWorkflowGrid">
             {workflowStages.map((stage, index) => (
-              <article key={stage.label} className="marketingWorkflowCard">
-                <span className="marketingWorkflowIndex">
+              <article key={stage.label} className="publicWorkflowCard">
+                <span className="publicWorkflowIndex">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <h3>{stage.label}</h3>
@@ -255,47 +258,49 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      <section className="marketingSection marketingSplitSection" id="memory">
-        <div className="marketingSectionPanel">
-          <MarketingSectionHeader
-            eyebrow="Memory and trust"
-            title="Campaign context becomes an asset, not disposable prompt input."
-            description={
-              <p>
-                Sender profiles, campaign briefs, reply history, selections, and
-                outcome signals make the workspace more useful over time without
-                pretending the product should run outreach autonomously.
-              </p>
-            }
-          />
-          <div className="marketingNoteStack">
-            {operatingNotes.map((note) => (
-              <article key={note.title} className="marketingNoteCard">
-                <h3>{note.title}</h3>
-                <p>{note.body}</p>
-              </article>
-            ))}
+      <section className="publicSection" id="memory">
+        <div className="publicSplitGrid">
+          <div className="publicPanel">
+            <MarketingSectionHeader
+              eyebrow="Memory and trust"
+              title="Campaign context becomes an asset, not disposable prompt input."
+              description={
+                <p>
+                  Sender profiles, campaign briefs, reply history, selections, and
+                  outcome signals make the workspace more useful over time without
+                  pretending the product should run outreach autonomously.
+                </p>
+              }
+            />
+            <div className="publicNoteStack">
+              {operatingNotes.map((note) => (
+                <article key={note.title} className="publicNoteCard">
+                  <h3>{note.title}</h3>
+                  <p>{note.body}</p>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="marketingTrustPanel" id="trust">
-          <p className="marketingEyebrow">Trust model</p>
-          <h2>Controlled, reviewable, and suited to serious client work.</h2>
-          <p>
-            The product can suggest research, classify replies, and draft messaging.
-            Operators still review, edit, approve, and decide what gets used.
-          </p>
-          <ul className="marketingTrustChecklist">
-            <li>No autonomous sending in the current workflow</li>
-            <li>Drafts remain reviewable before use</li>
-            <li>Quality checks help flag unsupported claims and tone risk</li>
-            <li>Workspace-scoped records preserve client separation</li>
-          </ul>
+          <div className="publicTrustPanel" id="trust">
+            <p className="marketingEyebrow">Trust model</p>
+            <h2>Controlled, reviewable, and suited to serious client work.</h2>
+            <p>
+              The product can suggest research, classify replies, and draft messaging.
+              Operators still review, edit, approve, and decide what gets used.
+            </p>
+            <ul className="publicTrustChecklist">
+              <li>No autonomous sending in the current workflow</li>
+              <li>Drafts remain reviewable before use</li>
+              <li>Quality checks help flag unsupported claims and tone risk</li>
+              <li>Workspace-scoped records preserve client separation</li>
+            </ul>
+          </div>
         </div>
       </section>
 
-      <section className="marketingSection" id="product-surface">
-        <div className="marketingSectionPanel">
+      <section className="publicSection" id="product-surface">
+        <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Operating surface"
             title="Research, drafts, replies, and performance live in the same review loop."
@@ -307,8 +312,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </p>
             }
           />
-          <div className="marketingSurfaceRow">
-            <article className="marketingWideSurfaceCard">
+          <div className="publicSurfaceShowcase">
+            <article className="publicSurfaceShowcasePrimary">
               <p className="marketingSurfaceEyebrow">Prospect workflow</p>
               <h3>Research -&gt; draft -&gt; review -&gt; thread handling</h3>
               <p>
@@ -322,49 +327,38 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 <span />
               </div>
             </article>
-            <article className="marketingCompactSurfaceCard">
-              <p className="marketingSurfaceEyebrow">Inbox draft handoff</p>
-              <h3>Create draft in Gmail</h3>
-              <p>
-                Selected generated artifacts can move into Gmail as drafts. Sending
-                remains an explicit human action.
-              </p>
-            </article>
-            <article className="marketingCompactSurfaceCard">
-              <p className="marketingSurfaceEyebrow">Performance snapshot</p>
-              <h3>Reply and positive-reply visibility</h3>
-              <p>
-                Structured campaign summaries keep response patterns visible
-                without exposing private thread content on shareable surfaces.
-              </p>
-            </article>
+            <div className="publicSurfaceShowcaseSide">
+              <article className="publicSurfaceShowcaseSecondary">
+                <p className="marketingSurfaceEyebrow">Inbox draft handoff</p>
+                <h3>Create draft in Gmail</h3>
+                <p>
+                  Selected generated artifacts can move into Gmail as drafts. Sending
+                  remains an explicit human action.
+                </p>
+              </article>
+              <article className="publicSurfaceShowcaseSecondary">
+                <p className="marketingSurfaceEyebrow">Performance snapshot</p>
+                <h3>Reply and positive-reply visibility</h3>
+                <p>
+                  Structured campaign summaries keep response patterns visible
+                  without exposing private thread content on shareable surfaces.
+                </p>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="marketingSection marketingFinalSection">
-        <div className="marketingFinalPanel">
-          <MarketingSectionHeader
-            eyebrow="Start with the workflow"
-            title="Bring context, research, review, replies, and learning into one operating system."
-            description={
-              <p>
-                Start lean, keep review visible, and add more operational depth as
-                client load, collaboration, and workflow complexity grow.
-              </p>
-            }
-            centered
-          />
-          <div className="marketingHeroActions marketingHeroActionsCentered">
-            <Link href={primaryHref} className="marketingPrimaryCta">
-              {primaryLabel}
-            </Link>
-            <Link href="/pricing" className="marketingSecondaryCta">
-              Compare Starter, Growth, and Enterprise
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PublicCtaBand
+        eyebrow="Bring it together"
+        title="Bring context, research, drafts, replies, and learning into one operating workflow."
+        description="Keep review visible, move with more structure, and give the team a cleaner operating surface for serious outbound work."
+        primaryLabel={primaryLabel}
+        primaryHref={primaryHref}
+        secondaryLabel="Compare Starter, Growth, and Enterprise"
+        secondaryHref="/pricing"
+      />
+      <MarketingFooter />
     </main>
   );
 }
