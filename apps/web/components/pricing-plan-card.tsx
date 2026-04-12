@@ -32,19 +32,19 @@ export function PricingPlanCard({
     <article className={classes} data-plan={plan.code}>
       <div className="pricingCardHeader">
         <div>
-          <p className="cardLabel">{plan.label}</p>
+          <p className="pricingPlanLabel">{plan.label}</p>
           <h3>{plan.headline}</h3>
         </div>
-        {badge ? <span className="pill">{badge}</span> : null}
+        {badge ? <span className="pricingPlanBadge">{badge}</span> : null}
       </div>
-      <p>{plan.summary}</p>
+      <p className="pricingSummary">{plan.summary}</p>
       <p className="pricingAudience">{plan.audience}</p>
       <ul className="pricingBulletList">
         {plan.bullets.map((bullet) => (
           <li key={bullet}>{bullet}</li>
         ))}
       </ul>
-      {actions ? <div className="inlineActions pricingActionRow">{actions}</div> : null}
+      {actions ? <div className="pricingActionRow">{actions}</div> : null}
       {footnote ? <p className="pricingFootnote">{footnote}</p> : null}
     </article>
   );

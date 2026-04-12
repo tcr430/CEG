@@ -1200,6 +1200,849 @@ h2 {
   }
 }
 
+.marketingSite {
+  min-height: 100vh;
+  padding: 24px;
+  color: #101318;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(55, 92, 255, 0.14), transparent 34%),
+    radial-gradient(circle at 88% 0%, rgba(28, 137, 103, 0.12), transparent 28%),
+    linear-gradient(180deg, #f5f7fb 0%, #edf1f7 44%, #f7f9fc 100%);
+}
+
+.marketingSite h1,
+.marketingSite h2,
+.marketingSite h3,
+.marketingSite p,
+.marketingSite ul {
+  margin-top: 0;
+}
+
+.marketingHero,
+.marketingSection,
+.marketingFinalSection {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.marketingHero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(420px, 1.06fr);
+  gap: 34px;
+  align-items: center;
+  padding: 84px 0 46px;
+}
+
+.marketingHeroCopy,
+.marketingHeroVisual,
+.marketingSectionPanel,
+.marketingPillarGrid,
+.marketingWorkflowGrid,
+.marketingSurfaceGrid,
+.marketingSurfaceRow,
+.marketingHeroAside,
+.marketingNoteStack,
+.marketingFinalPanel,
+.pricingCardGrid,
+.pricingMatrix {
+  display: grid;
+  gap: 18px;
+}
+
+.marketingEyebrow,
+.pricingPlanLabel,
+.marketingSurfaceEyebrow,
+.marketingFrameLabel {
+  margin-bottom: 0;
+  color: #355dff;
+  font-size: 0.78rem;
+  font-weight: 780;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.marketingHero h1 {
+  max-width: 11ch;
+  margin-bottom: 0;
+  font-size: clamp(3.7rem, 8vw, 6.9rem);
+  line-height: 0.88;
+  letter-spacing: -0.078em;
+}
+
+.marketingLead,
+.marketingSectionCopy,
+.marketingPillarCard p,
+.marketingWorkflowCard p,
+.marketingSurfaceCard p,
+.marketingWideSurfaceCard p,
+.marketingCompactSurfaceCard p,
+.marketingTrustPanel p,
+.marketingNoteCard p,
+.pricingSummary,
+.pricingAudience,
+.pricingFootnote,
+.pricingMatrixRow span,
+.pricingPrincipleList,
+.marketingRecommendation span,
+.marketingSidebarItem {
+  color: #5f6877;
+  line-height: 1.72;
+}
+
+.marketingSectionHeader .marketingEyebrow,
+.marketingFrameSidebar .marketingFrameLabel,
+.marketingSurfaceHeader .marketingSurfaceEyebrow,
+.marketingSurfaceCard .marketingSurfaceEyebrow,
+.marketingWideSurfaceCard .marketingSurfaceEyebrow,
+.marketingCompactSurfaceCard .marketingSurfaceEyebrow,
+.pricingHeroCard .marketingSurfaceEyebrow,
+.pricingCard .pricingPlanLabel {
+  color: #355dff;
+}
+
+.marketingLead {
+  max-width: 47rem;
+  margin-bottom: 0;
+  font-size: 1.12rem;
+}
+
+.marketingHeroActions,
+.marketingSignalRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.marketingHeroActionsCentered {
+  justify-content: center;
+}
+
+.marketingPrimaryCta,
+.marketingSecondaryCta,
+.marketingTertiaryCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 760;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.marketingPrimaryCta {
+  color: #ffffff;
+  background: linear-gradient(135deg, #355dff, #1536d5);
+  box-shadow: 0 18px 34px rgba(53, 93, 255, 0.24);
+}
+
+.marketingSecondaryCta,
+.marketingTertiaryCta {
+  border-color: rgba(17, 24, 39, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  color: #101318;
+}
+
+.marketingPrimaryCta:hover,
+.marketingSecondaryCta:hover,
+.marketingTertiaryCta:hover,
+.landingV2NavLinks a:hover,
+.landingV2NavLogin:hover,
+.landingV2NavCta:hover {
+  transform: translateY(-2px);
+}
+
+.marketingTrustLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: #4f5967;
+  font-size: 0.95rem;
+}
+
+.marketingTrustLine span:not([aria-hidden="true"]) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.marketingTrustLine span[aria-hidden="true"] {
+  color: #8f97a5;
+}
+
+.marketingSignalPill,
+.pricingPlanBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  color: #233043;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.marketingFrame,
+.marketingSectionPanel,
+.marketingTrustPanel,
+.marketingFinalPanel,
+.pricingHeroCard,
+.pricingMatrixPanel,
+.pricingCard,
+.marketingWideSurfaceCard,
+.marketingCompactSurfaceCard,
+.marketingPillarCard,
+.marketingWorkflowCard,
+.marketingNoteCard {
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 24px 56px rgba(30, 41, 59, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.marketingFrame {
+  overflow: hidden;
+  border-radius: 32px;
+}
+
+.marketingFrameTopbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  color: #6a7280;
+  font-size: 0.84rem;
+}
+
+.marketingFrameTopbar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #cfd5df;
+}
+
+.marketingFrameTopbar strong {
+  margin-left: 10px;
+  color: #101318;
+}
+
+.marketingFrameBody {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  min-height: 492px;
+}
+
+.marketingFrameSidebar {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 22px 20px;
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.marketingSidebarList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marketingSidebarItem {
+  padding: 11px 12px;
+  border-radius: 14px;
+}
+
+.marketingSidebarItem.is-active {
+  color: #101318;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
+}
+
+.marketingFrameMain {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 24px;
+}
+
+.marketingSurfaceHeader,
+.marketingRecommendation {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.marketingSurfaceHeader h2,
+.marketingSectionHeader h2,
+.marketingTrustPanel h2,
+.marketingFinalPanel h2,
+.pricingHeroCard h2 {
+  margin-bottom: 0;
+  color: #101318;
+  letter-spacing: -0.05em;
+}
+
+.marketingSectionHeader h2,
+.marketingTrustPanel h2,
+.marketingFinalPanel h2,
+.pricingHeroCard h2 {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 0.98;
+}
+
+.marketingSurfaceHeader h2 {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1.02;
+}
+
+.marketingSurfaceStatus,
+.marketingRecommendation span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(28, 137, 103, 0.12);
+  color: #17654a;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.marketingSurfaceGrid,
+.marketingPillarGrid,
+.pricingCardGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.marketingSurfaceCard,
+.marketingPillarCard,
+.pricingCard {
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.marketingSurfaceCard h3,
+.marketingPillarCard h3,
+.marketingWorkflowCard h3,
+.marketingNoteCard h3,
+.marketingWideSurfaceCard h3,
+.marketingCompactSurfaceCard h3,
+.pricingCard h3 {
+  margin-bottom: 10px;
+  color: #101318;
+  font-size: 1.4rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.marketingSection {
+  padding: 18px 0 0;
+}
+
+.marketingSectionPanel,
+.marketingFinalPanel {
+  gap: 24px;
+  padding: 34px;
+  border-radius: 34px;
+}
+
+.marketingSectionHeader {
+  max-width: 760px;
+}
+
+.marketingSectionHeaderCentered {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.marketingSectionCopy p:last-child {
+  margin-bottom: 0;
+}
+
+.marketingWorkflowGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.marketingWorkflowCard {
+  display: grid;
+  gap: 10px;
+  padding: 24px;
+  border-radius: 26px;
+}
+
+.marketingWorkflowIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(53, 93, 255, 0.12);
+  color: #355dff;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.marketingSplitSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.marketingNoteStack {
+  gap: 14px;
+}
+
+.marketingNoteCard {
+  padding: 22px 24px;
+  border-radius: 24px;
+}
+
+.marketingTrustPanel {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  padding: 34px;
+  border-radius: 34px;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(32, 43, 61, 0.98)),
+    radial-gradient(circle at 85% 18%, rgba(53, 93, 255, 0.36), transparent 34%);
+}
+
+.marketingTrustPanel .marketingEyebrow,
+.marketingTrustPanel h2 {
+  color: #ffffff;
+}
+
+.marketingTrustPanel p {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.marketingTrustChecklist,
+.pricingPrincipleList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marketingTrustChecklist li,
+.pricingPrincipleList li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.marketingTrustChecklist li::before,
+.pricingPrincipleList li::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #7ee2b8;
+  box-shadow: 0 0 0 4px rgba(126, 226, 184, 0.14);
+}
+
+.pricingPrincipleList li::before {
+  background: #355dff;
+  box-shadow: 0 0 0 4px rgba(53, 93, 255, 0.12);
+}
+
+.marketingSurfaceRow {
+  grid-template-columns: 1.4fr repeat(2, minmax(0, 0.8fr));
+}
+
+.marketingWideSurfaceCard,
+.marketingCompactSurfaceCard {
+  padding: 28px;
+  border-radius: 28px;
+}
+
+.marketingWideSurfaceCard {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(245, 248, 252, 0.86)),
+    radial-gradient(circle at 12% 10%, rgba(53, 93, 255, 0.12), transparent 32%);
+}
+
+.marketingStageRail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.marketingStageRail span {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #355dff, #1c8967);
+}
+
+.marketingStageRail span:nth-child(n + 3) {
+  opacity: 0.34;
+}
+
+.marketingFinalSection {
+  padding: 18px 0 44px;
+}
+
+.marketingFinalPanel {
+  place-items: center;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 250, 252, 0.84)),
+    radial-gradient(circle at 50% 0%, rgba(53, 93, 255, 0.16), transparent 38%);
+}
+
+.pricingSite .marketingHero {
+  align-items: start;
+}
+
+.pricingHeroPanel {
+  grid-template-columns: minmax(0, 0.96fr) minmax(320px, 0.84fr);
+}
+
+.pricingHeroAside {
+  align-content: start;
+}
+
+.pricingHeroCard {
+  padding: 26px 26px 28px;
+  border-radius: 28px;
+}
+
+.pricingHeroCard h2 {
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+}
+
+.pricingHeroCardMuted {
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.pricingCardGrid {
+  align-items: stretch;
+}
+
+.pricingCard {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 100%;
+  border-radius: 30px;
+}
+
+.pricingCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.pricingPlanLabel {
+  margin-bottom: 8px;
+}
+
+.pricingSummary {
+  margin-bottom: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pricingAudience {
+  margin-bottom: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.pricingBulletList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pricingBulletList li {
+  position: relative;
+  padding-left: 24px;
+  color: #5f6877;
+  line-height: 1.66;
+}
+
+.pricingBulletList li::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(53, 93, 255, 0.94);
+  box-shadow: 0 0 0 4px rgba(53, 93, 255, 0.12);
+}
+
+.pricingActionRow {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.pricingActionRow > * {
+  width: 100%;
+}
+
+.pricingActionRow form > * {
+  width: 100%;
+}
+
+.pricingFootnote {
+  margin-bottom: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  font-size: 0.92rem;
+}
+
+.featuredPricingCard {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 249, 255, 0.92)),
+    radial-gradient(circle at top right, rgba(53, 93, 255, 0.16), transparent 38%);
+  border-color: rgba(53, 93, 255, 0.24);
+  box-shadow: 0 28px 60px rgba(53, 93, 255, 0.13);
+}
+
+.activePricingCard {
+  border-color: rgba(28, 137, 103, 0.26);
+  box-shadow: 0 24px 54px rgba(28, 137, 103, 0.12);
+}
+
+.pricingMatrixPanel {
+  padding-bottom: 24px;
+}
+
+.pricingMatrix {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.pricingMatrixHeader,
+.pricingMatrixRow {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.pricingMatrixHeader {
+  padding: 18px 22px;
+  background: rgba(248, 250, 252, 0.92);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  color: #355dff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pricingMatrixRow {
+  padding: 20px 22px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.pricingMatrixRow:last-child {
+  border-bottom: 0;
+}
+
+.pricingMatrixRow strong {
+  color: #101318;
+  line-height: 1.4;
+}
+
+.pricingMatrixRow span {
+  display: block;
+}
+
+.pricingMatrixRow span[data-plan]::before {
+  content: attr(data-plan);
+  display: none;
+}
+
+.landingV2Nav {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 20px 48px rgba(20, 28, 41, 0.08);
+}
+
+.landingV2NavLinks a,
+.landingV2NavLogin,
+.landingV2NavCta {
+  min-height: 42px;
+  padding: 10px 16px;
+}
+
+.landingV2NavLinks a {
+  color: #4f5866;
+}
+
+.landingV2NavLogin {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.landingV2NavCta {
+  border-color: rgba(53, 93, 255, 0.34);
+  box-shadow: 0 14px 30px rgba(53, 93, 255, 0.2);
+}
+
+@media (max-width: 1120px) {
+  .marketingHero,
+  .pricingHeroPanel,
+  .marketingSplitSection,
+  .marketingSurfaceRow,
+  .marketingSurfaceGrid,
+  .marketingPillarGrid,
+  .pricingCardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketingHero {
+    padding-top: 58px;
+  }
+
+  .marketingHero h1 {
+    max-width: 13ch;
+  }
+
+  .marketingFrameBody,
+  .marketingWorkflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketingFrameSidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  }
+
+  .pricingMatrixHeader,
+  .pricingMatrixRow {
+    grid-template-columns: minmax(200px, 1.2fr) repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .marketingSite {
+    padding: 14px;
+  }
+
+  .marketingHero {
+    padding: 40px 0 28px;
+    gap: 22px;
+  }
+
+  .marketingHero h1 {
+    font-size: clamp(3rem, 17vw, 4.5rem);
+  }
+
+  .marketingHeroActions,
+  .marketingSignalRow {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .marketingPrimaryCta,
+  .marketingSecondaryCta,
+  .marketingTertiaryCta {
+    width: 100%;
+  }
+
+  .marketingSectionPanel,
+  .marketingTrustPanel,
+  .marketingFinalPanel,
+  .pricingHeroCard,
+  .pricingCard,
+  .marketingWideSurfaceCard,
+  .marketingCompactSurfaceCard,
+  .marketingPillarCard,
+  .marketingWorkflowCard,
+  .marketingNoteCard {
+    padding: 24px 20px;
+  }
+
+  .marketingSurfaceHeader,
+  .marketingRecommendation,
+  .landingV2Nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .landingV2NavLinks {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  .landingV2NavActions {
+    width: 100%;
+  }
+
+  .marketingFrameBody {
+    min-height: auto;
+  }
+
+  .pricingMatrixHeader {
+    display: none;
+  }
+
+  .pricingMatrixRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 18px;
+  }
+
+  .pricingMatrixRow span {
+    padding-top: 8px;
+    border-top: 1px solid rgba(17, 24, 39, 0.06);
+  }
+
+  .pricingMatrixRow span[data-plan]::before {
+    content: attr(data-plan) ": ";
+    display: inline;
+    color: #355dff;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.74rem;
+  }
+}
+
 .workflowStageCard {
   gap: 16px;
 }
