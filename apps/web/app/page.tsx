@@ -8,13 +8,6 @@ import { PublicCtaBand } from "../components/public-cta-band";
 import { PublicLandingNav } from "../components/public-landing-nav";
 import { getServerAuthContext } from "../lib/server/auth";
 
-const operatingSignals = [
-  "Built for outbound agencies",
-  "Evidence-backed research",
-  "Reviewable drafts",
-  "Gmail draft handoff",
-];
-
 const buyerProblems = [
   {
     title: "Context gets lost between clients",
@@ -113,31 +106,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </h1>
             <p className="publicHeroLead">
               OutFlow gives agency teams one structured system for client context,
-              prospect research, reviewable drafts, reply handling, and visible
+              prospect research, reviewable drafts, reply handling and
               human approval, so personalized outbound work is easier to run and
               easier to trust.
             </p>
-            <div className="publicActionRow">
+            <div className="publicTrustLine" aria-label="Trust principle">
+              <span>AI Proposes</span>
+              <span aria-hidden="true">→</span>
+              <span>Humans Review</span>
+              <span aria-hidden="true">→</span>
+              <span>Teams Approve</span>
+            </div>
+            <div className="publicActionRow publicHeroActionRow">
               <Link href={primaryHref} className="marketingPrimaryCta">
                 {primaryLabel}
               </Link>
               <Link href="/pricing" className="marketingSecondaryCta">
                 View plans
               </Link>
-            </div>
-            <div className="publicTrustLine" aria-label="Trust principle">
-              <span>AI proposes</span>
-              <span aria-hidden="true">/</span>
-              <span>humans review</span>
-              <span aria-hidden="true">/</span>
-              <span>teams approve</span>
-            </div>
-            <div className="publicSignalRow">
-              {operatingSignals.map((signal) => (
-                <span key={signal} className="publicSignalPill">
-                  {signal}
-                </span>
-              ))}
             </div>
           </div>
 
@@ -168,7 +154,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     <span className="publicStatusBadge">Human review required</span>
                   </div>
                   <div className="publicWorkspaceGrid">
-                    <article className="publicSurfaceCard publicSurfaceCardWide">
+                    <article className="publicSurfaceCard publicSurfaceCardWide publicSurfaceCardTight">
                       <p className="marketingSurfaceEyebrow">Campaign brief</p>
                       <h3>Reusable client context</h3>
                       <p>
@@ -177,7 +163,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                         from scratch.
                       </p>
                     </article>
-                    <article className="publicSurfaceCard">
+                    <article className="publicSurfaceCard publicSurfaceCardTight">
                       <p className="marketingSurfaceEyebrow">Research snapshot</p>
                       <h3>Evidence attached</h3>
                       <p>
@@ -185,7 +171,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                         for review before they influence outreach.
                       </p>
                     </article>
-                    <article className="publicSurfaceCard">
+                    <article className="publicSurfaceCard publicSurfaceCardTight">
                       <p className="marketingSurfaceEyebrow">Reply handling</p>
                       <h3>Intent stays inspectable</h3>
                       <p>
@@ -212,9 +198,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <HomeAuthFragmentBridge />
 
       <section className="publicSection publicProblemSection">
-        <div className="publicSectionIntro publicSectionIntroCompact">
+        <div className="publicSectionIntro publicSectionIntroCompact publicProblemIntro">
           <p className="marketingEyebrow">Why agencies outgrow ad hoc tools</p>
-          <h2>Outbound quality usually breaks down where the workflow breaks down.</h2>
+          <h2>
+            <span className="publicProblemHeadlineLine">
+              Outbound quality usually breaks down where the
+            </span>
+            <span className="publicProblemHeadlineLine">workflow breaks down.</span>
+          </h2>
           <p>
             Better cold email is not only about drafting better copy. It depends on
             how well the team keeps context, research, review, and replies connected

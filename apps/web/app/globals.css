@@ -2831,7 +2831,7 @@ h2 {
 
 .publicSiteShell {
   min-height: 100vh;
-  padding: 24px;
+  padding: 18px 12px 24px;
   color: #101318;
   background:
     radial-gradient(circle at 12% 0%, rgba(55, 92, 255, 0.14), transparent 30%),
@@ -2845,7 +2845,7 @@ h2 {
 .publicPricingHero,
 .publicSignupIntro,
 .publicSignupGrid {
-  width: min(1180px, 100%);
+  width: min(1380px, 100%);
   margin: 0 auto;
 }
 
@@ -2953,11 +2953,12 @@ h2 {
 
 .publicHeroGrid {
   grid-template-columns: minmax(0, 0.98fr) minmax(420px, 0.92fr);
-  align-items: center;
+  align-items: start;
 }
 
 .publicHeroGridWide {
-  grid-template-columns: minmax(0, 1.04fr) minmax(420px, 0.96fr);
+  grid-template-columns: minmax(0, 0.84fr) minmax(600px, 1.14fr);
+  gap: 40px;
 }
 
 .publicHeroCopy,
@@ -2987,8 +2988,9 @@ h2 {
 }
 
 .publicHeroCopy h1 {
-  max-width: 9.8ch;
-  font-size: clamp(3.15rem, 5.6vw, 5.3rem);
+  max-width: 15.5ch;
+  font-size: clamp(2.25rem, 3.9vw, 3.8rem);
+  line-height: 0.97;
 }
 
 .publicPricingHeroCopy h1 {
@@ -3025,7 +3027,7 @@ h2 {
 .publicPricingLead,
 .publicSignupLead {
   font-size: 1.05rem;
-  max-width: 40rem;
+  max-width: 35rem;
 }
 
 .publicActionRow {
@@ -3033,13 +3035,21 @@ h2 {
   gap: 12px;
 }
 
+.publicHeroActionRow {
+  margin-top: 14px;
+}
+
 .publicActionRowCentered {
   justify-content: center;
 }
 
 .publicTrustLine {
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  max-width: 35rem;
+  margin-top: 6px;
   color: #4f5967;
   font-size: 0.92rem;
 }
@@ -3061,7 +3071,10 @@ h2 {
 }
 
 .publicTrustLine span[aria-hidden="true"] {
+  justify-self: center;
   color: #8f97a5;
+  font-size: 1.84rem;
+  line-height: 1;
 }
 
 .publicSignalRow {
@@ -3162,6 +3175,10 @@ h2 {
   align-items: flex-start;
 }
 
+.publicWorkspaceHeader > div {
+  min-width: 0;
+}
+
 .publicWorkspaceHeader h2,
 .publicSignupFormHeader h2,
 .publicPricingNoteCard h2,
@@ -3172,8 +3189,10 @@ h2 {
 }
 
 .publicWorkspaceHeader h2 {
-  font-size: clamp(1.7rem, 2.2vw, 2.25rem);
+  font-size: clamp(1.45rem, 1.85vw, 1.95rem);
   line-height: 1.02;
+  margin-top: 8px;
+  white-space: nowrap;
 }
 
 .publicPricingNoteCard h2,
@@ -3189,6 +3208,12 @@ h2 {
 .publicRecommendationCard span {
   color: #17654a;
   background: rgba(28, 137, 103, 0.12);
+}
+
+.publicStatusBadge {
+  min-width: 164px;
+  white-space: nowrap;
+  justify-content: center;
 }
 
 .publicWorkspaceGrid {
@@ -3213,11 +3238,29 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.publicSurfaceCardTight {
+  display: grid;
+  gap: 8px;
+}
+
+.publicSurfaceCardTight h3 {
+  margin: 0;
+}
+
 .publicRecommendationCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
   padding: 18px 20px;
   border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 22px;
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.97), rgba(55, 92, 255, 0.88));
+  background: linear-gradient(135deg, rgba(20, 28, 48, 0.97), rgba(67, 95, 214, 0.9));
+}
+
+.publicRecommendationCard > div {
+  display: grid;
+  gap: 6px;
 }
 
 .publicRecommendationCard h3,
@@ -3226,7 +3269,13 @@ h2 {
   color: #ffffff;
 }
 
+.publicRecommendationCard h3,
+.publicRecommendationCard p {
+  margin: 0;
+}
+
 .publicRecommendationCard span {
+  flex-shrink: 0;
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.14);
 }
@@ -3280,6 +3329,31 @@ h2 {
   margin-bottom: 18px;
 }
 
+.publicProblemIntro {
+  width: min(1180px, 100%);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.publicProblemIntro h2 {
+  max-width: none;
+  font-size: clamp(2.25rem, 3.9vw, 3.8rem);
+  line-height: 0.97;
+}
+
+.publicProblemHeadlineLine {
+  display: block;
+}
+
+.publicProblemHeadlineLine:first-child {
+  white-space: nowrap;
+}
+
+.publicProblemIntro p:last-child {
+  max-width: 62rem;
+  margin-top: 4px;
+}
+
 .publicProblemGrid,
 .publicProofGrid,
 .publicOutcomeGrid {
@@ -3292,9 +3366,10 @@ h2 {
 .publicProofCard,
 .publicOutcomeCard {
   display: grid;
-  gap: 12px;
+  align-content: start;
+  gap: 14px;
   min-height: 100%;
-  padding: 24px;
+  padding: 28px 30px;
   border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.74);
@@ -3305,8 +3380,9 @@ h2 {
 .publicProofCard h3,
 .publicOutcomeCard h3 {
   margin: 0;
-  font-size: 1.28rem;
-  line-height: 1.08;
+  max-width: 16ch;
+  font-size: 1.26rem;
+  line-height: 1.12;
   letter-spacing: -0.035em;
 }
 
@@ -3314,6 +3390,7 @@ h2 {
 .publicProofCard p,
 .publicOutcomeCard p {
   margin: 0;
+  max-width: 31ch;
   color: #5f6877;
   line-height: 1.7;
 }
