@@ -31,33 +31,54 @@ const solutionPoints = [
 
 const workflowStages = [
   {
+    key: "set-context",
     label: "Set the client context",
     note: "Capture offer, ICP, tone, and campaign framing once so the team works from structure, not fresh prompts.",
   },
   {
+    key: "research-accounts",
     label: "Research target accounts",
     note: "Turn public website signals into usable evidence the team can inspect before using it in messaging.",
   },
   {
+    key: "draft-review",
     label: "Draft and review outreach",
+    displayLabel: (
+      <>
+        Draft and review
+        <br />
+        outreach
+      </>
+    ),
     note: "Generate drafts from stored context, then review and refine them before anything reaches the inbox.",
   },
   {
+    key: "handle-replies",
     label: "Handle replies in the same system",
+    displayLabel: (
+      <>
+        Handle replies in the
+        <br />
+        same system
+      </>
+    ),
     note: "Classify inbound replies, preserve thread history, and prepare next drafts without leaving the workflow.",
   },
 ];
 
 const proofPillars = [
   {
+    icon: "◎",
     title: "Safer than disconnected prompting",
     body: "OutFlow keeps research, drafts, and reply handling connected to real records instead of letting context disappear across ad hoc prompt sessions.",
   },
   {
+    icon: "✓",
     title: "Built for controlled execution",
     body: "The current product supports Gmail draft handoff, not autonomous sending. Operators still review, edit, and approve what moves forward.",
   },
   {
+    icon: "↗",
     title: "More useful as history accumulates",
     body: "Sender profiles, campaign context, reply history, selections, and performance signals make future work more informed without pretending the system runs itself.",
   },
@@ -65,16 +86,19 @@ const proofPillars = [
 
 const businessOutcomes = [
   {
+    icon: "→",
     title: "Faster campaign setup",
     body: "Start client work from reusable context instead of rebuilding every brief from scratch.",
   },
   {
+    icon: "✦",
     title: "Higher-confidence personalization",
     body: "Keep claims tied to visible research so the team can review the reasoning before it appears in outreach.",
   },
   {
-    title: "Cleaner operational follow-through",
-    body: "Move from research to drafts to replies inside one workflow instead of losing continuity as conversations progress.",
+    icon: "◌",
+    title: "Cleaner workflow flow-through",
+    body: "Move from research to drafts to replies in one workflow instead of losing continuity as conversations progress.",
   },
 ];
 
@@ -224,7 +248,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <section className="publicSection" id="workflow">
         <div className="publicSplitGrid publicSolutionSplit">
-          <div className="publicPanel">
+          <div className="publicPanel publicSolutionPanel">
             <MarketingSectionHeader
               eyebrow="What OutFlow does"
               title="Give the team one operating workflow for context, research, drafts, and replies."
@@ -262,7 +286,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </section>
 
       <section className="publicSection">
-        <div className="publicPanel">
+        <div className="publicPanel publicWorkflowPanel">
           <MarketingSectionHeader
             eyebrow="How the workflow runs"
             title="A cleaner operating loop from setup to reply handling."
@@ -275,11 +299,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           />
           <div className="publicWorkflowGrid publicWorkflowGridWide">
             {workflowStages.map((stage, index) => (
-              <article key={stage.label} className="publicWorkflowCard">
-                <span className="publicWorkflowIndex">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3>{stage.label}</h3>
+              <article key={stage.key} className="publicWorkflowCard">
+                <div className="publicWorkflowCardHeader">
+                  <span className="publicWorkflowIndex">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3>{stage.displayLabel ?? stage.label}</h3>
+                </div>
                 <p>{stage.note}</p>
               </article>
             ))}
@@ -288,7 +314,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </section>
 
       <section className="publicSection" id="memory">
-        <div className="publicSectionIntro publicSectionIntroCompact">
+        <div className="publicSectionIntro publicSectionIntroCompact publicMemoryIntro">
           <p className="marketingEyebrow">Why it is more usable than disconnected prompting</p>
           <h2>Better outbound work needs structure, reviewability, and memory.</h2>
           <p>
@@ -300,7 +326,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="publicProofGrid">
           {proofPillars.map((pillar) => (
             <article key={pillar.title} className="publicProofCard">
-              <h3>{pillar.title}</h3>
+              <div className="publicCardTitleRow">
+                <span className="publicCardIcon" aria-hidden="true">
+                  {pillar.icon}
+                </span>
+                <h3>{pillar.title}</h3>
+              </div>
               <p>{pillar.body}</p>
             </article>
           ))}
@@ -323,7 +354,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="publicOutcomeGrid">
             {businessOutcomes.map((item) => (
               <article key={item.title} className="publicOutcomeCard">
-                <h3>{item.title}</h3>
+                <div className="publicCardTitleRow">
+                  <span className="publicCardIcon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <h3>{item.title}</h3>
+                </div>
                 <p>{item.body}</p>
               </article>
             ))}
@@ -337,7 +373,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         description="Keep review visible, move with more structure, and give the team a cleaner system for serious outbound work."
         primaryLabel={primaryLabel}
         primaryHref={primaryHref}
-        secondaryLabel="Compare Starter, Growth, and Enterprise"
+        secondaryLabel="Compare our offers"
         secondaryHref="/pricing"
       />
       <MarketingFooter />

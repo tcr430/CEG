@@ -3317,12 +3317,14 @@ h2 {
   line-height: 0.98;
   letter-spacing: -0.055em;
   color: #101318;
+  text-wrap: balance;
 }
 
 .publicSectionIntro p {
   margin: 0;
   color: #5f6877;
   line-height: 1.72;
+  text-wrap: pretty;
 }
 
 .publicSectionIntroCompact {
@@ -3351,7 +3353,7 @@ h2 {
 
 .publicProblemIntro p:last-child {
   max-width: 62rem;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .publicProblemGrid,
@@ -3380,19 +3382,21 @@ h2 {
 .publicProofCard h3,
 .publicOutcomeCard h3 {
   margin: 0;
-  max-width: 16ch;
+  max-width: none;
   font-size: 1.26rem;
   line-height: 1.12;
   letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .publicProblemCard p,
 .publicProofCard p,
 .publicOutcomeCard p {
   margin: 0;
-  max-width: 31ch;
+  max-width: none;
   color: #5f6877;
   line-height: 1.7;
+  text-wrap: pretty;
 }
 
 .publicWorkflowGrid {
@@ -3407,7 +3411,20 @@ h2 {
 
 .publicWorkflowCard {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  align-content: start;
+}
+
+.publicWorkflowCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.publicWorkflowCardHeader h3 {
+  margin: 4px 0 0;
+  flex: 1;
+  text-wrap: balance;
 }
 
 .publicWorkflowIndex {
@@ -3430,7 +3447,13 @@ h2 {
 }
 
 .publicSolutionSplit {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
   align-items: start;
+}
+
+.publicSolutionSplit > * {
+  min-height: 100%;
 }
 
 .publicNoteStack,
@@ -3442,6 +3465,8 @@ h2 {
 }
 
 .publicTrustPanel {
+  display: grid;
+  gap: 12px;
   background:
     linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(32, 43, 61, 0.98)),
     radial-gradient(circle at 85% 18%, rgba(53, 93, 255, 0.36), transparent 34%);
@@ -3454,6 +3479,72 @@ h2 {
 
 .publicTrustPanel p {
   color: rgba(255, 255, 255, 0.76);
+}
+
+.publicSolutionPanel .marketingSectionHeader,
+.publicWorkflowPanel .marketingSectionHeader {
+  max-width: none;
+  display: contents;
+}
+
+.publicOutcomePanel .marketingSectionHeader {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  max-width: none;
+}
+
+.publicSolutionPanel .marketingSectionHeader h2,
+.publicTrustPanel h2,
+.publicWorkflowPanel .marketingSectionHeader h2,
+.publicMemoryIntro h2,
+.publicOutcomePanel .marketingSectionHeader h2 {
+  font-size: clamp(1.85rem, 2.6vw, 2.7rem);
+  line-height: 1.02;
+}
+
+.publicSolutionPanel .marketingSectionHeader h2,
+.publicTrustPanel h2,
+.publicWorkflowPanel .marketingSectionHeader h2 {
+  max-width: none;
+  text-wrap: balance;
+}
+
+.publicSolutionPanel .marketingSectionHeader {
+  display: contents;
+}
+
+.publicSolutionPanel .marketingSectionCopy,
+.publicWorkflowPanel .marketingSectionCopy,
+.publicOutcomePanel .marketingSectionCopy {
+  max-width: 60rem;
+}
+
+.publicSolutionPanel {
+  display: grid;
+  gap: 12px;
+}
+
+.publicWorkflowPanel {
+  display: grid;
+  gap: 12px;
+}
+
+.publicSolutionPanel .marketingSectionCopy p,
+.publicWorkflowPanel .marketingSectionCopy p,
+.publicMemoryIntro p,
+.publicOutcomePanel .marketingSectionCopy p {
+  text-wrap: pretty;
+}
+
+.publicSolutionPanel .marketingSectionCopy p {
+  max-width: 42rem;
+}
+
+.publicTrustPanel > p:not(.marketingEyebrow) {
+  margin-top: 2px;
+  max-width: 33rem;
+  text-wrap: pretty;
 }
 
 .publicTrustChecklist,
@@ -3478,11 +3569,12 @@ h2 {
 .pricingPrincipleList li::before {
   content: "";
   position: absolute;
-  top: 11px;
+  top: 50%;
   left: 0;
   width: 8px;
   height: 8px;
   border-radius: 999px;
+  transform: translateY(-50%);
 }
 
 .publicTrustChecklist li::before {
@@ -3490,31 +3582,37 @@ h2 {
   box-shadow: 0 0 0 4px rgba(126, 226, 184, 0.14);
 }
 
+.publicTrustChecklist li {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .publicValueChecklist {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .publicValueChecklist li {
   position: relative;
   padding-left: 24px;
   color: #384253;
-  line-height: 1.72;
+  line-height: normal;
+  text-wrap: pretty;
 }
 
 .publicValueChecklist li::before {
   content: "";
   position: absolute;
-  top: 11px;
+  top: 50%;
   left: 0;
   width: 9px;
   height: 9px;
   border-radius: 999px;
   background: rgba(53, 93, 255, 0.94);
   box-shadow: 0 0 0 4px rgba(53, 93, 255, 0.12);
+  transform: translateY(-50%);
 }
 
 .publicSignupChecklist li::before,
@@ -3726,6 +3824,41 @@ h2 {
   gap: 22px;
 }
 
+.publicMemoryIntro {
+  width: min(1180px, 100%);
+}
+
+.publicMemoryIntro h2 {
+  max-width: none;
+  white-space: nowrap;
+}
+
+.publicCardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.publicCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: rgba(53, 93, 255, 0.1);
+  color: #355dff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.publicProofCard .publicCardIcon,
+.publicOutcomeCard .publicCardIcon {
+  margin-top: 1px;
+}
+
 @media (max-width: 1280px) {
   .publicHeroGrid,
   .publicHeroGridWide {
@@ -3883,15 +4016,15 @@ h2 {
 .publicFooter,
 .publicInfoHero,
 .publicInfoPanel {
-  width: min(1180px, 100%);
+  width: min(1380px, 100%);
   margin: 0 auto;
 }
 
 .publicPreFooterBand {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
   padding: 28px 30px;
   border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 28px;
@@ -3903,26 +4036,30 @@ h2 {
 
 .publicPreFooterCopy {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  width: min(1080px, 100%);
 }
 
 .publicPreFooterCopy h2 {
   margin: 0;
-  max-width: 12ch;
-  font-size: clamp(1.95rem, 3.2vw, 3rem);
-  line-height: 1;
+  max-width: 17ch;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
   letter-spacing: -0.05em;
+  text-wrap: balance;
 }
 
 .publicPreFooterCopy p {
   margin: 0;
-  max-width: 44rem;
+  max-width: 56rem;
   color: #5f6877;
   line-height: 1.7;
+  text-wrap: pretty;
 }
 
 .publicPreFooterActions {
-  justify-content: flex-end;
+  justify-content: flex-start;
+  margin-top: 4px;
 }
 
 .publicFooter {
