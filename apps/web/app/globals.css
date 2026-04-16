@@ -3659,10 +3659,40 @@ h2 {
   padding-top: 8px;
 }
 
+.publicPricingPlansSection .marketingSectionHeader {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  max-width: none;
+}
+
+.publicPricingPlansSection .marketingSectionHeader h2 {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(1.9rem, 2.2vw, 2.5rem);
+  line-height: 1.02;
+  text-wrap: pretty;
+}
+
+.publicPricingPlansSection .marketingSectionHeader .marketingEyebrow,
+.publicPricingMatrixPanel .marketingSectionHeader .marketingEyebrow {
+  margin: 0;
+}
+
+.publicPricingPlansSection .marketingSectionCopy {
+  max-width: none;
+}
+
+.publicPricingPlansSection .marketingSectionCopy p,
+.publicPricingMatrixPanel .marketingSectionCopy p {
+  margin: 0;
+}
+
 .publicPricingCardGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
+  align-items: start;
 }
 
 .pricingCard {
@@ -3671,6 +3701,11 @@ h2 {
   gap: 16px;
   min-height: 100%;
   border-radius: 30px;
+}
+
+.pricingCard:not(.featuredPricingCard) {
+  transform: scale(0.97);
+  transform-origin: center top;
 }
 
 .pricingCardBody {
@@ -3733,7 +3768,7 @@ h2 {
 
 .featuredPricingCard {
   position: relative;
-  transform: translateY(-10px);
+  transform: translateY(0);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 249, 255, 0.93)),
     radial-gradient(circle at top right, rgba(53, 93, 255, 0.16), transparent 38%);
@@ -3755,6 +3790,21 @@ h2 {
 
 .publicPricingMatrixPanel {
   gap: 22px;
+}
+
+.publicPricingMatrixPanel .marketingSectionHeader {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  max-width: none;
+}
+
+.publicPricingMatrixPanel .marketingSectionHeader h2 {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(1.9rem, 2.2vw, 2.5rem);
+  line-height: 1.02;
+  text-wrap: pretty;
 }
 
 .publicSignupIntro {
@@ -3843,20 +3893,31 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
   flex-shrink: 0;
-  background: rgba(53, 93, 255, 0.1);
+  border: 1px solid rgba(53, 93, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(232, 238, 255, 0.86)),
+    radial-gradient(circle at 30% 30%, rgba(53, 93, 255, 0.16), transparent 60%);
+  box-shadow: 0 8px 18px rgba(53, 93, 255, 0.08);
   color: #355dff;
-  font-size: 0.95rem;
-  font-weight: 800;
   line-height: 1;
 }
 
 .publicProofCard .publicCardIcon,
 .publicOutcomeCard .publicCardIcon {
   margin-top: 1px;
+}
+
+.marketingIconSvg {
+  width: 25px;
+  height: 25px;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 @media (max-width: 1280px) {
@@ -4037,21 +4098,21 @@ h2 {
 .publicPreFooterCopy {
   display: grid;
   gap: 12px;
-  width: min(1080px, 100%);
+  width: 100%;
 }
 
 .publicPreFooterCopy h2 {
   margin: 0;
-  max-width: 17ch;
-  font-size: clamp(2rem, 3vw, 3rem);
+  max-width: none;
+  font-size: clamp(1.9rem, 2.2vw, 2.5rem);
   line-height: 1.02;
   letter-spacing: -0.05em;
-  text-wrap: balance;
+  text-wrap: pretty;
 }
 
 .publicPreFooterCopy p {
   margin: 0;
-  max-width: 56rem;
+  max-width: 74rem;
   color: #5f6877;
   line-height: 1.7;
   text-wrap: pretty;

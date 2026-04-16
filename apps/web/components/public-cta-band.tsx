@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 type PublicCtaBandProps = {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   description: string;
   primaryLabel: string;
   primaryHref: string;

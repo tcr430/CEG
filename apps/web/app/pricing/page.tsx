@@ -19,12 +19,6 @@ export const metadata: Metadata = {
   description: "Compare workflow plans for OutFlow's agency-grade cold email system.",
 };
 
-const pricingGuidance = [
-  "Each plan keeps the same product model: context, research, draft, review, replies, and history.",
-  "What changes is workflow depth, sender-aware support, and operating headroom.",
-  "Growth is the default fit for agencies actively running client campaigns.",
-];
-
 type PricingPageProps = {
   searchParams?: Promise<{
     notice?: string;
@@ -52,48 +46,13 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
     <main className="publicSiteShell publicPricingShell">
       <PublicLandingNav isAuthenticated={auth.user !== null} />
 
-      <section className="publicPricingHero" aria-labelledby="pricing-title">
-        <div className="publicPricingHeroCopy">
-          <p className="marketingEyebrow">Pricing</p>
-          <h1 id="pricing-title">Choose the workflow depth your team actually needs.</h1>
-          <p className="publicPricingLead">
-            OutFlow is priced around how much structured outbound work the team needs
-            to run, not around token language. Start lean, add sender-aware depth as
-            the workflow matures, and open up more headroom when client delivery gets
-            heavier.
-          </p>
-          <div className="publicActionRow">
-            <Link
-              href={auth.user ? "/app/settings" : "/sign-up"}
-              className="marketingPrimaryCta"
-            >
-              {auth.user ? "Open billing settings" : "Create account"}
-            </Link>
-            <Link href="/" className="marketingSecondaryCta">
-              Back to homepage
-            </Link>
-          </div>
-        </div>
-
-        <div className="publicPricingHeroNotes">
-          <div className="publicPricingNoteCard">
-            <p className="marketingSurfaceEyebrow">How to choose</p>
-            <ul className="pricingPrincipleList">
-              {pricingGuidance.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
       <FeedbackBanner error={params.error} notice={params.notice} />
 
       <section className="publicSection publicPricingPlansSection">
         <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Plans"
-            title="Pick the plan that matches the way the team operates today."
+            title="Pick the plan that matches how your team operates."
             description={
               <p>
                 Start with the amount of workflow room you need now. The operating

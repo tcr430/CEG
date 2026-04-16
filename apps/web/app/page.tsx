@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import { FeedbackBanner } from "../components/feedback-banner";
 import { HomeAuthFragmentBridge } from "../components/home-auth-fragment-bridge";
+import {
+  MarketingIcon,
+  type MarketingIconName,
+} from "../components/marketing-icon";
 import { MarketingFooter } from "../components/marketing-footer";
 import { MarketingSectionHeader } from "../components/marketing-section-header";
 import { PublicCtaBand } from "../components/public-cta-band";
@@ -66,39 +70,45 @@ const workflowStages = [
   },
 ];
 
-const proofPillars = [
+type MarketingCardWithIcon = {
+  icon: MarketingIconName;
+  title: string;
+  body: string;
+};
+
+const proofPillars: MarketingCardWithIcon[] = [
   {
-    icon: "◎",
+    icon: "target",
     title: "Safer than disconnected prompting",
     body: "OutFlow keeps research, drafts, and reply handling connected to real records instead of letting context disappear across ad hoc prompt sessions.",
   },
   {
-    icon: "✓",
+    icon: "check",
     title: "Built for controlled execution",
     body: "The current product supports Gmail draft handoff, not autonomous sending. Operators still review, edit, and approve what moves forward.",
   },
   {
-    icon: "↗",
+    icon: "spark",
     title: "More useful as history accumulates",
-    body: "Sender profiles, campaign context, reply history, selections, and performance signals make future work more informed without pretending the system runs itself.",
+    body: "Sender profiles, campaign context, and reply history make future work more informed without pretending the system runs itself.",
   },
 ];
 
-const businessOutcomes = [
+const businessOutcomes: MarketingCardWithIcon[] = [
   {
-    icon: "→",
+    icon: "timer",
     title: "Faster campaign setup",
-    body: "Start client work from reusable context instead of rebuilding every brief from scratch.",
+    body: "Start client campaigns from reusable context instead of rebuilding the brief from scratch every time.",
   },
   {
-    icon: "✦",
+    icon: "aim",
     title: "Higher-confidence personalization",
-    body: "Keep claims tied to visible research so the team can review the reasoning before it appears in outreach.",
+    body: "Keep personalization tied to visible research so the team can review the reasoning before outreach goes out.",
   },
   {
-    icon: "◌",
+    icon: "loop",
     title: "Cleaner workflow flow-through",
-    body: "Move from research to drafts to replies in one workflow instead of losing continuity as conversations progress.",
+    body: "Move from research to drafts to replies in one workflow without losing continuity as conversations move forward.",
   },
 ];
 
@@ -328,7 +338,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <article key={pillar.title} className="publicProofCard">
               <div className="publicCardTitleRow">
                 <span className="publicCardIcon" aria-hidden="true">
-                  {pillar.icon}
+                  <MarketingIcon name={pillar.icon} />
                 </span>
                 <h3>{pillar.title}</h3>
               </div>
@@ -356,7 +366,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <article key={item.title} className="publicOutcomeCard">
                 <div className="publicCardTitleRow">
                   <span className="publicCardIcon" aria-hidden="true">
-                    {item.icon}
+                    <MarketingIcon name={item.icon} />
                   </span>
                   <h3>{item.title}</h3>
                 </div>
