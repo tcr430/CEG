@@ -20,6 +20,7 @@ export type StripeBillingConfig = {
   webhookSecret: string;
   appUrl: string;
   monthlyPriceIds: {
+    free: string;
     pro: string;
     agency: string;
   };
@@ -30,7 +31,7 @@ export type CreateCheckoutSessionInput = {
   userId?: string | null;
   customerEmail?: string | null;
   existingCustomerId?: string | null;
-  planCode: Exclude<BillingPlanCode, "free">;
+  planCode: BillingPlanCode;
   successUrl: string;
   cancelUrl: string;
 };
@@ -106,6 +107,10 @@ function readPlanCodeFromPriceId(
   priceId: string | null | undefined,
   monthlyPriceIds: StripeBillingConfig["monthlyPriceIds"],
 ): BillingPlanCode {
+  if (priceId === monthlyPriceIds.free) {
+    return "free";
+  }
+
   if (priceId === monthlyPriceIds.pro) {
     return "pro";
   }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../components/feedback-banner";
 import { SubmitButton } from "../../../components/submit-button";
@@ -8,7 +7,7 @@ import {
   getOnboardingNextStepGuidance,
   getOnboardingPersonaGuidance,
 } from "../../../lib/onboarding-guidance";
-import { getWorkspaceAppContext } from "../../../lib/server/auth";
+import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { getUserTypeLabel } from "../../../lib/server/onboarding-state";
 
@@ -67,11 +66,7 @@ function StepCard({
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
 
   const summary = await getWorkspaceOnboardingSummary({
     membership: context.workspace,

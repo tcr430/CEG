@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(
-          `/sign-up?notice=${encodeURIComponent("Create and confirm an OutFlow account before signing in.")}`,
+          `/create-account?notice=${encodeURIComponent("Create and confirm an OutFlow account before signing in.")}`,
           request.url,
         ),
         303,

@@ -1,8 +1,7 @@
 ﻿import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../../components/feedback-banner";
-import { getWorkspaceAppContext } from "../../../../lib/server/auth";
+import { requireActiveWorkspaceAppContext } from "../../../../lib/server/billing";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
 import { createCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
@@ -18,11 +17,7 @@ export default async function NewCampaignPage({
   searchParams,
 }: NewCampaignPageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
 
   const senderProfiles = await listSenderProfilesForWorkspace(
     context.workspace.workspaceId,

@@ -15,8 +15,10 @@ import { WorkflowStageStrip } from "../../../../../../components/workflow-stage-
 import { FeedbackBanner } from "../../../../../../components/feedback-banner";
 import { SubmitButton } from "../../../../../../components/submit-button";
 
-import { getWorkspaceAppContext } from "../../../../../../lib/server/auth";
-import { getWorkspaceBillingState } from "../../../../../../lib/server/billing";
+import {
+  getWorkspaceBillingState,
+  requireActiveWorkspaceAppContext,
+} from "../../../../../../lib/server/billing";
 import { getUpgradePrompt } from "../../../../../../lib/upgrade-prompts";
 import { UpgradePromptCard } from "../../../../../../components/upgrade-prompt-card";
 import {
@@ -161,11 +163,7 @@ export default async function ProspectDetailPage({
 }: ProspectDetailPageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(resolvedSearchParams.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(resolvedSearchParams.workspace);
 
   const workspace = context.workspace;
   const [billing, prospect] = await Promise.all([

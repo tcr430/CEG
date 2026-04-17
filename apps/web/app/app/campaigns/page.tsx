@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../components/feedback-banner";
 import { WorkflowStageStrip } from "../../../components/workflow-stage-strip";
-import { getWorkspaceAppContext } from "../../../lib/server/auth";
+import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
 import { getCampaignsEmptyState } from "../../../lib/empty-state-guidance";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { listCampaignsForWorkspace } from "../../../lib/server/campaigns";
@@ -33,11 +32,7 @@ type CampaignsPageProps = {
 
 export default async function CampaignsPage({ searchParams }: CampaignsPageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
 
   const workspace = context.workspace;
   const [campaigns, onboarding] = await Promise.all([

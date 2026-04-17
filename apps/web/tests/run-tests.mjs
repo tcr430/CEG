@@ -417,8 +417,7 @@ const signupGrowthRedirect = createDefaultPostAuthRedirectPath({
   mode: "sign-up",
   planCode: "pro",
 });
-assert.match(signupGrowthRedirect, /^\/app\/settings\?upgrade=pro/);
-assert.match(signupGrowthRedirect, /#billing-plans$/);
+assert.match(signupGrowthRedirect, /^\/app\/billing\?notice=/);
 assert.equal(normalizeAuthMode("sign-up"), "sign-up");
 assert.equal(normalizeAuthMode("magic-link"), "magic-link");
 assert.equal(normalizeAuthMode("anything-else"), "password-sign-in");
@@ -427,6 +426,10 @@ assert.equal(normalizeSignupPlanCode("enterprise"), null);
 assert.equal(
   normalizePostAuthRedirectPath("/app/settings?upgrade=pro#billing-plans"),
   "/app/settings?upgrade=pro#billing-plans",
+);
+assert.equal(
+  normalizePostAuthRedirectPath("/app/billing?workspace=workspace-1"),
+  "/app/billing?workspace=workspace-1",
 );
 assert.equal(normalizePostAuthRedirectPath("https://evil.test/app"), null);
 assert.equal(normalizePostAuthRedirectPath("//evil.test/app"), null);

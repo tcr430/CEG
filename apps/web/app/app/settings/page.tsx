@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../components/feedback-banner";
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
@@ -15,13 +14,12 @@ import {
   updateWorkspaceMemberRoleAction,
   updateWorkspaceProfileAction,
 } from "./actions";
-import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import {
   canAccessInternalAdminView,
   getInternalAdminAllowedEmails,
   isInternalAdminEnabled,
 } from "../../../lib/internal-admin-access";
-import { getWorkspaceBillingState } from "../../../lib/server/billing";
+import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
 import { getWorkspaceInboxState } from "../../../lib/server/inbox/service";
 import { getInstitutionalControlsState } from "../../../lib/server/institutional-controls";
 import { readWorkspaceDataHandling } from "../../../lib/server/data-handling";
@@ -137,12 +135,8 @@ function getRoleOptions(actorRole: "owner" | "admin" | "member") {
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
   const workspace = context.workspace;
-
-  if (workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
 
   const showInternalAdminLink =
     isInternalAdminEnabled() &&
@@ -151,11 +145,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       membership: workspace,
       allowedEmails: getInternalAdminAllowedEmails(),
     });
-  const [billing, inboxState, teamState] = await Promise.all([
-    getWorkspaceBillingState({
-      workspaceId: workspace.workspaceId,
-      workspacePlanCode: workspace.billingPlanCode,
-    }),
+  const [inboxState, teamState] = await Promise.all([
     getWorkspaceInboxState(workspace.workspaceId),
     getWorkspaceTeamState({
       workspaceId: workspace.workspaceId,
@@ -169,6 +159,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     userEmail: context.user.email ?? "",
     supportEmail: teamState.profile.supportEmail,
   });
+  const billing = context.billing;
   const currentPlan = getPricingPlanPresentation(billing.planCode);
   const selectedUpgradePlanCode =
     params.upgrade === "pro" || params.upgrade === "agency"
@@ -180,8 +171,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     billing,
     performance: null,
   });
-  const subscriptionLocked =
-    billing.subscriptionRequired && !billing.hasActiveSubscription;
   const controls = institutionalControlsState.controls;
   const dataHandling = readWorkspaceDataHandling(teamState.workspace.settings);
 
@@ -527,7 +516,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p>
               {billing.currentSubscription
                 ? `Subscription status: ${billing.currentSubscription.status.replaceAll("_", " ")}.`
-                : "No paid subscription is synced yet. The workspace account exists, but core workflow execution stays locked until checkout completes."}
+                : "No active subscription is synced yet. The workspace account exists, but core workflow execution stays locked until checkout completes."}
             </p>
             {subscriptionLocked ? (
               <p className="statusMessage">
@@ -756,11 +745,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             const active = billing.planCode === plan.code;
             let actions;
 
-            if (plan.code === "free") {
-              actions = active ? null : (
-                <p className="statusMessage">This workspace shows Starter as the default account tier when no paid subscription is active, but workflow execution still requires checkout.</p>
-              );
-            } else if (active) {
+            if (active) {
               actions = billing.currentSubscription?.providerCustomerId ? (
                 <form action="/api/billing/portal" method="post">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
@@ -778,7 +763,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
                     pendingLabel="Starting checkout..."
                   >
-                    {plan.code === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise"}
+                    {plan.code === "free"
+                      ? "Switch to Starter"
+                      : plan.code === "pro"
+                        ? "Upgrade to Growth"
+                        : "Upgrade to Enterprise"}
                   </SubmitButton>
                 </form>
               );

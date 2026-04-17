@@ -33,7 +33,7 @@ const footerColumns: FooterColumnProps[] = [
       { label: "Memory", href: "/#memory" },
       { label: "Trust", href: "/#trust" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Create workspace", href: "/sign-up" },
+      { label: "Create account", href: "/create-account" },
     ],
   },
   {
@@ -42,7 +42,7 @@ const footerColumns: FooterColumnProps[] = [
       { label: "Agencies", href: "/" },
       { label: "SDR teams", href: "/pricing" },
       { label: "Founders", href: "/pricing" },
-      { label: "Reply handling", href: "/#product-surface" },
+      { label: "Reply handling", href: "/#workflow" },
       { label: "Prospect research", href: "/#workflow" },
     ],
   },
@@ -51,7 +51,7 @@ const footerColumns: FooterColumnProps[] = [
     links: [
       { label: "Sender profiles", href: "/#memory" },
       { label: "Campaign context", href: "/#workflow" },
-      { label: "Research snapshots", href: "/#product-surface" },
+      { label: "Research snapshots", href: "/#workflow" },
       { label: "Draft handoff", href: "/#trust" },
       { label: "Performance summaries", href: "/pricing" },
     ],
@@ -91,7 +91,7 @@ export function MarketingFooter() {
           </p>
           <p className="publicFooterTrust">
             Structured research, reviewable drafts, reply handling, and controlled
-            execution for serious client work.
+            execution for serious outbound work.
           </p>
           <div className="publicFooterMeta">
             <span>(c) 2026 OutFlow</span>

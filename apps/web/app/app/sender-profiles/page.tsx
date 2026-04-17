@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../components/feedback-banner";
-import { getWorkspaceAppContext } from "../../../lib/server/auth";
-import { getWorkspaceBillingState } from "../../../lib/server/billing";
+import {
+  getWorkspaceBillingState,
+  requireActiveWorkspaceAppContext,
+} from "../../../lib/server/billing";
 import { getSenderProfilesEmptyState } from "../../../lib/empty-state-guidance";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { listSenderProfilesForWorkspace } from "../../../lib/server/sender-profiles";
@@ -27,11 +28,7 @@ export default async function SenderProfilesPage({
   searchParams,
 }: SenderProfilesPageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
 
   const workspace = context.workspace;
   const billing = await getWorkspaceBillingState({

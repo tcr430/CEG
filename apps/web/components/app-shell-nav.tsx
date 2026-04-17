@@ -71,6 +71,9 @@ export function AppShellNav({
         <Link href={withWorkspace("/app/settings", workspaceId)} className="buttonGhost">
           Settings
         </Link>
+        <Link href={withWorkspace("/app/billing", workspaceId)} className="buttonGhost">
+          Billing
+        </Link>
         <Link href="/pricing" className="buttonGhost">
           Pricing
         </Link>

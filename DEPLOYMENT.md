@@ -46,6 +46,7 @@ Environment variables:
 Auth setup notes:
 - the current app uses Supabase server-side session handling
 - self-service sign-up uses email and password, sends a confirmation email, and only provisions local `users`, `workspaces`, and `workspace_members` records after the confirmation callback succeeds
+- account creation now happens before plan selection; confirmed sign-ups are redirected into the signed-in billing flow immediately after local workspace bootstrap
 - sign-in is only for already confirmed product accounts; password sign-in starts a session immediately, while magic-link sign-in uses Supabase OTP with user creation disabled
 - workspace membership is now resolved from local `workspace_members` records first; auth metadata is only a legacy/bootstrap fallback where explicitly allowed
 - `DATABASE_URL` is required in production for product account creation and workspace membership lookup; Supabase auth variables alone are not sufficient
@@ -67,6 +68,7 @@ Current implementation note:
 Environment variables:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRICE_STARTER_MONTHLY`
 - `STRIPE_PRICE_PRO_MONTHLY`
 - `STRIPE_PRICE_AGENCY_MONTHLY`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`

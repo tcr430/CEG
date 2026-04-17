@@ -2,10 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  createDefaultPostAuthRedirectPath,
-  normalizeSignupPlanCode,
-} from "../../../lib/auth-redirects";
+import { createDefaultPostAuthRedirectPath } from "../../../lib/auth-redirects";
 import { createOperationContext } from "../../../lib/server/observability";
 import { assertTrustedAppRequest } from "../../../lib/server/request-security";
 import {
@@ -18,7 +15,6 @@ const signUpRequestSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(8),
   passwordConfirmation: z.string().min(8),
-  planCode: z.enum(["free", "pro", "agency"]).optional(),
 }).refine((value) => value.password === value.passwordConfirmation, {
   message: "Passwords do not match.",
   path: ["passwordConfirmation"],
@@ -39,7 +35,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/sign-up?error=${encodeUserFacingError(error, "We could not verify that request. Refresh the page and try again.")}`,
+        `/create-account?error=${encodeUserFacingError(error, "We could not verify that request. Refresh the page and try again.")}`,
         request.url,
       ),
       303,
@@ -51,13 +47,12 @@ export async function POST(request: Request) {
     email: formData.get("email"),
     password: formData.get("password"),
     passwordConfirmation: formData.get("passwordConfirmation"),
-    planCode: normalizeSignupPlanCode(formData.get("planCode")) ?? undefined,
   });
 
   if (!parsed.success) {
     return NextResponse.redirect(
       new URL(
-        `/sign-up?error=${encodeUserFacingError(parsed.error.issues[0]?.message ?? "invalid sign-up request", "Check the form and try again.")}`,
+        `/create-account?error=${encodeUserFacingError(parsed.error.issues[0]?.message ?? "invalid sign-up request", "Check the form and try again.")}`,
         request.url,
       ),
       303,
@@ -70,7 +65,7 @@ export async function POST(request: Request) {
     operation.logger.warn("Supabase auth is not configured for sign-up");
     return NextResponse.redirect(
       new URL(
-        `/sign-up?error=${encodeUserFacingError("supabase not configured")}`,
+        `/create-account?error=${encodeUserFacingError("supabase not configured")}`,
         request.url,
       ),
       303,
@@ -79,7 +74,6 @@ export async function POST(request: Request) {
 
   const postAuthRedirectPath = createDefaultPostAuthRedirectPath({
     mode: "sign-up",
-    planCode: parsed.data.planCode ?? null,
   });
   const callbackPath = `/auth/callback?mode=sign-up&next=${encodeURIComponent(postAuthRedirectPath)}`;
   const emailRedirectTo =
@@ -100,7 +94,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/sign-up?plan=${parsed.data.planCode ?? "free"}&error=${encodeUserFacingError(error, "We could not create that account. Please try again.")}`,
+        `/create-account?error=${encodeUserFacingError(error, "We could not create that account. Please try again.")}`,
         request.url,
       ),
       303,
@@ -110,11 +104,10 @@ export async function POST(request: Request) {
   operation.logger.info("Supabase sign-up confirmation email sent", {
     emailDomain: parsed.data.email.split("@")[1] ?? null,
     emailRedirectHost: new URL(emailRedirectTo).host,
-    planCode: parsed.data.planCode ?? "free",
   });
 
   return NextResponse.redirect(
-    new URL(`/sign-up?plan=${parsed.data.planCode ?? "free"}&check-email=1`, request.url),
+    new URL(`/create-account?check-email=1`, request.url),
     303,
   );
 }

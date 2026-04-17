@@ -88,11 +88,18 @@ For local demos, trusted internal admins can opt into development-only sample da
 The app is designed to stay portable, but it is ready for Vercel deployment with a few explicit expectations:
 - set `NEXT_PUBLIC_APP_URL` to the canonical public app origin in production
 - set `DATABASE_URL` in production so confirmed auth identities can create and load local product accounts, workspaces, memberships, subscriptions, and workflow records
+- set `STRIPE_PRICE_STARTER_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, and `STRIPE_PRICE_AGENCY_MONTHLY` when Stripe billing is enabled
 - set Supabase, Stripe, and OpenAI variables only for the features you actually enable
 - keep server-only secrets in server modules; secret-bearing integrations live under [server](D:/Project/CEG/apps/web/lib/server)
 - Vercel preview deployments can fall back to `VERCEL_URL` when `NEXT_PUBLIC_APP_URL` is omitted, but production should use an explicit canonical origin
 
 User-facing packaging now uses `Starter`, `Growth`, and `Enterprise`. Internal billing codes remain `free`, `pro`, and `agency` for compatibility, so expect those identifiers in code, Stripe mappings, and operational docs.
+
+Auth and billing now enter in this order:
+- create the account first from `/create-account`
+- confirm the email so local user, workspace, and membership records can be provisioned
+- continue into the signed-in billing flow
+- unlock `/app` product workflows only after an active subscription syncs
 
 ## Validation Commands
 

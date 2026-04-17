@@ -86,6 +86,7 @@ export function buildInstitutionalControlsState(input: {
   const stripeConfigured =
     getConfiguredFlag(getOptionalEnv("STRIPE_SECRET_KEY")) &&
     getConfiguredFlag(getOptionalEnv("STRIPE_WEBHOOK_SECRET")) &&
+    getConfiguredFlag(getOptionalEnv("STRIPE_PRICE_STARTER_MONTHLY")) &&
     getConfiguredFlag(getOptionalEnv("STRIPE_PRICE_PRO_MONTHLY")) &&
     getConfiguredFlag(getOptionalEnv("STRIPE_PRICE_AGENCY_MONTHLY")) &&
     getConfiguredFlag(getOptionalEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"));

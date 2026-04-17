@@ -16,7 +16,7 @@ import { pricingFeatureRows, pricingPlans } from "../../lib/pricing-content";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Compare workflow plans for OutFlow's agency-grade cold email system.",
+  description: "Compare OutFlow plans for agency-grade cold email workflow operations.",
 };
 
 type PricingPageProps = {
@@ -52,34 +52,25 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Plans"
-            title="Pick the plan that matches how your team operates."
+            title="Choose the plan that matches how your team operates."
             description={
               <p>
-                Start with the amount of workflow room you need now. The operating
-                model stays familiar as the workspace grows.
+                Compare Starter, Growth, and Enterprise quickly. The workflow model
+                stays consistent as delivery volume grows.
               </p>
             }
           />
           <div className="publicPricingCardGrid">
             {pricingPlans.map((plan) => {
-              const active = billing?.planCode === plan.code;
+              const active =
+                billing?.hasActiveSubscription === true && billing.planCode === plan.code;
               const badge = active ? "Current plan" : plan.featured ? "Recommended" : undefined;
 
               let actions;
-              if (plan.code === "free") {
-                actions = auth.user ? (
-                  <Link href="/app" className="marketingTertiaryCta">
-                    Open workspace
-                  </Link>
-                ) : (
-                  <Link href="/sign-up?plan=free" className="marketingTertiaryCta">
-                    Start with Starter
-                  </Link>
-                );
-              } else if (defaultWorkspace) {
+              if (defaultWorkspace) {
                 actions = active ? (
                   <Link
-                    href={`/app/settings?workspace=${defaultWorkspace.workspaceId}`}
+                    href={`/app/billing?workspace=${defaultWorkspace.workspaceId}`}
                     className="marketingTertiaryCta"
                   >
                     Manage current plan
@@ -96,19 +87,21 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                       className={plan.featured ? "marketingPrimaryCta" : "marketingTertiaryCta"}
                       pendingLabel="Starting checkout..."
                     >
-                      {plan.code === "pro" ? "Upgrade to Growth" : "Upgrade to Enterprise"}
+                      {plan.code === "free"
+                        ? "Choose Starter"
+                        : plan.code === "pro"
+                          ? "Choose Growth"
+                          : "Choose Enterprise"}
                     </SubmitButton>
                   </form>
                 );
               } else {
                 actions = (
                   <Link
-                    href={`/sign-up?plan=${plan.code}`}
+                    href="/create-account"
                     className={plan.featured ? "marketingPrimaryCta" : "marketingTertiaryCta"}
                   >
-                    {plan.code === "pro"
-                      ? "Create account for Growth"
-                      : "Create account for Enterprise"}
+                    Create account
                   </Link>
                 );
               }
@@ -136,11 +129,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel publicPricingMatrixPanel">
           <MarketingSectionHeader
             eyebrow="Comparison"
-            title="See where each tier opens up more room in the workflow."
+            title="See where each tier opens more room in the workflow."
             description={
               <p>
-                The matrix below focuses on the practical differences that matter
-                once the team starts running more client work.
+                Focus on practical differences for context depth, usage capacity,
+                and day-to-day operating headroom.
               </p>
             }
           />
@@ -164,13 +157,13 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       </section>
 
       <PublicCtaBand
-        eyebrow="Choose the right operating room"
-        title="Start with the plan that fits the team today, then add headroom as delivery grows."
-        description="Keep the same controlled workflow while adding more sender-aware context, more research and generation room, and more capacity for live client work."
-        primaryLabel={auth.user ? "Open billing settings" : "Create your workspace"}
-        primaryHref={auth.user ? "/app/settings" : "/sign-up"}
-        secondaryLabel="Back to homepage"
-        secondaryHref="/"
+        eyebrow="Ready to start"
+        title="Create an account, then activate the plan your team needs."
+        description="OutFlow separates account creation from billing so plan selection is explicit before product workflows unlock."
+        primaryLabel={auth.user ? "Choose plan" : "Create account"}
+        primaryHref={auth.user ? "/app/billing" : "/create-account"}
+        secondaryLabel={auth.user ? "Sign in to another account" : "Back to homepage"}
+        secondaryHref={auth.user ? "/sign-in" : "/"}
       />
       <MarketingFooter />
     </main>

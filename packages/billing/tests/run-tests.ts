@@ -162,6 +162,7 @@ const stripeProvider = createStripeBillingProvider(
     webhookSecret: "whsec_123",
     appUrl: "http://localhost:3000",
     monthlyPriceIds: {
+      free: "price_starter_monthly",
       pro: "price_pro_monthly",
       agency: "price_agency_monthly",
     },
@@ -189,6 +190,13 @@ const checkoutSession = await stripeProvider.createCheckoutSession({
   successUrl: "http://localhost:3000/success",
   cancelUrl: "http://localhost:3000/cancel",
 });
+const starterCheckoutSession = await stripeProvider.createCheckoutSession({
+  workspaceId: "5f07db2d-8abd-49db-a5ca-a877ef2fe53c",
+  planCode: "free",
+  customerEmail: "owner@example.com",
+  successUrl: "http://localhost:3000/success",
+  cancelUrl: "http://localhost:3000/cancel",
+});
 const portalSession = await stripeProvider.createBillingPortalSession({
   customerId: "cus_123",
   returnUrl: "http://localhost:3000/app/settings",
@@ -197,6 +205,7 @@ const event = stripeProvider.verifyWebhook("payload", "signature");
 const normalized = await stripeProvider.normalizeSubscriptionFromEvent(event);
 
 assert.equal(checkoutSession.id, "cs_test_123");
+assert.equal(starterCheckoutSession.id, "cs_test_123");
 assert.equal(portalSession.url, "https://billing.stripe.test/session");
 assert.equal(normalized?.providerSubscriptionId, "sub_123");
 assert.equal(normalized?.planCode, "pro");

@@ -6,6 +6,7 @@ type PaidPlanCode = Exclude<BillingPlanCode, "free">;
 const paidPlanCodes = new Set<string>(["pro", "agency"]);
 const allowedPostAuthPathPrefixes = [
   "/app",
+  "/app/billing",
   "/app/onboarding",
   "/app/settings",
   "/pricing",
@@ -35,15 +36,11 @@ export function createDefaultPostAuthRedirectPath(input: {
   mode: AuthMode;
   planCode?: BillingPlanCode | null;
 }): string {
-  if (input.mode === "sign-up" && isPaidPlanCode(input.planCode ?? null)) {
-    const notice = encodeURIComponent(
-      "Account created. Review the selected plan and start checkout when you are ready.",
-    );
-    return `/app/settings?upgrade=${input.planCode}&notice=${notice}#billing-plans`;
-  }
-
   if (input.mode === "sign-up") {
-    return "/app?notice=Workspace%20created.%20Start%20with%20the%20guided%20setup.";
+    const notice = encodeURIComponent(
+      "Account created. Choose a plan to unlock the workspace workflow.",
+    );
+    return `/app/billing?notice=${notice}`;
   }
 
   return "/app?notice=Welcome%20back.";

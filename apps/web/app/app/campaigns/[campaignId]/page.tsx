@@ -6,7 +6,6 @@ import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { PerformanceSummaryCard } from "../../../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
 import { WorkflowStageStrip } from "../../../../components/workflow-stage-strip";
-import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import {
   getCampaignForWorkspace,
   listProspectsForCampaign,
@@ -20,7 +19,10 @@ import { createProspectAction, updateCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
 import { ProspectForm } from "../prospect-form";
 import { getUpgradePrompt } from "../../../../lib/upgrade-prompts";
-import { getWorkspaceBillingState } from "../../../../lib/server/billing";
+import {
+  getWorkspaceBillingState,
+  requireActiveWorkspaceAppContext,
+} from "../../../../lib/server/billing";
 import {
   buildVisibleWorkflowStages,
   getVisibleWorkflowNextAction,
@@ -43,11 +45,7 @@ export default async function CampaignDetailPage({
 }: CampaignDetailPageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(resolvedSearchParams.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(resolvedSearchParams.workspace);
 
   const workspace = context.workspace;
   const campaign = await getCampaignForWorkspace(

@@ -7,11 +7,11 @@ import { getServerAuthContext } from "../../lib/server/auth";
 import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to an existing OutFlow account with password or magic link.",
+  title: "Create account",
+  description: "Create an OutFlow account with email and password, then choose a plan.",
 };
 
-type SignInPageProps = {
+type CreateAccountPageProps = {
   searchParams?: Promise<{
     error?: string;
     notice?: string;
@@ -27,7 +27,7 @@ function getMessage(params: {
   "check-email"?: string;
 }) {
   if (params["check-email"] === "1") {
-    return "Magic link sent. Check your inbox to continue.";
+    return "Confirmation email sent. Check your inbox to finish creating the account.";
   }
 
   return (
@@ -37,7 +37,9 @@ function getMessage(params: {
   );
 }
 
-export default async function SignInPage({ searchParams }: SignInPageProps) {
+export default async function CreateAccountPage({
+  searchParams,
+}: CreateAccountPageProps) {
   const [context, params] = await Promise.all([
     getServerAuthContext(),
     searchParams ?? Promise.resolve({}),
@@ -48,52 +50,26 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       <PublicLandingNav isAuthenticated={context.user !== null} />
 
       <section className="hero authEntryHero">
-        <p className="eyebrow">Sign In</p>
-        <h1>Sign in to your account</h1>
+        <p className="eyebrow">Create account</p>
+        <h1>Create your account</h1>
         <p className="lede">
-          Use email and password, or request a magic link for an existing confirmed
-          account. If your plan is not active yet, you will be directed to billing.
+          Start with a secure email and password for the admin user. After
+          confirmation, choose your plan and then add team members.
         </p>
       </section>
 
-      <section className="panel authPanel" aria-labelledby="sign-in-title">
+      <section className="panel authPanel" aria-labelledby="create-account-title">
         <div>
-          <h2 id="sign-in-title">Continue with email</h2>
+          <h2 id="create-account-title">Create your account with email</h2>
           <p>
-            Sign-in is only for confirmed accounts. Create-account and plan
-            selection happen in separate steps.
+            Use a work email, choose a password, and confirm it once. Magic links
+            are available later for sign-in, but account creation is password-only.
           </p>
         </div>
 
-        <form action="/auth/sign-in" method="post" className="stack">
-          <input type="hidden" name="mode" value="password-sign-in" />
+        <form action="/auth/sign-up" method="post" className="stack">
           <label className="field">
             <span>Work email</span>
-            <input
-              type="email"
-              name="email"
-              placeholder="you@company.com"
-              required
-            />
-          </label>
-          <label className="field">
-            <span>Password</span>
-            <input
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              required
-            />
-          </label>
-          <SubmitButton className="buttonPrimary" pendingLabel="Signing in...">
-            Sign in
-          </SubmitButton>
-        </form>
-
-        <form action="/auth/sign-in" method="post" className="stack">
-          <input type="hidden" name="mode" value="magic-link" />
-          <label className="field">
-            <span>Or send a magic link</span>
             <input
               type="email"
               name="email"
@@ -102,8 +78,28 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
               required
             />
           </label>
-          <SubmitButton className="buttonSecondary" pendingLabel="Sending magic link...">
-            Send magic link
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              name="password"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Confirm password</span>
+            <input
+              type="password"
+              name="passwordConfirmation"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+          <SubmitButton className="buttonPrimary" pendingLabel="Sending confirmation...">
+            Create account
           </SubmitButton>
         </form>
 
@@ -125,8 +121,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         ) : null}
 
         <div className="inlineActions">
-          <Link href="/create-account" className="buttonSecondary">
-            Create account
+          <Link href="/sign-in" className="buttonSecondary">
+            Already have an account?
           </Link>
           <Link href="/pricing" className="buttonGhost">
             Compare plans

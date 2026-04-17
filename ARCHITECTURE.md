@@ -169,14 +169,15 @@ Billing and usage gating should stay server side:
 Authentication should stay server side and modular:
   Supabase backed session handling happens in server entrypoints only
   self service sign up uses email and password with Supabase email confirmation before local product account provisioning
+  account creation happens before plan selection, and confirmed sign ups are redirected into the billing flow immediately after workspace bootstrap
   sign in is reserved for already confirmed product accounts and supports password sign in plus magic link sign in without creating new product accounts
   workspace membership and role guards live in `@ceg/auth`
   protected routes resolve workspace context before rendering app surfaces
   UI components consume already resolved auth and workspace state instead of talking to auth providers directly
 
 Billing access principle:
-  confirmed users can enter the app shell and billing/settings areas before subscribing
-  core workflow execution is server gated behind an active synced subscription so account creation and paid product usage remain separate lifecycle steps
+  confirmed users can access only the minimum signed-in billing and account-management surface before subscribing
+  core workflow pages under `/app` are server gated behind an active synced subscription so account creation and paid product usage remain separate lifecycle steps
 
 ## Migration Strategy
 

@@ -32,7 +32,7 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   free: {
     code: "free",
     label: "Starter",
-    description: "Core agency workspace with guarded usage and basic mode fallback.",
+    description: "Starter workspace for controlled agency operations with lighter monthly headroom.",
     features: {
       sender_aware_profiles: false,
       website_research: true,

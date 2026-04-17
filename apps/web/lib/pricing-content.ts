@@ -21,41 +21,44 @@ export const pricingPlans: PricingPlanPresentation[] = [
   {
     code: "free",
     label: "Starter",
-    headline: "Start the workflow without overcommitting.",
+    headline: "Start with the core workflow.",
     summary:
-      "A clean entry point for a solo operator or very small team that needs structure, not sprawl, for early outbound work.",
-    audience: "Best for initial agency use, smaller books of business, or validating the operating workflow before scaling it.",
+      "Built for early-stage agency delivery where one operator or a small team needs structure from day one.",
+    audience:
+      "Best for starting client work in one workspace before higher-volume delivery.",
     bullets: [
-      "Basic mode workflows without sender-aware profile support",
-      "Public website research for real prospect context",
-      "Core sequence generation and reply intelligence with monthly limits",
+      "Core outbound workflow with monthly limits",
+      "Public website research for prospect context",
+      "Sequence generation and reply intelligence in one workspace",
     ],
   },
   {
     code: "pro",
     label: "Growth",
-    headline: "Give a growing team real operating room.",
+    headline: "Run active client campaigns with headroom.",
     summary:
-      "The default plan for agencies that need sender-aware context, more workflow depth, and enough headroom to manage live client delivery confidently.",
-    audience: "Best for small-to-mid agency teams running active client campaigns and needing reusable context across more outbound work.",
+      "The default fit for agencies managing multiple active campaigns with sender-aware context and higher usage capacity.",
+    audience:
+      "Best for small-to-mid agency teams running repeatable client delivery.",
     featured: true,
     bullets: [
-      "Sender-aware profiles for SDR, founder, and agency contexts",
-      "Higher monthly research, sequence, reply, and regeneration capacity",
-      "A stronger day-to-day operating layer for repeatable outbound quality across one workspace",
+      "Sender-aware profiles across workflow stages",
+      "Higher monthly research, sequence, reply, and regeneration limits",
+      "Recommended for day-to-day multi-campaign operations",
     ],
   },
   {
     code: "agency",
     label: "Enterprise",
-    headline: "Keep larger-scale client operations out of the way of the work.",
+    headline: "Keep larger-scale delivery moving smoothly.",
     summary:
-      "For larger books of business that need the same controlled workflow, but with more scale, more room to iterate, and fewer operational ceilings.",
-    audience: "Best for higher-volume agency operations that need deeper headroom around active client delivery and iteration.",
+      "For larger books of business that need the same controlled workflow with fewer operational ceilings.",
+    audience:
+      "Best for higher-volume agency operations with heavier prospecting and iteration needs.",
     bullets: [
-      "Sender-aware profiles included across agency workflows",
-      "Research, sequence generation, reply intelligence, and regenerations without monthly caps",
-      "Headroom for heavier prospecting, iteration, and client delivery volume",
+      "Sender-aware profiles across all workflows",
+      "Research, sequence, reply intelligence, and regenerations without monthly caps",
+      "Maximum capacity for sustained client delivery volume",
     ],
   },
 ];

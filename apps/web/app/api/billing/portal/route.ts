@@ -3,7 +3,10 @@ import { requireWorkspaceAccess } from "@ceg/auth";
 import { NextResponse } from "next/server";
 
 import { getServerAuthContext } from "../../../../lib/server/auth";
-import { createBillingPortalSessionForWorkspace } from "../../../../lib/server/billing";
+import {
+  createBillingPortalSessionForWorkspace,
+  createWorkspaceBillingPath,
+} from "../../../../lib/server/billing";
 import { createOperationContext } from "../../../../lib/server/observability";
 import { assertTrustedAppRequest } from "../../../../lib/server/request-security";
 import { encodeUserFacingError } from "../../../../lib/server/user-facing-errors";
@@ -23,7 +26,12 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/app/settings?billingError=${encodeUserFacingError(error, "We could not verify that billing request. Please refresh and try again.")}`,
+        createWorkspaceBillingPath({
+          error: encodeUserFacingError(
+            error,
+            "We could not verify that billing request. Please refresh and try again.",
+          ),
+        }),
         request.url,
       ),
       303,
@@ -36,7 +44,9 @@ export async function POST(request: Request) {
   if (typeof workspaceId !== "string") {
     return NextResponse.redirect(
       new URL(
-        `/app/settings?billingError=${encodeUserFacingError("missing workspace", "Select a workspace and try again.")}`,
+        createWorkspaceBillingPath({
+          error: encodeUserFacingError("missing workspace", "Select a workspace and try again."),
+        }),
         request.url,
       ),
       303,
@@ -64,7 +74,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/app/settings?workspace=${workspaceId}&billingError=${encodeUserFacingError(error, "We could not open billing management. Please try again.")}`,
+        createWorkspaceBillingPath({
+          workspaceId,
+          error: encodeUserFacingError(error, "We could not open billing management. Please try again."),
+        }),
         request.url,
       ),
       303,

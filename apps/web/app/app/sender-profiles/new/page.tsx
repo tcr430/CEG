@@ -1,9 +1,10 @@
 ﻿import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { FeedbackBanner } from "../../../../components/feedback-banner";
-import { getWorkspaceAppContext } from "../../../../lib/server/auth";
-import { getWorkspaceBillingState } from "../../../../lib/server/billing";
+import {
+  getWorkspaceBillingState,
+  requireActiveWorkspaceAppContext,
+} from "../../../../lib/server/billing";
 import { createSenderProfileAction } from "../actions";
 import { SenderProfileForm } from "../sender-profile-form";
 
@@ -18,11 +19,7 @@ export default async function NewSenderProfilePage({
   searchParams,
 }: NewSenderProfilePageProps) {
   const params = (await searchParams) ?? {};
-  const context = await getWorkspaceAppContext(params.workspace);
-
-  if (context.workspace === null || context.needsWorkspaceSelection) {
-    redirect("/app/workspaces");
-  }
+  const context = await requireActiveWorkspaceAppContext(params.workspace);
 
   const billing = await getWorkspaceBillingState({
     workspaceId: context.workspace.workspaceId,

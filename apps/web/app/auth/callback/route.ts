@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { buildAuthCallbackBridgeHtml } from "../../../lib/auth-callback-bridge";
-import { normalizePostAuthRedirectPath } from "../../../lib/auth-redirects";
+import {
+  createDefaultPostAuthRedirectPath,
+  normalizePostAuthRedirectPath,
+} from "../../../lib/auth-redirects";
 import { createOperationContext } from "../../../lib/server/observability";
 import { createSupabaseServerClient } from "../../../lib/server/supabase";
 import {
@@ -22,7 +25,7 @@ export async function GET(request: Request) {
   const mode = requestUrl.searchParams.get("mode") === "sign-up" ? "sign-up" : "magic-link";
   const postAuthRedirectPath =
     normalizePostAuthRedirectPath(requestUrl.searchParams.get("next")) ??
-    "/app?notice=Welcome%20back.";
+    createDefaultPostAuthRedirectPath({ mode });
 
   if (code === null) {
     operation.logger.warn("Auth callback reached without code; returning fragment bridge");
@@ -79,7 +82,7 @@ export async function GET(request: Request) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(
-          `/sign-up?error=${encodeUserFacingError("email not confirmed", "Confirm your email before creating the workspace account.")}`,
+          `/create-account?error=${encodeUserFacingError("email not confirmed", "Confirm your email before creating the workspace account.")}`,
           request.url,
         ),
         303,
@@ -98,7 +101,7 @@ export async function GET(request: Request) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(
-          `/sign-up?error=${encodeUserFacingError(
+          `/create-account?error=${encodeUserFacingError(
             new Error("workspace sync failed"),
             "We signed you in, but could not prepare your workspace. Please try again.",
           )}`,
@@ -117,7 +120,7 @@ export async function GET(request: Request) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
         new URL(
-          `/sign-up?notice=${encodeURIComponent("Create and confirm an OutFlow account before signing in.")}`,
+          `/create-account?notice=${encodeURIComponent("Create and confirm an OutFlow account before signing in.")}`,
           request.url,
         ),
         303,

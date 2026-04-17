@@ -3,7 +3,10 @@ import { requireWorkspaceAccess } from "@ceg/auth";
 import { NextResponse } from "next/server";
 
 import { getServerAuthContext } from "../../../../lib/server/auth";
-import { createCheckoutSessionForWorkspace } from "../../../../lib/server/billing";
+import {
+  createCheckoutSessionForWorkspace,
+  createWorkspaceBillingPath,
+} from "../../../../lib/server/billing";
 import { createOperationContext } from "../../../../lib/server/observability";
 import { assertTrustedAppRequest } from "../../../../lib/server/request-security";
 import { encodeUserFacingError } from "../../../../lib/server/user-facing-errors";
@@ -23,7 +26,12 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/app/settings?billingError=${encodeUserFacingError(error, "We could not verify that billing request. Please refresh and try again.")}`,
+        createWorkspaceBillingPath({
+          error: encodeUserFacingError(
+            error,
+            "We could not verify that billing request. Please refresh and try again.",
+          ),
+        }),
         request.url,
       ),
       303,
@@ -36,11 +44,17 @@ export async function POST(request: Request) {
 
   if (
     typeof workspaceId !== "string" ||
-    (planCode !== "pro" && planCode !== "agency")
+    (planCode !== "free" && planCode !== "pro" && planCode !== "agency")
   ) {
     return NextResponse.redirect(
       new URL(
-        `/app/settings?billingError=${encodeUserFacingError("invalid billing request", "That billing request was incomplete.")}`,
+        createWorkspaceBillingPath({
+          workspaceId: typeof workspaceId === "string" ? workspaceId : null,
+          error: encodeUserFacingError(
+            "invalid billing request",
+            "That billing request was incomplete.",
+          ),
+        }),
         request.url,
       ),
       303,
@@ -72,7 +86,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.redirect(
       new URL(
-        `/app/settings?workspace=${workspaceId}&billingError=${encodeUserFacingError(error, "We could not start checkout. Please try again.")}`,
+        createWorkspaceBillingPath({
+          workspaceId,
+          error: encodeUserFacingError(error, "We could not start checkout. Please try again."),
+        }),
         request.url,
       ),
       303,

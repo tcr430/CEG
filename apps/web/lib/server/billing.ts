@@ -14,9 +14,11 @@
   type StripeBillingProvider,
 } from "@ceg/billing";
 import { getOptionalEnv, getRequiredEnv } from "@ceg/security";
+import { redirect } from "next/navigation";
 import { getRequiredAppOrigin } from "./runtime-origin";
 import type { Subscription } from "@ceg/validation";
 
+import { getWorkspaceAppContext } from "./auth";
 import { getSharedAuditEventRepository } from "./audit-events";
 import { createOperationContext } from "./observability";
 import { trackProductAnalyticsEvent } from "./product-analytics";
@@ -51,6 +53,38 @@ declare global {
   var __cegStripeBillingProvider: StripeBillingProvider | undefined;
 }
 
+export function isWorkspaceSubscriptionLocked(billing: WorkspaceBillingState): boolean {
+  return billing.subscriptionRequired && !billing.hasActiveSubscription;
+}
+
+export function createWorkspaceBillingPath(input?: {
+  workspaceId?: string | null;
+  notice?: string | null;
+  error?: string | null;
+  billing?: string | null;
+}): string {
+  const searchParams = new URLSearchParams();
+
+  if (input?.workspaceId) {
+    searchParams.set("workspace", input.workspaceId);
+  }
+
+  if (input?.notice) {
+    searchParams.set("notice", input.notice);
+  }
+
+  if (input?.error) {
+    searchParams.set("error", input.error);
+  }
+
+  if (input?.billing) {
+    searchParams.set("billing", input.billing);
+  }
+
+  const query = searchParams.toString();
+  return query.length > 0 ? `/app/billing?${query}` : "/app/billing";
+}
+
 function isActiveSubscription(subscription: Subscription | null): boolean {
   return subscription?.status === "active" || subscription?.status === "trialing";
 }
@@ -76,6 +110,7 @@ function getStripeBillingProvider(): StripeBillingProvider {
       webhookSecret: getRequiredEnv("STRIPE_WEBHOOK_SECRET"),
       appUrl: getRequiredAppOrigin(),
       monthlyPriceIds: {
+        free: getRequiredEnv("STRIPE_PRICE_STARTER_MONTHLY"),
         pro: getRequiredEnv("STRIPE_PRICE_PRO_MONTHLY"),
         agency: getRequiredEnv("STRIPE_PRICE_AGENCY_MONTHLY"),
       },
@@ -151,6 +186,40 @@ export async function getWorkspaceBillingState(input: {
   };
 }
 
+export async function requireWorkspaceBillingContext(selectedWorkspaceId?: string) {
+  const context = await getWorkspaceAppContext(selectedWorkspaceId);
+
+  if (context.workspace === null || context.needsWorkspaceSelection) {
+    redirect("/app/workspaces");
+  }
+
+  const billing = await getWorkspaceBillingState({
+    workspaceId: context.workspace.workspaceId,
+    workspacePlanCode: context.workspace.billingPlanCode,
+  });
+
+  return {
+    ...context,
+    billing,
+  };
+}
+
+export async function requireActiveWorkspaceAppContext(selectedWorkspaceId?: string) {
+  const context = await requireWorkspaceBillingContext(selectedWorkspaceId);
+
+  if (isWorkspaceSubscriptionLocked(context.billing)) {
+    redirect(
+      createWorkspaceBillingPath({
+        workspaceId: context.workspace.workspaceId,
+        notice:
+          "Choose a plan to unlock campaigns, research, drafts, reply intelligence, and inbox workflows.",
+      }),
+    );
+  }
+
+  return context;
+}
+
 export async function assertWorkspaceSubscriptionActive(input: {
   workspaceId: string;
 }): Promise<void> {
@@ -202,7 +271,7 @@ export async function assertWorkspaceUsageAccess(input: {
 
 export async function createCheckoutSessionForWorkspace(input: {
   workspaceId: string;
-  planCode: Exclude<BillingPlanCode, "free">;
+  planCode: BillingPlanCode;
   userId?: string | null;
   customerEmail?: string | null;
   requestId?: string;
@@ -222,8 +291,14 @@ export async function createCheckoutSessionForWorkspace(input: {
     customerEmail: input.customerEmail,
     existingCustomerId: currentSubscription?.providerCustomerId ?? null,
     planCode: input.planCode,
-    successUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}&billing=success`,
-    cancelUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}&billing=canceled`,
+    successUrl: `${appUrl}${createWorkspaceBillingPath({
+      workspaceId: input.workspaceId,
+      billing: "success",
+    })}`,
+    cancelUrl: `${appUrl}${createWorkspaceBillingPath({
+      workspaceId: input.workspaceId,
+      billing: "canceled",
+    })}`,
   });
 
   operation.logger.info("Stripe checkout session created", {
@@ -266,7 +341,9 @@ export async function createBillingPortalSessionForWorkspace(input: {
   const appUrl = getRequiredAppOrigin();
   const session = await getStripeBillingProvider().createBillingPortalSession({
     customerId: currentSubscription.providerCustomerId,
-    returnUrl: `${appUrl}/app/settings?workspace=${input.workspaceId}`,
+    returnUrl: `${appUrl}${createWorkspaceBillingPath({
+      workspaceId: input.workspaceId,
+    })}`,
   });
 
   operation.logger.info("Stripe billing portal session created", {

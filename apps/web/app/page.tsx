@@ -14,59 +14,45 @@ import { getServerAuthContext } from "../lib/server/auth";
 
 const buyerProblems = [
   {
-    title: "Context gets lost between clients",
-    body: "Teams rebuild ICPs, offers, tone, and prior decisions too often because the workflow lives across prompts, docs, and inboxes.",
+    title: "Client context gets rebuilt too often",
+    body: "Briefs, ICP notes, and tone decisions get recreated in docs and prompts instead of staying in one workflow record.",
   },
   {
-    title: "Personalization quality becomes inconsistent",
-    body: "Research is hard to inspect, draft quality drifts, and outreach starts depending more on operator memory than on a repeatable system.",
+    title: "Personalization quality drifts",
+    body: "When research and drafting are disconnected, quality depends on operator memory instead of a repeatable system.",
   },
   {
-    title: "Reply handling breaks the workflow",
-    body: "Once conversations start, context splinters again. Teams lose visibility into intent, draft quality, and what actually happened next.",
+    title: "Reply handling breaks continuity",
+    body: "Once replies arrive, teams lose visibility into intent, decisions, and what draft should happen next.",
   },
 ];
 
 const solutionPoints = [
-  "Store sender, campaign, and prospect context in one place",
-  "Ground research in visible public-source evidence before it informs outreach",
-  "Keep drafts, replies, and handoff inside a human-reviewed operating workflow",
+  "Keep sender, campaign, and prospect context in one workspace record",
+  "Attach visible public-source research before it influences messaging",
+  "Review drafts and reply handling in the same workflow before use",
 ];
 
 const workflowStages = [
   {
     key: "set-context",
     label: "Set the client context",
-    note: "Capture offer, ICP, tone, and campaign framing once so the team works from structure, not fresh prompts.",
+    note: "Capture offer, ICP, tone, and campaign framing once so the team can reuse it across accounts.",
   },
   {
     key: "research-accounts",
     label: "Research target accounts",
-    note: "Turn public website signals into usable evidence the team can inspect before using it in messaging.",
+    note: "Turn public website signals into evidence the team can inspect before using it in outreach.",
   },
   {
     key: "draft-review",
     label: "Draft and review outreach",
-    displayLabel: (
-      <>
-        Draft and review
-        <br />
-        outreach
-      </>
-    ),
-    note: "Generate drafts from stored context, then review and refine them before anything reaches the inbox.",
+    note: "Generate from stored context, then edit and approve before anything reaches an inbox draft.",
   },
   {
     key: "handle-replies",
     label: "Handle replies in the same system",
-    displayLabel: (
-      <>
-        Handle replies in the
-        <br />
-        same system
-      </>
-    ),
-    note: "Classify inbound replies, preserve thread history, and prepare next drafts without leaving the workflow.",
+    note: "Classify inbound replies, preserve thread history, and prepare the next draft in the same system.",
   },
 ];
 
@@ -76,39 +62,21 @@ type MarketingCardWithIcon = {
   body: string;
 };
 
-const proofPillars: MarketingCardWithIcon[] = [
+const trustSignals: MarketingCardWithIcon[] = [
   {
     icon: "target",
-    title: "Safer than disconnected prompting",
-    body: "OutFlow keeps research, drafts, and reply handling connected to real records instead of letting context disappear across ad hoc prompt sessions.",
+    title: "No autonomous sending in this workflow",
+    body: "OutFlow supports reviewable drafting and handoff. Teams decide what gets used before anything is sent.",
   },
   {
     icon: "check",
-    title: "Built for controlled execution",
-    body: "The current product supports Gmail draft handoff, not autonomous sending. Operators still review, edit, and approve what moves forward.",
+    title: "Gmail support is draft handoff",
+    body: "The current provider path creates drafts for review. It does not auto-deliver outbound messages.",
   },
   {
     icon: "spark",
-    title: "More useful as history accumulates",
-    body: "Sender profiles, campaign context, and reply history make future work more informed without pretending the system runs itself.",
-  },
-];
-
-const businessOutcomes: MarketingCardWithIcon[] = [
-  {
-    icon: "timer",
-    title: "Faster campaign setup",
-    body: "Start client campaigns from reusable context instead of rebuilding the brief from scratch every time.",
-  },
-  {
-    icon: "aim",
-    title: "Higher-confidence personalization",
-    body: "Keep personalization tied to visible research so the team can review the reasoning before outreach goes out.",
-  },
-  {
-    icon: "loop",
-    title: "Cleaner workflow flow-through",
-    body: "Move from research to drafts to replies in one workflow without losing continuity as conversations move forward.",
+    title: "Workspace scope keeps separation clear",
+    body: "Records are workspace-scoped so context, campaigns, and reply history stay separated between client environments.",
   },
 ];
 
@@ -124,8 +92,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     getServerAuthContext(),
     searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
   ]);
-  const primaryHref = context.user === null ? "/sign-up" : "/app";
-  const primaryLabel = context.user === null ? "Create workspace" : "Open workspace";
+  const primaryHref = context.user === null ? "/create-account" : "/app/billing";
+  const primaryLabel = context.user === null ? "Create account" : "Choose plan";
+  const secondaryLabel = "Compare plans";
 
   return (
     <main className="publicSiteShell">
@@ -135,20 +104,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="publicHeroGrid publicHeroGridWide">
           <div className="publicHeroCopy">
             <p className="marketingEyebrow">For outbound agencies serving B2B clients</p>
-            <h1 id="landing-title">
-              Run better cold email without losing control of the workflow.
-            </h1>
+            <h1 id="landing-title">Run agency outbound in one controlled workflow.</h1>
             <p className="publicHeroLead">
-              OutFlow gives agency teams one structured system for client context,
-              prospect research, reviewable drafts, reply handling and
-              human approval, so personalized outbound work is easier to run and
-              easier to trust.
+              OutFlow helps small-to-mid outbound agencies keep context, research,
+              drafting, and reply handling in one system so teams can ship
+              personalized client work faster without losing human control.
             </p>
             <div className="publicTrustLine" aria-label="Trust principle">
               <span>AI Proposes</span>
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">-&gt;</span>
               <span>Humans Review</span>
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">-&gt;</span>
               <span>Teams Approve</span>
             </div>
             <div className="publicActionRow publicHeroActionRow">
@@ -156,7 +122,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 {primaryLabel}
               </Link>
               <Link href="/pricing" className="marketingSecondaryCta">
-                View plans
+                {secondaryLabel}
               </Link>
             </div>
           </div>
@@ -234,16 +200,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="publicSection publicProblemSection">
         <div className="publicSectionIntro publicSectionIntroCompact publicProblemIntro">
           <p className="marketingEyebrow">Why agencies outgrow ad hoc tools</p>
-          <h2>
-            <span className="publicProblemHeadlineLine">
-              Outbound quality usually breaks down where the
-            </span>
-            <span className="publicProblemHeadlineLine">workflow breaks down.</span>
-          </h2>
+          <h2>Outbound quality usually breaks where the workflow breaks.</h2>
           <p>
-            Better cold email is not only about drafting better copy. It depends on
-            how well the team keeps context, research, review, and replies connected
-            as client work gets busier.
+            Better cold email depends on how well context, research, review, and
+            replies stay connected as delivery volume grows.
           </p>
         </div>
         <div className="publicProblemGrid">
@@ -260,13 +220,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="publicSplitGrid publicSolutionSplit">
           <div className="publicPanel publicSolutionPanel">
             <MarketingSectionHeader
-              eyebrow="What OutFlow does"
-              title="Give the team one operating workflow for context, research, drafts, and replies."
+              eyebrow="How OutFlow works"
+              title="Give the team one system for context, research, drafts, and replies."
               description={
                 <p>
-                  Instead of scattering the outbound process across prompts, docs,
-                  and inbox cleanup, OutFlow keeps the work inside one structured,
-                  reviewable system.
+                  Instead of scattering work across prompts, docs, and inbox cleanup,
+                  OutFlow keeps execution in one structured and reviewable workflow.
                 </p>
               }
             />
@@ -279,11 +238,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
           <div className="publicTrustPanel" id="trust">
             <p className="marketingEyebrow">Trust model</p>
-            <h2>Designed for serious client work, not autonomous outbound.</h2>
+            <h2>AI proposes, human approves.</h2>
             <p>
-              The product can suggest research, classify replies, and draft
-              messaging. Operators still review, edit, approve, and decide what gets
-              used.
+              OutFlow can suggest research, classify replies, and draft messaging.
+              Operators review, edit, and approve what gets used.
             </p>
             <ul className="publicTrustChecklist">
               <li>No autonomous sending in the current workflow</li>
@@ -298,12 +256,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="publicSection">
         <div className="publicPanel publicWorkflowPanel">
           <MarketingSectionHeader
-            eyebrow="How the workflow runs"
-            title="A cleaner operating loop from setup to reply handling."
+            eyebrow="Workflow"
+            title="From setup to reply handling, the workflow stays connected."
             description={
               <p>
-                The product is meant to reduce context loss between stages, not just
-                generate text in the middle of the process.
+                This flow is built to reduce context loss between stages, not just
+                generate copy in isolation.
               </p>
             }
           />
@@ -314,7 +272,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <span className="publicWorkflowIndex">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3>{stage.displayLabel ?? stage.label}</h3>
+                  <h3>{stage.label}</h3>
                 </div>
                 <p>{stage.note}</p>
               </article>
@@ -325,16 +283,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <section className="publicSection" id="memory">
         <div className="publicSectionIntro publicSectionIntroCompact publicMemoryIntro">
-          <p className="marketingEyebrow">Why it is more usable than disconnected prompting</p>
-          <h2>Better outbound work needs structure, reviewability, and memory.</h2>
+          <p className="marketingEyebrow">Proof-ready trust signals</p>
+          <h2>Built for controlled outbound, not black-box automation.</h2>
           <p>
-            OutFlow is built so the team can reuse context, inspect research, keep
-            human control visible, and carry campaign history forward as the account
-            book grows.
+            These claims are grounded in current product behavior and easy to verify
+            during a pilot.
           </p>
         </div>
         <div className="publicProofGrid">
-          {proofPillars.map((pillar) => (
+          {trustSignals.map((pillar) => (
             <article key={pillar.title} className="publicProofCard">
               <div className="publicCardTitleRow">
                 <span className="publicCardIcon" aria-hidden="true">
@@ -348,42 +305,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      <section className="publicSection" id="product-surface">
-        <div className="publicPanel publicOutcomePanel">
-          <MarketingSectionHeader
-            eyebrow="What improves"
-            title="More structured work, more consistent review, and less operational drag."
-            description={
-              <p>
-                The product is designed to make agency outbound easier to run well,
-                not to replace judgment or pretend every step should be automated.
-              </p>
-            }
-            centered
-          />
-          <div className="publicOutcomeGrid">
-            {businessOutcomes.map((item) => (
-              <article key={item.title} className="publicOutcomeCard">
-                <div className="publicCardTitleRow">
-                  <span className="publicCardIcon" aria-hidden="true">
-                    <MarketingIcon name={item.icon} />
-                  </span>
-                  <h3>{item.title}</h3>
-                </div>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <PublicCtaBand
         eyebrow="Bring it together"
-        title="Bring context, research, drafts, replies, and learning into one operating workflow."
-        description="Keep review visible, move with more structure, and give the team a cleaner system for serious outbound work."
+        title="Bring context, research, drafts, and replies into one operating workflow."
+        description="Start with account setup, pick the right plan, and run client outbound in a system built for review and control."
         primaryLabel={primaryLabel}
         primaryHref={primaryHref}
-        secondaryLabel="Compare our offers"
+        secondaryLabel={secondaryLabel}
         secondaryHref="/pricing"
       />
       <MarketingFooter />
