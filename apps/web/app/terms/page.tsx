@@ -4,31 +4,39 @@ import { PublicInfoPage } from "../../components/public-info-page";
 
 export const metadata: Metadata = {
   title: "Terms",
-  description: "OutFlow terms summary.",
+  description: "Terms summary for current OutFlow product access.",
 };
 
 export default function TermsPage() {
   return (
     <PublicInfoPage
       eyebrow="Legal"
-      title="Terms"
-      description="This page provides a concise current-application terms summary for early product access."
+      title="Terms summary"
+      description="This page outlines practical usage expectations for the current OutFlow product."
     >
       <div className="publicInfoStack">
         <section>
-          <h2>Use of the product</h2>
+          <h2>Acceptable product use</h2>
           <p>
-            OutFlow is intended for legitimate outbound workflow support. Users are
-            responsible for reviewing outputs, handling account access securely, and
-            using the product in line with applicable law and customer obligations.
+            OutFlow is intended for legitimate outbound workflow operations. Customers
+            are responsible for reviewing outputs, managing access securely, and
+            operating in line with applicable law and client obligations.
           </p>
         </section>
         <section>
-          <h2>Current product reality</h2>
+          <h2>Decision responsibility</h2>
           <p>
-            The application supports structured research, drafting, reply handling,
-            and inbox draft handoff. It should not be understood as an autonomous
-            outbound execution system.
+            OutFlow can generate draft and analysis suggestions, but users retain
+            responsibility for review and approval. The current product should not be
+            interpreted as autonomous outbound execution.
+          </p>
+        </section>
+        <section>
+          <h2>Current scope notice</h2>
+          <p>
+            This is a concise terms summary for the current product stage. It is
+            intended to communicate operating expectations clearly while fuller legal
+            documentation evolves.
           </p>
         </section>
       </div>

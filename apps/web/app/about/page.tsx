@@ -4,31 +4,40 @@ import { PublicInfoPage } from "../../components/public-info-page";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "About OutFlow.",
+  description:
+    "Learn why OutFlow is focused on outbound agencies serving B2B clients.",
 };
 
 export default function AboutPage() {
   return (
     <PublicInfoPage
       eyebrow="Company"
-      title="OutFlow is built for agency-grade outbound workflow."
-      description="The product is designed to help outbound teams run a more structured cold-email workflow with visible review, reusable context, and controlled execution."
+      title="OutFlow is built for outbound agencies."
+      description="OutFlow helps agencies run personalized cold email with clearer workflow control from campaign setup to reply handling."
     >
       <div className="publicInfoStack">
         <section>
-          <h2>What the product is</h2>
+          <h2>What OutFlow is today</h2>
           <p>
-            OutFlow is positioned as an operating system for hyperpersonalized cold
-            email. It supports context setup, research, drafting, reply handling,
-            and campaign history inside one workflow.
+            OutFlow is workflow software for agencies serving B2B clients. It keeps
+            campaign context, prospect research, draft review, and reply handling in
+            one operational system.
           </p>
         </section>
         <section>
-          <h2>How it is intended to be used</h2>
+          <h2>Why it exists</h2>
           <p>
-            The current product is built around serious outbound work where human
-            review remains visible. AI proposes, while operators review, edit, and
-            approve what moves forward.
+            Agency delivery quality drops when work is scattered across prompts, docs,
+            and inbox threads. OutFlow is designed to keep continuity visible and to
+            preserve human review before outbound reaches inbox handoff.
+          </p>
+        </section>
+        <section>
+          <h2>Operating principle</h2>
+          <p>
+            AI can propose research summaries, draft language, and reply analysis.
+            Agency operators still review, edit, and approve every client-facing
+            decision. No autonomous sending is part of the current product model.
           </p>
         </section>
       </div>

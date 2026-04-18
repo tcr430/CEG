@@ -16,7 +16,8 @@ import { pricingFeatureRows, pricingPlans } from "../../lib/pricing-content";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Compare OutFlow plans for agency-grade cold email workflow operations.",
+  description:
+    "Compare Starter, Growth, and Enterprise plans for outbound agencies serving B2B clients.",
 };
 
 type PricingPageProps = {
@@ -52,11 +53,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel">
           <MarketingSectionHeader
             eyebrow="Plans"
-            title="Choose the plan that matches how your team operates."
+            title="Pick the plan that matches how your agency operates."
             description={
               <p>
-                Compare Starter, Growth, and Enterprise quickly. The workflow model
-                stays consistent as delivery volume grows.
+                Compare Starter, Growth, and Enterprise in one view. Each plan keeps
+                the same workflow model while opening more operational headroom.
               </p>
             }
           />
@@ -101,7 +102,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                     href="/create-account"
                     className={plan.featured ? "marketingPrimaryCta" : "marketingTertiaryCta"}
                   >
-                    Create account
+                    Start your agency workspace
                   </Link>
                 );
               }
@@ -129,11 +130,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="publicPanel publicPricingMatrixPanel">
           <MarketingSectionHeader
             eyebrow="Comparison"
-            title="See where each tier opens more room in the workflow."
+            title="Compare capabilities by delivery scale."
             description={
               <p>
-                Focus on practical differences for context depth, usage capacity,
-                and day-to-day operating headroom.
+                Focus on practical differences across context depth, usage capacity,
+                and operational throughput for agency delivery.
               </p>
             }
           />
@@ -158,12 +159,12 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
 
       <PublicCtaBand
         eyebrow="Ready to start"
-        title="Create an account, then activate the plan your team needs."
-        description="OutFlow separates account creation from billing so plan selection is explicit before product workflows unlock."
-        primaryLabel={auth.user ? "Choose plan" : "Create account"}
+        title="Create your account, then activate the right plan for your agency."
+        description="OutFlow separates account creation from billing so plan selection is explicit before workflow features unlock."
+        primaryLabel={auth.user ? "Choose plan" : "Start your agency workspace"}
         primaryHref={auth.user ? "/app/billing" : "/create-account"}
-        secondaryLabel={auth.user ? "Sign in to another account" : "Back to homepage"}
-        secondaryHref={auth.user ? "/sign-in" : "/"}
+        secondaryLabel={auth.user ? "Sign in to another account" : "See the workflow"}
+        secondaryHref={auth.user ? "/sign-in" : "/#how-it-works"}
       />
       <MarketingFooter />
     </main>

@@ -5,7 +5,6 @@ import { FeedbackBanner } from "../../../components/feedback-banner";
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";
 import {
-  createWorkspaceBillingPath,
   isWorkspaceSubscriptionLocked,
   requireWorkspaceBillingContext,
 } from "../../../lib/server/billing";

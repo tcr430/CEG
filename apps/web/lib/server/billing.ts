@@ -49,6 +49,17 @@ export type WorkspaceBillingState = {
   };
 };
 
+type WorkspaceAppContext = Awaited<ReturnType<typeof getWorkspaceAppContext>>;
+
+export type WorkspaceBillingContext = Omit<
+  WorkspaceAppContext,
+  "workspace" | "needsWorkspaceSelection"
+> & {
+  workspace: NonNullable<WorkspaceAppContext["workspace"]>;
+  needsWorkspaceSelection: false;
+  billing: WorkspaceBillingState;
+};
+
 declare global {
   var __cegStripeBillingProvider: StripeBillingProvider | undefined;
 }
@@ -186,25 +197,32 @@ export async function getWorkspaceBillingState(input: {
   };
 }
 
-export async function requireWorkspaceBillingContext(selectedWorkspaceId?: string) {
+export async function requireWorkspaceBillingContext(
+  selectedWorkspaceId?: string,
+): Promise<WorkspaceBillingContext> {
   const context = await getWorkspaceAppContext(selectedWorkspaceId);
+  const workspace = context.workspace;
 
-  if (context.workspace === null || context.needsWorkspaceSelection) {
+  if (workspace === null || context.needsWorkspaceSelection) {
     redirect("/app/workspaces");
   }
 
   const billing = await getWorkspaceBillingState({
-    workspaceId: context.workspace.workspaceId,
-    workspacePlanCode: context.workspace.billingPlanCode,
+    workspaceId: workspace.workspaceId,
+    workspacePlanCode: workspace.billingPlanCode,
   });
 
   return {
     ...context,
+    workspace,
+    needsWorkspaceSelection: false,
     billing,
   };
 }
 
-export async function requireActiveWorkspaceAppContext(selectedWorkspaceId?: string) {
+export async function requireActiveWorkspaceAppContext(
+  selectedWorkspaceId?: string,
+): Promise<WorkspaceBillingContext> {
   const context = await requireWorkspaceBillingContext(selectedWorkspaceId);
 
   if (isWorkspaceSubscriptionLocked(context.billing)) {

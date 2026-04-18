@@ -8,7 +8,8 @@ import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to an existing OutFlow account with password or magic link.",
+  description:
+    "Sign in to an existing OutFlow agency workspace account with password or magic link.",
 };
 
 type SignInPageProps = {
@@ -49,10 +50,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
       <section className="hero authEntryHero">
         <p className="eyebrow">Sign In</p>
-        <h1>Sign in to your account</h1>
+        <h1>Sign in to your OutFlow workspace</h1>
         <p className="lede">
           Use email and password, or request a magic link for an existing confirmed
-          account. If your plan is not active yet, you will be directed to billing.
+          account. If your plan is not active, you will be directed to billing before
+          product workflows unlock.
         </p>
       </section>
 
@@ -60,8 +62,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <div>
           <h2 id="sign-in-title">Continue with email</h2>
           <p>
-            Sign-in is only for confirmed accounts. Create-account and plan
-            selection happen in separate steps.
+            Sign-in is only for confirmed accounts. Account creation and plan
+            selection are separate steps in the onboarding flow.
           </p>
         </div>
 
@@ -126,7 +128,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
         <div className="inlineActions">
           <Link href="/create-account" className="buttonSecondary">
-            Create account
+            Start your agency workspace
           </Link>
           <Link href="/pricing" className="buttonGhost">
             Compare plans

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { ActionEmptyState } from "../../../../components/action-empty-state";
 import { FeedbackBanner } from "../../../../components/feedback-banner";

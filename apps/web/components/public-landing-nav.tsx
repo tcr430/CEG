@@ -13,10 +13,10 @@ export function PublicLandingNav({ isAuthenticated }: PublicLandingNavProps) {
           <span>OutFlow</span>
         </Link>
         <div className="publicNavLinks">
-          <Link href="/#workflow">Workflow</Link>
-          <Link href="/#memory">Memory</Link>
-          <Link href="/#trust">Trust</Link>
+          <Link href="/#product">Product</Link>
+          <Link href="/#how-it-works">How it works</Link>
           <Link href="/pricing">Pricing</Link>
+          <Link href="/#trust">Trust</Link>
         </div>
         <div className="publicNavActions">
           {isAuthenticated ? null : (
@@ -25,7 +25,7 @@ export function PublicLandingNav({ isAuthenticated }: PublicLandingNavProps) {
             </Link>
           )}
           <Link href={isAuthenticated ? "/app/billing" : "/create-account"} className="publicNavCta">
-            {isAuthenticated ? "Choose plan" : "Create account"}
+            {isAuthenticated ? "Open billing" : "Start your agency workspace"}
           </Link>
         </div>
       </nav>

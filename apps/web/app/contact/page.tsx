@@ -5,7 +5,8 @@ import { PublicInfoPage } from "../../components/public-info-page";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Contact OutFlow.",
+  description:
+    "Contact OutFlow for pricing, onboarding, and workflow questions for your agency.",
 };
 
 export default function ContactPage() {
@@ -13,7 +14,7 @@ export default function ContactPage() {
     <PublicInfoPage
       eyebrow="Company"
       title="Contact OutFlow"
-      description="For product questions, early access conversations, or operational follow-up, use the contact route below."
+      description="Use this page for pricing questions, implementation walkthroughs, and agency onboarding support."
     >
       <div className="publicInfoStack">
         <section>
@@ -27,10 +28,17 @@ export default function ContactPage() {
           </p>
         </section>
         <section>
-          <h2>What to include</h2>
+          <h2>When to contact us</h2>
           <p>
-            A short note about your agency, outbound workflow, and what you want to
-            evaluate will help us respond with the most relevant next step.
+            Contact us for plan selection, rollout planning, billing support, or a
+            walkthrough of how OutFlow fits your current agency workflow.
+          </p>
+        </section>
+        <section>
+          <h2>What to include for faster help</h2>
+          <p>
+            Share your agency size, active client volume, and where your outbound
+            workflow currently breaks. We will respond with the most relevant next step.
           </p>
         </section>
       </div>

@@ -23,13 +23,13 @@ export const pricingPlans: PricingPlanPresentation[] = [
     label: "Starter",
     headline: "Start with the core workflow.",
     summary:
-      "Built for early-stage agency delivery where one operator or a small team needs structure from day one.",
+      "Built for agencies starting a structured outbound workflow for a smaller active client book.",
     audience:
-      "Best for starting client work in one workspace before higher-volume delivery.",
+      "Best for validating one repeatable workflow before scaling delivery volume.",
     bullets: [
-      "Core outbound workflow with monthly limits",
-      "Public website research for prospect context",
-      "Sequence generation and reply intelligence in one workspace",
+      "Campaign context, research, drafting, and reply handling in one workspace",
+      "Public-website research snapshots for prospect context",
+      "Monthly limits suited to early agency operations",
     ],
   },
   {
@@ -37,14 +37,14 @@ export const pricingPlans: PricingPlanPresentation[] = [
     label: "Growth",
     headline: "Run active client campaigns with headroom.",
     summary:
-      "The default fit for agencies managing multiple active campaigns with sender-aware context and higher usage capacity.",
+      "The default fit for agencies running multiple active client campaigns with stronger workflow headroom.",
     audience:
-      "Best for small-to-mid agency teams running repeatable client delivery.",
+      "Best for day-to-day agency delivery where consistency and review speed matter.",
     featured: true,
     bullets: [
-      "Sender-aware profiles across workflow stages",
-      "Higher monthly research, sequence, reply, and regeneration limits",
-      "Recommended for day-to-day multi-campaign operations",
+      "Sender-aware profiles across campaign, research, and drafting stages",
+      "Higher monthly capacity for research, sequence, reply, and regeneration workflows",
+      "Recommended for most multi-client agency operations",
     ],
   },
   {
@@ -52,13 +52,13 @@ export const pricingPlans: PricingPlanPresentation[] = [
     label: "Enterprise",
     headline: "Keep larger-scale delivery moving smoothly.",
     summary:
-      "For larger books of business that need the same controlled workflow with fewer operational ceilings.",
+      "For larger agency books of business that need the same controlled workflow with fewer operational limits.",
     audience:
-      "Best for higher-volume agency operations with heavier prospecting and iteration needs.",
+      "Best for high-volume agency operations with heavier prospecting and iteration demand.",
     bullets: [
-      "Sender-aware profiles across all workflows",
-      "Research, sequence, reply intelligence, and regenerations without monthly caps",
-      "Maximum capacity for sustained client delivery volume",
+      "Sender-aware profiles across all workflow stages",
+      "Unlimited research, sequence, reply intelligence, and regeneration volume",
+      "Maximum operational capacity for sustained client delivery",
     ],
   },
 ];

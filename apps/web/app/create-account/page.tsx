@@ -8,7 +8,8 @@ import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 export const metadata: Metadata = {
   title: "Create account",
-  description: "Create an OutFlow account with email and password, then choose a plan.",
+  description:
+    "Create your OutFlow account with email and password, then choose a plan for your agency workspace.",
 };
 
 type CreateAccountPageProps = {
@@ -53,8 +54,8 @@ export default async function CreateAccountPage({
         <p className="eyebrow">Create account</p>
         <h1>Create your account</h1>
         <p className="lede">
-          Start with a secure email and password for the admin user. After
-          confirmation, choose your plan and then add team members.
+          Start with a secure email and password for your agency admin. After
+          confirmation, choose a plan and then add agency members.
         </p>
       </section>
 
@@ -62,8 +63,8 @@ export default async function CreateAccountPage({
         <div>
           <h2 id="create-account-title">Create your account with email</h2>
           <p>
-            Use a work email, choose a password, and confirm it once. Magic links
-            are available later for sign-in, but account creation is password-only.
+            Use a work email, set a password, and confirm it once. Magic links are
+            available later for sign-in, but account creation is password-only.
           </p>
         </div>
 

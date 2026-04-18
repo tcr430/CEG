@@ -29,40 +29,40 @@ const footerColumns: FooterColumnProps[] = [
   {
     title: "Product",
     links: [
-      { label: "Workflow", href: "/#workflow" },
-      { label: "Memory", href: "/#memory" },
+      { label: "Product overview", href: "/#product" },
+      { label: "How it works", href: "/#how-it-works" },
       { label: "Trust", href: "/#trust" },
       { label: "Pricing", href: "/pricing" },
       { label: "Create account", href: "/create-account" },
     ],
   },
   {
-    title: "Solutions",
+    title: "Agency use cases",
     links: [
-      { label: "Agencies", href: "/" },
-      { label: "SDR teams", href: "/pricing" },
-      { label: "Founders", href: "/pricing" },
-      { label: "Reply handling", href: "/#workflow" },
-      { label: "Prospect research", href: "/#workflow" },
+      { label: "Multi-client outbound operations", href: "/#product" },
+      { label: "Prospect research workflow", href: "/#how-it-works" },
+      { label: "Review and approval", href: "/#trust" },
+      { label: "Reply handling", href: "/#how-it-works" },
+      { label: "Plan comparison", href: "/pricing" },
     ],
   },
   {
     title: "Platform",
     links: [
-      { label: "Sender profiles", href: "/#memory" },
-      { label: "Campaign context", href: "/#workflow" },
-      { label: "Research snapshots", href: "/#workflow" },
+      { label: "Campaign context", href: "/#product-detail" },
+      { label: "Research snapshots", href: "/#product-detail" },
+      { label: "Draft review workflow", href: "/#trust" },
       { label: "Draft handoff", href: "/#trust" },
-      { label: "Performance summaries", href: "/pricing" },
+      { label: "Reply handling", href: "/#product-detail" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Product overview", href: "/" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "Security and trust", href: "/#trust" },
       { label: "About OutFlow", href: "/about" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Trust model", href: "/#trust" },
+      { label: "Privacy", href: "/privacy" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -87,11 +87,11 @@ export function MarketingFooter() {
             <span>OutFlow</span>
           </Link>
           <p className="publicFooterPositioning">
-            The operating system for agency-grade hyperpersonalized cold email.
+            Outbound workflow software for agencies running personalized cold email.
           </p>
           <p className="publicFooterTrust">
-            Structured research, reviewable drafts, reply handling, and controlled
-            execution for serious outbound work.
+            Keep client context, prospect research, draft review, and reply handling
+            in one controlled workflow.
           </p>
           <div className="publicFooterMeta">
             <span>(c) 2026 OutFlow</span>

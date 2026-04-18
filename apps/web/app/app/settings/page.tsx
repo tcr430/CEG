@@ -19,7 +19,10 @@ import {
   getInternalAdminAllowedEmails,
   isInternalAdminEnabled,
 } from "../../../lib/internal-admin-access";
-import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
+import {
+  isWorkspaceSubscriptionLocked,
+  requireActiveWorkspaceAppContext,
+} from "../../../lib/server/billing";
 import { getWorkspaceInboxState } from "../../../lib/server/inbox/service";
 import { getInstitutionalControlsState } from "../../../lib/server/institutional-controls";
 import { readWorkspaceDataHandling } from "../../../lib/server/data-handling";
@@ -160,6 +163,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     supportEmail: teamState.profile.supportEmail,
   });
   const billing = context.billing;
+  const subscriptionLocked = isWorkspaceSubscriptionLocked(billing);
   const currentPlan = getPricingPlanPresentation(billing.planCode);
   const selectedUpgradePlanCode =
     params.upgrade === "pro" || params.upgrade === "agency"

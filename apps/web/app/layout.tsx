@@ -6,9 +6,9 @@ import { VercelAnalytics } from "../components/vercel-analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OutFlow | Operating system for agency-grade hyperpersonalized cold email",
+  title: "OutFlow | Outbound workflow software for B2B agencies",
   description:
-    "Agency-first cold email workflow system with sender-aware research, sequence and reply workflows, human review, and structured campaign memory.",
+    "Outbound workflow software for agencies serving B2B clients. Keep campaign context, prospect research, draft review, and reply handling in one controlled system.",
 };
 
 type RootLayoutProps = {
