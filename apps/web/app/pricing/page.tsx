@@ -65,7 +65,11 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             {pricingPlans.map((plan) => {
               const active =
                 billing?.hasActiveSubscription === true && billing.planCode === plan.code;
-              const badge = active ? "Current plan" : plan.featured ? "Recommended" : undefined;
+              const badge = active
+                ? "Current plan"
+                : plan.featured
+                  ? "Best fit for active teams"
+                  : undefined;
 
               let actions;
               if (defaultWorkspace) {
@@ -89,10 +93,10 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                       pendingLabel="Starting checkout..."
                     >
                       {plan.code === "free"
-                        ? "Choose Starter"
+                        ? "Start with Starter"
                         : plan.code === "pro"
-                          ? "Choose Growth"
-                          : "Choose Enterprise"}
+                          ? "Run on Growth (Best fit)"
+                          : "Scale with Enterprise"}
                     </SubmitButton>
                   </form>
                 );

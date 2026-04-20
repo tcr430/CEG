@@ -230,7 +230,7 @@ export async function requireActiveWorkspaceAppContext(
       createWorkspaceBillingPath({
         workspaceId: context.workspace.workspaceId,
         notice:
-          "Choose a plan to unlock campaigns, research, drafts, reply intelligence, and inbox workflows.",
+          "Pick a plan to run campaigns, research, drafts, reply intelligence, and inbox workflows.",
       }),
     );
   }

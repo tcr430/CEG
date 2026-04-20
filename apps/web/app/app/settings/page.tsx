@@ -768,10 +768,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     pendingLabel="Starting checkout..."
                   >
                     {plan.code === "free"
-                      ? "Switch to Starter"
+                      ? "Move to Starter"
                       : plan.code === "pro"
-                        ? "Upgrade to Growth"
-                        : "Upgrade to Enterprise"}
+                        ? "Move to Growth (Best fit)"
+                        : "Move to Enterprise"}
                   </SubmitButton>
                 </form>
               );
@@ -788,7 +788,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     : selectedUpgradePlanCode === plan.code
                       ? "Selected from signup"
                       : plan.featured
-                        ? "Recommended"
+                        ? "Best fit for active teams"
                         : undefined
                 }
                 actions={actions}

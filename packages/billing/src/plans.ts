@@ -32,7 +32,8 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   free: {
     code: "free",
     label: "Starter",
-    description: "Starter workspace for controlled agency operations with lighter monthly headroom.",
+    description:
+      "Starter workspace for validating a repeatable outbound workflow with tighter monthly operating limits.",
     features: {
       sender_aware_profiles: false,
       website_research: true,
@@ -52,7 +53,8 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   pro: {
     code: "pro",
     label: "Growth",
-    description: "Growing agency workspace with sender-aware flows and healthier monthly headroom.",
+    description:
+      "Growth workspace for active client delivery with sender-aware workflows and healthy monthly headroom.",
     features: {
       sender_aware_profiles: true,
       website_research: true,
@@ -72,7 +74,8 @@ export const billingPlans: Record<BillingPlanCode, BillingPlanDefinition> = {
   agency: {
     code: "agency",
     label: "Enterprise",
-    description: "Larger-scale workspace for higher-throughput multi-client outbound operations.",
+    description:
+      "Enterprise workspace for higher-throughput outbound organizations that need uncapped operational capacity.",
     features: {
       sender_aware_profiles: true,
       website_research: true,

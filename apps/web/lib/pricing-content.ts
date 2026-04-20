@@ -21,71 +21,68 @@ export const pricingPlans: PricingPlanPresentation[] = [
   {
     code: "free",
     label: "Starter",
-    headline: "Validate one repeatable outbound workflow.",
+    headline: "For proving a repeatable outbound workflow on real accounts.",
     summary:
-      "For teams moving from ad hoc outreach to a structured process with disciplined execution and clear review.",
+      "Run live outbound inside one controlled workflow while the team validates process quality under tighter monthly room.",
     audience:
-      "Best for early-stage agency, SDR, and founder-led outbound where volume is still controlled.",
+      "Choose Starter when delivery is lower-volume and your operators are still formalizing a dependable execution rhythm.",
     bullets: [
-      "Keep research, sequence drafts, and replies in one operating flow",
-      "Preserve campaign context from brief through draft handoff",
-      "Intentionally limited monthly capacity for proving one stable motion",
+      "Build each campaign from saved context plus public-source prospect research with visible evidence",
+      "Generate sequences, analyze inbound replies, and prepare next drafts without leaving the same workflow",
+      "Keep decisions operator-controlled with review before draft output is used",
+      "Best for validating process discipline before moving into heavier delivery volume",
     ],
   },
   {
     code: "pro",
     label: "Growth",
-    headline: "Run active outbound delivery with real headroom.",
+    headline: "For agencies shipping active client delivery every week.",
     summary:
-      "Default plan for teams running consistent weekly outbound across multiple campaigns and accounts.",
+      "Default plan for serious execution: sender-aware workflows with enough monthly headroom to run campaigns confidently day to day.",
     audience:
-      "Best for agencies, SDR teams, and founders with active outbound delivery targets.",
+      "Choose Growth when outbound is a core service line and tighter limits start slowing delivery across accounts.",
     featured: true,
     bullets: [
-      "Use sender-aware profiles across research, sequences, and reply workflows",
-      "Get strong monthly headroom for research, generation, analysis, and iteration",
-      "Balanced choice for speed, consistency, and day-to-day delivery confidence",
+      "Apply sender profiles so research, sequences, and reply drafts stay aligned to each client voice",
+      "Run higher monthly research and generation volume without routine workflow bottlenecks",
+      "Keep reply analysis and draft preparation connected to campaign history as conversations evolve",
+      "Provides the operational headroom most active teams need for consistent multi-client delivery",
     ],
   },
   {
     code: "agency",
     label: "Enterprise",
-    headline: "Support large-scale outbound and complex team load.",
+    headline: "For high-throughput organizations with complex outbound operations.",
     summary:
-      "For heavier-volume organizations coordinating multiple operators and sustained outbound throughput.",
+      "Built for larger delivery organizations where outbound throughput, reliability, and workflow control operate as core infrastructure.",
     audience:
-      "Best when outbound is core revenue infrastructure and monthly caps become an operational bottleneck.",
+      "Choose Enterprise when concurrent operators and sustained volume make monthly caps an execution risk.",
     bullets: [
-      "Keep sender-aware context across every stage while team volume scales",
-      "Run research, sequence generation, and reply intelligence without monthly caps",
-      "Designed for heavy prospecting, rapid iteration, and complex delivery operations",
+      "Remove monthly caps across research, sequence generation, reply analysis, and draft workflows",
+      "Support denser campaign portfolios and heavier operator concurrency in one controlled workspace",
+      "Maintain review gates and thread continuity while outbound volume scales across accounts",
+      "Built for teams managing outbound as an operational system, not campaign-by-campaign coordination",
     ],
   },
 ];
 
 export const pricingFeatureRows: PricingFeatureRow[] = [
   {
-    feature: "Sender-aware workflow context",
-    free: "Basic mode",
-    pro: "Included",
-    agency: "Included",
+    feature: "Context model",
+    free: "Basic context",
+    pro: "Sender-aware context",
+    agency: "Sender-aware context",
   },
   {
-    feature: "Prospect research volume",
-    free: "15 runs/mo",
-    pro: "150 runs/mo",
+    feature: "Monthly research runs",
+    free: "15",
+    pro: "150",
     agency: "Unlimited",
   },
   {
-    feature: "Sequence generation volume",
-    free: "20 runs/mo",
-    pro: "250 runs/mo",
-    agency: "Unlimited",
-  },
-  {
-    feature: "Reply analysis + draft volume",
-    free: "20 + 20 /mo",
-    pro: "250 + 250 /mo",
+    feature: "Monthly drafting + reply runs",
+    free: "20 + 20",
+    pro: "250 + 250",
     agency: "Unlimited",
   },
 ];

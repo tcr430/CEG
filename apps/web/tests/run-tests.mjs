@@ -151,7 +151,7 @@ const subscriptionRequired = toUserFacingError(
   new Error("An active subscription is required to use workspace workflows."),
 );
 assert.equal(subscriptionRequired.code, "subscription-required");
-assert.match(subscriptionRequired.message, /unlock workspace workflow/i);
+assert.match(subscriptionRequired.message, /continue with campaign workflows/i);
 
 const fallback = toUserFacingError(new Error("Totally unknown failure"), "Friendly fallback.");
 assert.equal(fallback.code, "unknown-error");
@@ -289,8 +289,8 @@ assert.match(replyGuidance.nextAction, /analysis/i);
 
 assert.equal(pricingPlans.length, 3);
 assert.equal(getPricingPlanPresentation("pro").featured, true);
-assert.equal(pricingFeatureRows[0]?.free, "Basic mode only");
-assert.match(pricingFeatureRows[3]?.pro ?? "", /250 analyses/i);
+assert.equal(pricingFeatureRows[0]?.free, "Basic context");
+assert.match(pricingFeatureRows[2]?.pro ?? "", /250 \+ 250/i);
 
 const internalAdminEmails = parseInternalAdminEmails("Owner@Example.com, admin@example.com ");
 assert.deepEqual(internalAdminEmails, ["owner@example.com", "admin@example.com"]);

@@ -58,7 +58,7 @@ const USER_FACING_ERROR_MAP: Array<{
   {
     pattern: /active subscription is required|subscription.*required/i,
     code: "subscription-required",
-    message: "Choose a plan to unlock workspace workflow actions.",
+    message: "Pick a plan to continue with campaign workflows.",
   },
   {
     pattern: /sender profile not found/i,
@@ -133,7 +133,7 @@ const USER_FACING_ERROR_MAP: Array<{
   {
     pattern: /no stripe customer/i,
     code: "billing-portal-unavailable",
-    message: "Billing portal becomes available after the first successful checkout syncs.",
+    message: "Billing portal appears after your first successful checkout is confirmed.",
   },
   {
     pattern: /feature .* not available|plan does not include|not included on the current plan/i,
