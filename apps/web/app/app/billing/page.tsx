@@ -15,8 +15,9 @@ import {
 } from "../../../lib/pricing-content";
 
 export const metadata: Metadata = {
-  title: "Billing",
-  description: "Choose a plan or manage billing before using the workspace workflow.",
+  title: "Activate workspace",
+  description:
+    "Choose Starter, Growth, or Enterprise to activate prospect research, sequence generation, and reply workflows.",
 };
 
 type BillingPageProps = {
@@ -48,22 +49,33 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
   const currentPlan = getPricingPlanPresentation(billing.planCode);
   const subscriptionLocked = isWorkspaceSubscriptionLocked(billing);
   const currentSubscriptionStatus = billing.currentSubscription?.status?.replaceAll("_", " ");
+  const recommendedPlan = pricingPlans.find((plan) => plan.featured) ?? pricingPlans[0]!;
+  const workspaceName = workspace.workspaceName ?? workspace.workspaceId;
 
   return (
-    <main className="shell">
-      <section className="hero">
-        <p className="eyebrow">Billing</p>
+    <main className="shell billingDecisionShell">
+      <section className="hero billingDecisionHero">
+        <p className="eyebrow">Activate workspace</p>
         <h1>
           {subscriptionLocked
-            ? "Choose a plan to unlock the workspace"
-            : "Manage your workspace billing"}
+            ? "Choose the plan that fits your outbound volume."
+            : "Your outbound workflow is active. Adjust your plan any time."}
         </h1>
         <p className="lede">
-          Account creation comes first. Plan selection happens here, after the workspace exists,
-          so billing stays explicit before campaigns, research, drafts, replies, and inbox
-          workflows become available.
+          Activate the workflow your team needs now: faster prospect research, stronger sequence
+          generation, cleaner reply handling, and review-ready draft creation for {workspaceName}.
         </p>
+        <div className="pillRow">
+          <span className="pill">Recommended for most teams: {recommendedPlan.label}</span>
+          <span className="pill">Switch plans later as volume grows</span>
+        </div>
       </section>
+
+      <div className="inlineActions profileHeaderActions billingDecisionTopActions">
+        <Link href="/pricing" className="buttonGhost">
+          See full public pricing
+        </Link>
+      </div>
 
       <FeedbackBanner
         error={params.error}
@@ -71,134 +83,148 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         success={
           params.billing === "success"
             ? encodeURIComponent(
-                "Checkout completed. Subscription state will sync automatically through the webhook.",
+                "Checkout completed. Your plan is activating now and full workflow access will follow automatically.",
               )
             : undefined
         }
       />
 
-      <div className="inlineActions profileHeaderActions">
-        <Link href="/pricing" className="buttonSecondary">
-          View public pricing
-        </Link>
-        <form action="/auth/sign-out" method="post">
-          <SubmitButton className="buttonGhost" pendingLabel="Signing out...">
-            Sign out
-          </SubmitButton>
-        </form>
-      </div>
-
-      <section className="profileDetailGrid settingsGrid">
-        <div className="stack">
-          <div className="dashboardCard">
-            <p className="cardLabel">Workspace billing state</p>
-            <h2>{billing.planLabel}</h2>
-            <p>{currentPlan.summary}</p>
-            <div className="pillRow">
-              <span className="pill">{workspace.workspaceName ?? workspace.workspaceId}</span>
-              <span className="pill">
-                {billing.hasActiveSubscription ? "Subscription active" : "Subscription required"}
-              </span>
-              {currentSubscriptionStatus ? <span className="pill">{currentSubscriptionStatus}</span> : null}
-            </div>
-            <p>
-              {billing.currentSubscription
-                ? `Current status: ${currentSubscriptionStatus}. Billing period end: ${formatPeriodEnd(
-                    billing.currentSubscription.currentPeriodEnd,
-                  )}`
-                : "No synced subscription yet. The account and workspace exist, but product access stays locked until a plan is active."}
-            </p>
-            {subscriptionLocked ? (
-              <p className="statusMessage">
-                Until checkout completes and the subscription is active, the workspace is limited
-                to account and billing management only.
-              </p>
-            ) : null}
-            {billing.currentSubscription?.providerCustomerId ? (
-              <form action="/api/billing/portal" method="post" className="inlineActions">
-                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <SubmitButton className="buttonSecondary" pendingLabel="Opening billing...">
-                  Manage billing in Stripe
-                </SubmitButton>
-              </form>
-            ) : (
-              <p className="statusMessage">
-                Billing management in Stripe appears after the first checkout sync completes.
-              </p>
-            )}
-          </div>
-
-          <div className="dashboardCard">
-            <p className="cardLabel">Plan comparison</p>
-            <h2>See where each plan opens more operating room</h2>
-            <div className="pricingComparisonHeader">
-              <span>Capability</span>
-              <span>Starter</span>
-              <span>Growth</span>
-              <span>Enterprise</span>
-            </div>
-            {pricingFeatureRows.map((row) => (
-              <div key={row.feature} className="pricingComparisonRow">
-                <strong>{row.feature}</strong>
-                <span>{row.free}</span>
-                <span>{row.pro}</span>
-                <span>{row.agency}</span>
-              </div>
-            ))}
-          </div>
+      <section className="dashboardCard billingDecisionGuide">
+        <p className="cardLabel">Choose your plan</p>
+        <h2>Select the tier that matches your current outbound stage</h2>
+        <p>
+          All plans follow the same core workflow. If you are running active outbound now, Growth
+          is the safest default for speed and capacity.
+        </p>
+        <div className="pillRow">
+          <span className="pill">1. Choose plan</span>
+          <span className="pill">2. Complete secure Stripe checkout</span>
+          <span className="pill">3. Start running workflows after activation</span>
         </div>
+        <p className="statusMessage">
+          You can change plans later from Stripe billing without creating a new workspace.
+        </p>
+      </section>
 
-        <div id="billing-plans" className="stack pricingSettingsStack">
-          {pricingPlans.map((plan) => {
-            const active = billing.hasActiveSubscription && billing.planCode === plan.code;
-            const actions = active ? (
-              billing.currentSubscription?.providerCustomerId ? (
+      <section id="billing-plans" className="pricingSettingsStack billingDecisionPlans">
+        {pricingPlans.map((plan) => {
+          const active = billing.hasActiveSubscription && billing.planCode === plan.code;
+          const actions = active ? (
+            billing.currentSubscription?.providerCustomerId ? (
                 <form action="/api/billing/portal" method="post">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <SubmitButton className="buttonSecondary" pendingLabel="Opening billing...">
-                    Manage current plan
+                    Manage plan
                   </SubmitButton>
                 </form>
               ) : (
-                <p className="statusMessage">
-                  Stripe sync is still catching up. Billing management will appear here once the
-                  subscription record is available.
-                </p>
-              )
-            ) : (
-              <form action="/api/billing/checkout" method="post">
-                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <input type="hidden" name="planCode" value={plan.code} />
-                <SubmitButton
-                  className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
-                  pendingLabel="Starting checkout..."
-                >
-                  {plan.code === "free"
-                    ? "Start with Starter"
-                    : plan.code === "pro"
-                      ? "Upgrade to Growth"
-                      : "Upgrade to Enterprise"}
-                </SubmitButton>
-              </form>
-            );
+              <p className="statusMessage">
+                Your plan is being activated. Billing management appears shortly.
+              </p>
+            )
+          ) : (
+            <form action="/api/billing/checkout" method="post">
+              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+              <input type="hidden" name="planCode" value={plan.code} />
+              <SubmitButton
+                className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
+                pendingLabel="Starting checkout..."
+              >
+                {plan.code === "free"
+                  ? "Start on Starter"
+                  : plan.code === "pro"
+                    ? "Choose Growth (Recommended)"
+                    : "Choose Enterprise"}
+              </SubmitButton>
+            </form>
+          );
 
-            return (
-              <PricingPlanCard
-                key={plan.code}
-                plan={plan}
-                active={active}
-                badge={active ? "Current plan" : plan.featured ? "Recommended" : undefined}
-                actions={actions}
-                footnote={
-                  active
-                    ? `Current workspace allowance includes ${
-                        billing.limits.sequenceGeneration.remaining ?? "unlimited"
-                      } sequence runs remaining this month.`
+          return (
+            <PricingPlanCard
+              key={plan.code}
+              plan={plan}
+              active={active}
+              badge={
+                active
+                  ? "Current plan"
+                  : plan.featured
+                    ? "Recommended default"
                     : undefined
-                }
-              />
-            );
-          })}
+              }
+              actions={actions}
+              footnote={
+                active
+                  ? `Current allowance includes ${
+                      billing.limits.sequenceGeneration.remaining ?? "unlimited"
+                    } sequence runs remaining this month.`
+                  : plan.code === "agency"
+                    ? "Enterprise checkout is available directly on this page."
+                  : undefined
+              }
+            />
+          );
+        })}
+      </section>
+
+      <section className="dashboardCard billingComparisonCard">
+        <p className="cardLabel">Plan comparison</p>
+        <h2>Quick tier differences</h2>
+        <p>
+          Same workflow across all plans. Main differences are context depth and monthly volume.
+        </p>
+        <div className="pricingComparisonHeader">
+          <span>Decision factor</span>
+          <span>Starter</span>
+          <span>Growth</span>
+          <span>Enterprise</span>
+        </div>
+        {pricingFeatureRows.map((row) => (
+          <div key={row.feature} className="pricingComparisonRow">
+            <strong>{row.feature}</strong>
+            <span>{row.free}</span>
+            <span>{row.pro}</span>
+            <span>{row.agency}</span>
+          </div>
+        ))}
+      </section>
+
+      <section className="dashboardCard billingAccountCard">
+        <p className="cardLabel">Account and billing details</p>
+        <h2>{billing.planLabel}</h2>
+        <p>{currentPlan.summary}</p>
+        <div className="pillRow">
+          <span className="pill">{workspaceName}</span>
+          <span className="pill">
+            {billing.hasActiveSubscription ? "Plan active" : "Activation pending"}
+          </span>
+          {currentSubscriptionStatus ? <span className="pill">{currentSubscriptionStatus}</span> : null}
+        </div>
+        <p>
+          {billing.currentSubscription
+            ? `Status: ${currentSubscriptionStatus}. Billing period end: ${formatPeriodEnd(
+                billing.currentSubscription.currentPeriodEnd,
+              )}`
+            : "Next step: choose a plan above and complete Stripe checkout to activate campaign, research, and reply workflows."}
+        </p>
+        {subscriptionLocked ? (
+          <p className="statusMessage">
+            Full workflow access starts automatically once plan activation completes.
+          </p>
+        ) : null}
+        <div className="inlineActions">
+          {billing.currentSubscription?.providerCustomerId ? (
+            <form action="/api/billing/portal" method="post">
+              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
+              <SubmitButton className="buttonSecondary" pendingLabel="Opening billing...">
+                Open Stripe billing
+              </SubmitButton>
+            </form>
+          ) : null}
+          <form action="/auth/sign-out" method="post">
+            <SubmitButton className="buttonGhost" pendingLabel="Signing out...">
+              Sign out
+            </SubmitButton>
+          </form>
         </div>
       </section>
     </main>

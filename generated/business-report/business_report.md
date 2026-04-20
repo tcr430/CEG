@@ -1,175 +1,146 @@
 # Business/Product Report
 
 ## 1. Executive Summary
-Outbound Copilot is a workspace-based web application for AI-assisted outbound sales execution. Based on the repository, it is designed to help SDR teams, SaaS founders, and lead generation agencies research prospects, generate outbound email sequences, ingest and classify replies, draft follow-up responses, and manage those workflows inside a shared workspace. Evidence appears across the public marketing pages, the protected app flows, the shared domain packages, and the database schema in `README.md`, `apps/web/app/page.tsx`, `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `packages/database/migrations/0001_initial_schema.sql`, and `packages/validation/src/entities.ts`.
+OutFlow is currently a workspace-scoped B2B SaaS product for outbound agencies running personalized cold email workflows. The implemented product is not just a text generator: it supports campaign setup, prospect intake, research snapshots, sequence generation, reply analysis/drafting, Gmail inbox import, and draft handoff inside one app flow (`apps/web/app/app/page.tsx`, `apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/lib/server/replies.ts`).
 
-The product is no longer a placeholder prototype. It has a meaningful end-to-end application surface: authentication, onboarding, sender profiles, campaigns, prospects, prospect research, sequence generation, reply analysis, reply drafting, billing, Gmail connection/import, internal admin tooling, demo data, and data export foundations. At the same time, the repo also shows clear limits: there is no full email sending workflow yet, queueing is still “async-ready” rather than extracted to background infrastructure, Microsoft 365 is scaffolded but not implemented, and some repository paths still rely on in-memory adapters rather than a fully migrated Postgres-backed stack (`ARCHITECTURE.md`, `apps/web/lib/server/inbox/service.ts`, `packages/jobs/src/index.ts`).
+The repo shows a clear commercial model: authenticated users create accounts, then must hold an active paid subscription to use core app routes; non-subscribed users are gated to billing (`apps/web/lib/server/billing.ts`, `apps/web/app/app/layout.tsx`, `apps/web/app/app/billing/page.tsx`).
 
-Overall maturity is best described as an advanced MVP approaching early production readiness: the app has real product breadth and internal discipline, but it still carries several “foundation complete, scale-out later” choices that should be understood honestly.
+The system has meaningful production-readiness foundations: workspace isolation controls, RLS policy migrations, provider abstraction for AI, Stripe checkout/webhook sync, and operational logging/audit records (`packages/database/migrations/0003_workspace_rls.sql`, `packages/database/migrations/0004_workspace_integrity.sql`, `apps/web/lib/server/model-providers.ts`, `apps/web/app/api/stripe/webhook/route.ts`).
+
+Current maturity is best described as an **advanced MVP**: the core workflow is implemented end to end, but some areas are intentionally partial (multi-provider inbox parity, full queue infrastructure, enterprise controls depth, and richer proof/reporting surfaces).
 
 ## 2. What the Business Is Today
-The implemented product is a SaaS-style outbound copilot for business users who run email-based outbound motions. This is confirmed by the app shell, feature boundaries, database model, and pricing/billing implementation in `apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`, `apps/web/lib/server/billing.ts`, and `packages/billing/src/plans.ts`.
+Confirmed from repo:
+- **Product type:** Multi-tenant SaaS workflow application for outbound agencies (`README.md`, `ARCHITECTURE.md`, `apps/web/app/page.tsx`).
+- **Core use case:** Help agency teams run outbound workflow stages (context -> research -> drafting -> review -> reply handling) with human control and workspace scoping (`apps/web/app/app/page.tsx`, `apps/web/app/app/onboarding/page.tsx`).
+- **Business model signal:** Subscription billing with plan-gated product access and Stripe-based checkout/portal/webhooks (`apps/web/lib/server/billing.ts`, `apps/web/app/api/billing/checkout/route.ts`, `apps/web/app/api/billing/portal/route.ts`, `apps/web/app/api/stripe/webhook/route.ts`).
 
-Confirmed from the repo:
-- Product type: a multi-workspace web application built with Next.js and backed by Supabase/Postgres-style relational storage (`apps/web/package.json`, `packages/database/migrations/0001_initial_schema.sql`).
-- Core use case: help a user set up sender context, create campaigns and prospects, run prospect research, generate outbound sequences, capture replies, analyze intent/objections, and draft response options (`apps/web/app/app/onboarding/page.tsx`, `apps/web/lib/server/prospect-research.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/lib/server/replies.ts`).
-- Target users explicitly named in the code and copy: SDRs, SaaS founders, lead generation agencies, and a basic fallback mode (`README.md`, `apps/web/app/page.tsx`, `infrastructure/demo-data/fixtures.ts`).
-
-Inferred from code/configuration:
-- Likely business model: subscription SaaS with tiered plans (`free`, `pro`, `agency`) and outcome-oriented feature/usage gating, rather than token-credit pricing (`packages/billing/src/plans.ts`, `apps/web/app/pricing/page.tsx`).
-- Likely sales motion: founder-led or small-team commercial software sold initially to individual teams or agencies rather than large enterprise procurement, because the app includes team roles and institutional controls but keeps the operational surface intentionally lightweight (`apps/web/app/app/settings/page.tsx`, `ARCHITECTURE.md`).
+Inferred from code/configuration (explicitly inferred):
+- **Likely buyer profile:** Small-to-mid outbound agencies serving B2B clients (inferred from public messaging and in-app language) (`apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`, `README.md`).
+- **Commercial packaging layer:** Public plan names Starter/Growth/Enterprise mapped onto internal codes free/pro/agency for compatibility (`packages/billing/src/plans.ts`, `apps/web/lib/pricing-content.ts`).
 
 ## 3. Problem It Solves
-Based on the actual workflows in the repo, the product appears to solve four related problems:
+The product addresses operational fragmentation in outbound execution:
+- Context is often spread across docs/prompts/inboxes and hard to reuse.
+- Research and drafting quality are hard to review consistently.
+- Reply handling gets detached from original campaign context.
+- Teams need controlled draft handoff rather than autonomous sending.
 
-1. Manual outbound research and message creation are slow and inconsistent.
-   The app fetches and structures prospect website information, turns it into a company profile, and feeds that into sequence generation (`apps/web/lib/server/prospect-research.ts`, `packages/research-engine/src/contracts.ts`, `apps/web/lib/server/openai-research-provider.ts`).
-
-2. Generic AI copy is risky for serious outbound.
-   The system repeatedly emphasizes sender-aware personalization, evidence-backed claims, schema validation, quality checks, and guardrails against unsupported claims or pushiness (`README.md`, `apps/web/lib/server/openai-sequence-provider.ts`, `apps/web/lib/server/openai-reply-provider.ts`, `packages/validation/src/entities.ts`).
-
-3. Teams need a unified place to manage outbound threads and reply handling.
-   The prospect detail screen combines research, sequences, messages, reply analysis, drafts, Gmail import, and draft-to-inbox steps into one workflow (`apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `apps/web/lib/server/inbox/service.ts`).
-
-4. The business wants to learn from performance over time.
-   The repo stores usage events, audit events, training signals, campaign performance snapshots, evaluation fixtures, and dataset export foundations (`packages/database/migrations/0001_initial_schema.sql`, `DATA_STRATEGY.md`, `packages/testing/tests/run-evals.ts`).
+These problems are reflected directly in UX flows and server modules for campaign context, prospect research, sequence generation, reply intelligence, inbox ingestion, and draft-in-inbox handoff (`apps/web/app/app/page.tsx`, `apps/web/app/app/onboarding/page.tsx`, `apps/web/lib/server/prospect-research.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/lib/server/replies.ts`, `apps/web/lib/server/inbox/service.ts`).
 
 ## 4. Current Feature Set
-
 | Area | Feature | What it does | Status | Evidence |
 |------|---------|--------------|--------|----------|
-| Authentication | Supabase magic-link sign-in | Supports sign-in, callback handling, protected routes, and server-side session handling | Implemented | `apps/web/app/sign-in/page.tsx`, `apps/web/lib/server/auth.ts`, `DEPLOYMENT.md` |
-| Workspace management | Workspace-scoped app with roles | Supports workspaces and roles (`owner`, `admin`, `member`) with membership records | Implemented | `packages/database/migrations/0001_initial_schema.sql`, `packages/validation/src/entities.ts`, `apps/web/app/app/settings/page.tsx` |
-| Onboarding | First-run onboarding flow | Guides users through workspace confirmation, user type, sender profile/basic mode, first campaign, and first prospect | Implemented | `apps/web/app/app/onboarding/page.tsx` |
-| Sender profiles | Sender-aware personalization setup | Stores sender profile type, company context, proof points, goals, and tone preferences | Implemented | `apps/web/app/app/sender-profiles/page.tsx`, `packages/validation/src/entities.ts` |
-| Campaigns | Campaign creation and management | Stores objectives, ICP/persona, offer summary, tone/framework preferences, and status | Implemented | `apps/web/app/app/campaigns/page.tsx`, `packages/database/migrations/0001_initial_schema.sql` |
-| Prospects | Prospect record management | Stores people/companies, status, source, company site, and campaign linkage | Implemented | `apps/web/app/app/campaigns/[campaignId]/page.tsx`, `packages/database/migrations/0001_initial_schema.sql` |
-| Research | Prospect website research and company-profile extraction | Fetches public websites, extracts/summarizes company profile data, stores evidence/confidence/flags | Implemented | `apps/web/lib/server/prospect-research.ts`, `packages/research-engine/src/contracts.ts`, `apps/web/lib/server/openai-research-provider.ts` |
-| Sequence generation | Outbound email sequence generation | Generates subject lines, openers, initial email, and follow-up sequence | Implemented | `apps/web/lib/server/sequences.ts`, `packages/sequence-engine/src/contracts.ts`, `apps/web/lib/server/openai-sequence-provider.ts` |
-| Sequence refinement | Partial regeneration and editing | Regenerates specific sequence parts, stores versions, and supports manual edits | Implemented | `packages/sequence-engine/src/contracts.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx` |
-| Quality control | Deterministic quality scoring | Stores quality reports on sequences and draft replies | Implemented | `supabase/migrations/20260328133000_quality_checks_json.sql`, `packages/validation/src/entities.ts` |
-| Threads/messages | Conversation timeline | Stores outbound/inbound messages, thread state, message source, and send state | Implemented | `packages/database/migrations/0001_initial_schema.sql`, `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx` |
-| Reply analysis | Intent and objection classification | Classifies replies, recommends next action, and stores rationale/confidence | Implemented | `apps/web/lib/server/replies.ts`, `packages/reply-engine/src/contracts.ts`, `apps/web/lib/server/openai-reply-provider.ts` |
-| Reply drafting | Multi-option response generation | Produces multiple response drafts, supports regeneration and manual editing | Implemented | `apps/web/lib/server/replies.ts`, `packages/reply-engine/src/contracts.ts` |
-| Inbox connection | Gmail OAuth connection | Connects a Gmail inbox with encrypted credential storage | Implemented | `apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/inbox/gmail-provider.ts`, `supabase/migrations/20260405091500_inbox_oauth_credentials.sql` |
-| Inbox import | Recent thread/message import | Imports Gmail threads/messages, maps them into local threads/messages, and triggers reply analysis | Implemented | `apps/web/lib/server/inbox/service.ts`, `supabase/migrations/20260404200000_inbox_integration_foundation.sql`, `supabase/migrations/20260406131500_inbox_reply_ingestion.sql` |
-| Inbox drafting | Push generated content into Gmail drafts | Creates Gmail drafts from generated sequence steps or reply drafts | Implemented | `apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/inbox-drafts.ts` |
-| Sending | Real provider send | Provider-agnostic send contract exists, but sending is intentionally not implemented | Partially implemented | `packages/inbox/src/contracts.ts`, `apps/web/lib/server/inbox/service.ts` |
-| Billing | Plans, entitlements, checkout, portal, webhook sync | Supports Free/Pro/Agency plans, Stripe checkout/portal, subscription sync, and feature gates | Implemented | `packages/billing/src/plans.ts`, `packages/billing/src/entitlements.ts`, `apps/web/lib/server/billing.ts`, `apps/web/app/pricing/page.tsx` |
-| Performance metrics | Campaign/workspace stats | Tracks outbound count, replies, positive replies, rates, and simple summaries | Implemented | `apps/web/lib/server/campaign-performance.ts`, `apps/web/app/app/page.tsx`, `apps/web/app/app/campaigns/[campaignId]/page.tsx` |
-| Analytics/signals | Usage, audit, training-signal capture | Records workflow events, edits, selections, exports, and outcome signals | Implemented | `DATA_STRATEGY.md`, `packages/database/migrations/0001_initial_schema.sql`, `apps/web/lib/server/training-signals.ts` |
-| Team features | Member invites/roles/removal | Supports viewing workspace members, inviting, assigning roles, and removing members | Implemented | `apps/web/app/app/settings/page.tsx`, `apps/web/lib/server/workspace-team.ts` |
-| Institutional controls | Retention/visibility summaries | Exposes retention preference, export/delete visibility, audit visibility, and readiness notes | Implemented | `apps/web/app/app/settings/page.tsx`, `packages/validation/src/entities.ts` |
-| Data handling | Workspace export and deletion request | Exports structured workspace data and records owner-only deletion requests | Implemented | `apps/web/lib/server/data-handling.ts`, `apps/web/app/app/settings/page.tsx` |
-| Internal tools | Debug/admin routes and demo seeding | Restricts internal operational views and allows demo data loading | Implemented | `apps/web/app/app/settings/debug/page.tsx`, `infrastructure/demo-data/fixtures.ts` |
-| Evaluation groundwork | Eval fixtures/harness | Provides regression/eval fixtures and a workflow harness | Implemented | `packages/testing/tests/run-evals.ts`, `DATA_STRATEGY.md` |
-| Multi-provider routing | Second provider scaffold | Supports internal provider routing across OpenAI and Anthropic at the server layer | Implemented | `apps/web/lib/server/model-providers.ts`, `.env.example` |
-| Microsoft 365 inbox | Second inbox provider | Mentioned in contracts and schema, but no provider implementation was inspected | Partially implemented | `packages/inbox/src/contracts.ts`, `supabase/migrations/20260404200000_inbox_integration_foundation.sql` |
-| Public sharing | Public-facing share pages | The app has shareable performance summaries in-app, but no public share pages | Not present | `apps/web/app/app/page.tsx`, `apps/web/components/performance-summary-card.tsx` |
+| Authentication | Email/password sign-up with confirmation | Creates auth identity and requires confirmed email before full product account bootstrap | Implemented | `apps/web/app/auth/sign-up/route.ts`, `apps/web/app/auth/callback/route.ts` |
+| Authentication | Sign-in via password or magic link | Supports password sign-in and magic-link sign-in for existing users | Implemented | `apps/web/app/auth/sign-in/route.ts`, `apps/web/app/sign-in/page.tsx` |
+| Account bootstrap | Product user/workspace sync | Syncs app-side user/workspace/membership records after auth callback | Implemented | `apps/web/lib/server/user-sync.ts`, `apps/web/app/auth/callback/route.ts` |
+| Billing | Plan-gated access | Blocks app usage without active subscription and routes to billing | Implemented | `apps/web/lib/server/billing.ts`, `apps/web/app/app/layout.tsx`, `apps/web/app/app/billing/page.tsx` |
+| Billing | Stripe checkout + portal + webhook | Creates checkout sessions, opens portal, syncs subscription state | Implemented | `apps/web/app/api/billing/checkout/route.ts`, `apps/web/app/api/billing/portal/route.ts`, `apps/web/app/api/stripe/webhook/route.ts` |
+| Onboarding | Guided setup flow | Walks users through workspace mode, sender profile, campaign, and first prospect | Implemented | `apps/web/app/app/onboarding/page.tsx` |
+| Sender context | Sender profile management | Stores reusable sender context and proof points | Implemented | `apps/web/app/app/onboarding/page.tsx`, `packages/database/src/schema.ts` |
+| Campaign management | Campaign create/list/detail/edit | Persists campaign brief and workflow settings | Implemented | `apps/web/app/app/campaigns/actions.ts`, `apps/web/app/app/campaigns/[campaignId]/page.tsx` |
+| Prospect management | Prospect add/detail | Stores target company/contact data and links to campaign | Implemented | `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `packages/database/src/schema.ts` |
+| Research workflow | Website research snapshots | Runs structured prospect/company research and stores evidence snapshots | Implemented | `apps/web/lib/server/prospect-research.ts`, `packages/research-engine/src/service.ts` |
+| Sequence workflow | Sequence generation + regeneration + edits | Produces and updates subject/openers/emails/follow-ups with schema validation | Implemented | `apps/web/lib/server/sequences.ts`, `packages/sequence-engine/src/service.ts` |
+| Reply intelligence | Reply analysis + strategy + drafts | Classifies replies and generates draft responses with validation | Implemented | `apps/web/lib/server/replies.ts`, `packages/reply-engine/src/service.ts` |
+| Inbox integration | Gmail OAuth + import + mapping | Connects Gmail, imports threads/messages, maps to prospects/threads | Implemented | `apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/inbox/gmail-provider.ts`, `apps/web/app/api/inbox/gmail/*` |
+| Inbox integration | Provider-agnostic inbox schema | Contracts/tables include Gmail + Microsoft365 provider values | Partially implemented | `packages/inbox/src/contracts.ts`, `packages/database/migrations/0005_inbox_integration_foundation.sql` |
+| Draft handoff | Create Gmail draft from generated artifacts | Pushes selected draft into inbox as reviewable draft | Implemented | `apps/web/lib/server/inbox/service.ts` (`createDraftInInbox`), `apps/web/lib/server/inbox/gmail-provider.ts` |
+| Async readiness | Job state tracking | Tracks operation states in metadata; queue extraction readiness pattern | Partially implemented | `apps/web/lib/server/prospect-job-runs.ts`, `packages/jobs/src/index.ts`, `ARCHITECTURE.md` |
+| Analytics/events | Product usage and feedback events | Captures event/audit records and feedback submissions | Implemented | `apps/web/lib/server/product-analytics.ts`, `apps/web/lib/server/feedback.ts`, `apps/web/app/api/training-signals/route.ts` |
+| Data governance | Workspace export | Exports structured workspace records | Implemented | `apps/web/app/api/workspace/export/route.ts` |
+| Data governance | Internal dataset export pipeline | Supports filtered export for eval/training use by internal admin | Implemented | `apps/web/lib/server/dataset-exports.ts`, `apps/web/app/api/internal/dataset-export/route.ts` |
+| Access control | Workspace RLS and role policy foundation | Enables RLS + role-aware table policies and stricter same-workspace FKs | Implemented | `packages/database/migrations/0003_workspace_rls.sql`, `packages/database/migrations/0004_workspace_integrity.sql` |
+| Team management | Role-based membership model | Owner/admin/member roles represented in policies and UI flows | Implemented | `packages/database/migrations/0003_workspace_rls.sql`, `apps/web/app/app/settings/page.tsx` |
+| Public marketing | Homepage/pricing/legal/contact pages | Public acquisition funnel with pricing and account-entry routes | Implemented | `apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`, `apps/web/app/about/page.tsx`, `apps/web/app/contact/page.tsx`, `apps/web/app/privacy/page.tsx`, `apps/web/app/terms/page.tsx` |
+| Testing/evals | Contract and eval harness foundations | Includes test runners for jobs, RLS contract checks, and AI eval harness scaffolding | Partially implemented | `packages/testing/tests/rls-contracts.ts`, `packages/testing/src/evals/workflow-harness.ts`, `apps/web/tests/run-tests.mjs` |
 
 ## 5. How the Product Works
-At a practical level, the product works like this:
+Practical flow from action to output:
+1. User authenticates via create-account or sign-in routes.
+2. Auth callback exchanges code/session and syncs product user/workspace records.
+3. Billing context is checked server-side; non-subscribed users are routed to billing.
+4. Inside `/app`, user sets sender/campaign/prospect context.
+5. Server modules run research and generation workflows through provider abstractions.
+6. AI outputs are schema-validated before storage.
+7. Generated artifacts are editable/regenerable and linked to threads/messages.
+8. Gmail integration can import live thread/message context and create reviewable drafts.
+9. Usage, audit, and signal events are recorded for reporting and future dataset/eval use.
 
-1. A user signs in with Supabase-backed auth and enters a workspace-scoped application (`apps/web/lib/server/auth.ts`, `apps/web/app/sign-in/page.tsx`).
-2. The user creates sender context, campaigns, and prospects in the protected app (`apps/web/app/app/onboarding/page.tsx`, `apps/web/app/app/sender-profiles/page.tsx`, `apps/web/app/app/campaigns/page.tsx`).
-3. For a prospect, the app can fetch the prospect’s company website, clean/extract content, summarize it into a structured company profile, and store evidence, confidence, and flags (`apps/web/lib/server/prospect-research.ts`, `packages/research-engine/src/contracts.ts`, `apps/web/lib/server/openai-research-provider.ts`).
-4. The sequence engine takes sender context, campaign context, prospect company profile, tone/constraint settings, and optional performance hints to generate structured outbound email artifacts (`packages/sequence-engine/src/contracts.ts`, `apps/web/lib/server/openai-sequence-provider.ts`, `apps/web/lib/server/sequences.ts`).
-5. Generated artifacts are validated, quality-scored, persisted, and shown in the prospect workflow UI, where the user can regenerate specific parts or edit content manually (`packages/validation/src/entities.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`).
-6. Replies can enter the system either by manual paste/save or by Gmail import. In both paths, replies become normalized messages on a conversation thread (`apps/web/lib/server/replies.ts`, `apps/web/lib/server/inbox/service.ts`).
-7. The reply engine analyzes the latest inbound message, classifies intent/objection/recommended action, and then generates multiple response draft options under explicit safety and tone constraints (`packages/reply-engine/src/contracts.ts`, `apps/web/lib/server/openai-reply-provider.ts`, `apps/web/lib/server/replies.ts`).
-8. Users can edit drafts, regenerate one option, or push a selected output into Gmail as a draft. The system also tracks sent state manually or by inbox linkage, then updates campaign performance metrics and training/evaluation signals (`apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/inbox-drafts.ts`, `apps/web/lib/server/campaign-performance.ts`, `DATA_STRATEGY.md`).
+End-to-end mechanics are distributed across app routes, server-only services, and database repositories (`apps/web/app/app/*`, `apps/web/lib/server/*`, `packages/database/src/repositories/*`).
 
-Text diagram of the main flow:
-
+Text workflow diagram:
 ```text
-Sign in
-  -> enter workspace
-  -> set up sender profile/basic mode
-  -> create campaign
-  -> add prospect
-  -> run website research
-  -> generate sequence
-  -> review / edit / regenerate
-  -> store outbound thread messages
-  -> ingest or paste reply
-  -> analyze reply
-  -> generate reply drafts
-  -> optionally push selected draft into Gmail
-  -> track outcomes, usage, quality, and performance
+Public site -> create account/sign in -> auth callback -> user/workspace sync
+        -> billing gate check -> onboarding/core app
+        -> sender/campaign/prospect context
+        -> research -> sequence generation -> review/edit/regenerate
+        -> reply ingestion/analysis/drafts -> Gmail draft handoff
+        -> usage/audit/training signals + export/eval pipelines
 ```
 
 ## 6. User Workflow
+Primary subscribed workflow:
+1. User lands on public site (`/`) and goes to create account or sign in.
+2. User creates account (email/password) and confirms via email.
+3. System syncs product account/workspace and redirects to billing if no active subscription.
+4. User selects plan/checkout and returns to app.
+5. User completes onboarding: choose mode, create sender profile (or basic), create first campaign, add first prospect.
+6. User runs prospect research.
+7. User generates sequence drafts, reviews/edits/regenerates.
+8. User handles replies with analysis and suggested response drafts.
+9. User can connect Gmail to import recent threads and push drafts into inbox.
+10. User monitors settings, usage limits, and optional export/feedback controls.
 
-### Core outbound workflow
-1. User lands on the marketing homepage and can navigate to sign-in or pricing (`apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`).
-2. User signs in with a magic-link flow and is redirected into the protected app (`apps/web/app/sign-in/page.tsx`, `apps/web/lib/server/auth.ts`).
-3. If the workspace is not meaningfully set up, the user is guided through onboarding: confirm workspace, choose user type, create sender profile or select basic mode, create a first campaign, and add a first prospect (`apps/web/app/app/onboarding/page.tsx`).
-4. User opens a campaign and adds or edits prospects (`apps/web/app/app/campaigns/[campaignId]/page.tsx`).
-5. On a prospect detail page, the user can run research against the prospect company website (`apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `apps/web/lib/server/prospect-research.ts`).
-6. The system stores the research snapshot and uses the company profile to generate a sequence (`apps/web/lib/server/sequences.ts`).
-7. The user reviews subject lines, openers, initial email, and follow-ups; can regenerate specific parts or edit text manually (`packages/sequence-engine/src/contracts.ts`, `apps/web/lib/server/sequences.ts`).
-8. The user can link generated outbound content into the thread timeline and optionally create a Gmail draft rather than sending from the app (`apps/web/lib/server/inbox/service.ts`, `apps/web/lib/server/inbox-drafts.ts`).
+Secondary workflows:
+- No-plan signed-in users: limited to billing management routes until subscription activates.
+- Internal/admin dataset export: internal endpoint guarded by admin access checks.
 
-### Reply-handling workflow
-1. A reply enters the system either by manual paste/save or Gmail import (`apps/web/lib/server/replies.ts`, `apps/web/lib/server/inbox/service.ts`).
-2. The reply is stored as an inbound message on a conversation thread, with provider/raw/normalized data when imported from Gmail (`supabase/migrations/20260406131500_inbox_reply_ingestion.sql`, `apps/web/lib/server/inbox/service.ts`).
-3. The system analyzes the latest inbound reply, storing intent, objection type, confidence, rationale, and recommended action (`packages/reply-engine/src/contracts.ts`, `apps/web/lib/server/replies.ts`).
-4. The app generates three reply draft options, each governed by safety constraints such as “do not push after hard no” (`apps/web/lib/server/openai-reply-provider.ts`, `packages/reply-engine/src/contracts.ts`).
-5. The user reviews the classification and drafts in the thread workspace, regenerates one option if needed, edits manually if desired, and can push a selected draft into Gmail as a draft (`apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `apps/web/lib/server/inbox/service.ts`).
-
-### Operational/admin workflow
-1. A trusted internal admin can open a restricted debug/settings route (`apps/web/app/app/settings/debug/page.tsx`).
-2. The admin can inspect recent operational records, load demo seed data, and access restricted dataset export/debug functionality (`infrastructure/demo-data/fixtures.ts`, `DATA_STRATEGY.md`).
+Evidence: `apps/web/app/create-account/page.tsx`, `apps/web/app/sign-in/page.tsx`, `apps/web/app/auth/callback/route.ts`, `apps/web/app/app/billing/page.tsx`, `apps/web/app/app/onboarding/page.tsx`, `apps/web/app/app/settings/page.tsx`, `apps/web/app/api/internal/dataset-export/route.ts`.
 
 ## 7. Technical/Operational Workflow
-The product is built as a Next.js monorepo with clear internal boundaries. The practical architecture is:
+- **Frontend structure:** Next.js App Router in `apps/web/app`; separate public and authenticated route groups.
+- **Backend/API structure:** Server actions + route handlers in `apps/web/app/api/*` and server modules in `apps/web/lib/server/*`.
+- **Database/storage:** Postgres schema and migrations under `packages/database`; workspace-scoped entities and inbox tables present.
+- **AI/model calls:** Central provider abstraction (`model-providers`) with OpenAI and Anthropic adapters; engine packages enforce request/output contracts.
+- **Job processing:** Async-ready state tracking and job package abstractions; not yet externalized to full queue infrastructure.
+- **External services:** Supabase Auth, Stripe Billing, Gmail API integration, optional Vercel Analytics.
+- **State/security boundaries:** Workspace-scoped checks in services + RLS policy foundation in SQL migrations; server-only handling for tokens and keys.
+- **Deployment clues:** Vercel deployment and environment guidance documented, with Supabase and Stripe setup dependencies.
 
-- Frontend/app shell: `apps/web` contains the marketing pages, protected app pages, route handlers, and server actions (`apps/web/package.json`, `apps/web/app/...`).
-- Shared domain packages: research, sequence generation, reply intelligence, billing, inbox, jobs, validation, auth, database, testing, observability, and security are separated into workspace packages (`README.md`, `ARCHITECTURE.md`).
-- Validation layer: Zod contracts in `packages/validation/src/entities.ts` define the application’s shared types, schemas, and many persistence shapes. This is a strong signal that the app is designed around contract-first boundaries rather than ad hoc JSON.
-- Database/storage: the schema is relational and workspace-scoped, with tables for users, workspaces, members, campaigns, prospects, research snapshots, sequences, threads/messages, reply analyses, draft replies, usage events, audit events, subscriptions, and inbox synchronization tables (`packages/database/migrations/0001_initial_schema.sql`, `supabase/migrations/...`).
-- Access control: database-scoped RLS exists as a backstop, while app-layer auth and workspace checks remain primary today (`supabase/migrations/20260404121500_workspace_rls.sql`, `ARCHITECTURE.md`).
-- AI/model calls: provider-specific calls are server-side only and routed through internal adapters. OpenAI is the default path; Anthropic is scaffolded as a second provider. Research, sequence generation, and reply flows all emit consistent provider metadata (`apps/web/lib/server/model-providers.ts`, `apps/web/lib/server/openai-sequence-provider.ts`, `apps/web/lib/server/openai-reply-provider.ts`, `apps/web/lib/server/openai-research-provider.ts`).
-- Async/job handling: slow operations still complete in the app flow, but they persist explicit run state (`idle/running/succeeded/failed`) through a jobs contract that is designed for future queue extraction (`packages/jobs/src/index.ts`, `ARCHITECTURE.md`).
-- External services: Supabase is used for auth and Postgres-oriented deployment assumptions; Stripe powers subscriptions; Gmail powers inbox connection/import and draft creation; model providers currently include OpenAI by default and Anthropic as internal routing support (`DEPLOYMENT.md`, `.env.example`, `apps/web/lib/server/billing.ts`, `apps/web/lib/server/inbox/service.ts`).
-- Deployment clues: the repo is prepared for Vercel deployment, expects env-driven configuration, and uses Next.js 15 with React 19 (`apps/web/package.json`, `DEPLOYMENT.md`, `.env.example`).
+Evidence: `ARCHITECTURE.md`, `DEPLOYMENT.md`, `apps/web/lib/server/model-providers.ts`, `apps/web/lib/server/billing.ts`, `apps/web/lib/server/inbox/gmail-provider.ts`, `packages/database/migrations/*.sql`.
 
 ## 8. Current Strengths
-- The product has a coherent end-to-end use case rather than isolated demos. Research, sequence generation, reply handling, billing, and Gmail draft workflows connect inside one prospect workspace (`apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`).
-- The architecture is unusually disciplined for an MVP-stage repo. Shared package boundaries, schema validation, provider abstraction, and workspace-scoped data modeling are consistently visible (`ARCHITECTURE.md`, `packages/validation/src/entities.ts`, `apps/web/lib/server/model-providers.ts`).
-- Safety/credibility constraints are first-class. The prompts and contracts repeatedly forbid invented claims, excessive fluff, and aggressive handling of hard-no replies (`apps/web/lib/server/openai-sequence-provider.ts`, `apps/web/lib/server/openai-reply-provider.ts`, `packages/reply-engine/src/contracts.ts`).
-- The product is already instrumented for future learning. Usage, audit logs, outcome-aware signals, dataset export structures, and evaluation fixtures are implemented well beyond a bare workflow app (`DATA_STRATEGY.md`, `packages/testing/tests/run-evals.ts`).
-- The app looks prepared for founder demos and early customer evaluation. Demo data, internal admin views, shareable performance summaries, onboarding, pricing, and upgrade prompts are all present in the repository (`infrastructure/demo-data/fixtures.ts`, `apps/web/app/app/settings/debug/page.tsx`, `apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`).
+- Clear workflow orientation beyond one-off generation.
+- Strong server-side gating around subscription unlock.
+- Provider abstraction and schema validation are explicit and reused.
+- Workspace scoping has both app-layer checks and database policy foundations.
+- Inbox integration is practical (OAuth, import, mapping, draft handoff).
+- Data/export/eval foundations exist for future model quality loops.
+- Public + app experiences are coherent around “AI suggests, human approves.”
 
 ## 9. Current Gaps / Limitations
-- No real email sending yet. The inbox layer supports draft creation and tracking, but not provider send execution. That is explicit in the contracts and service boundary (`packages/inbox/src/contracts.ts`, `apps/web/lib/server/inbox/service.ts`).
-- Microsoft 365/Outlook support is not implemented. The provider is named in contracts and schema, but the concrete implementation inspected here is Gmail-only (`packages/inbox/src/contracts.ts`, `apps/web/lib/server/inbox/gmail-provider.ts`).
-- Async operations are queue-ready, not queue-backed. Run-state persistence exists, but there is no extracted worker/queue infrastructure in the repo (`packages/jobs/src/index.ts`, `ARCHITECTURE.md`).
-- Some repository paths remain transitional. The architecture docs explicitly say not every repository path is Postgres-backed yet, and some lower-priority views still rely on in-memory adapters (`ARCHITECTURE.md`).
-- The product is operationally serious but not yet enterprise-complete. It has team roles, institutional controls, exports, and audit visibility, but no evidence of a full compliance portal, SCIM/SSO suite, advanced governance, or enterprise procurement features (`apps/web/app/app/settings/page.tsx`, `ARCHITECTURE.md`).
-- The app has one known deployment rough edge: a documented non-blocking Next.js ESLint-plugin warning is referenced in repo work history and build notes, though it does not appear to block builds. This is an inferred operational note rather than a product feature conclusion.
-- The `packages/database/migrations` folder has a numbering inconsistency with two `0006_...` files. The timestamped Supabase migrations appear to be the cleaner operational source of truth for ordering (`packages/database/migrations`, `supabase/migrations/...`).
+- **Inbox provider breadth:** Microsoft365 appears schema-ready but no equivalent production integration path is visible (partial provider parity).
+- **Queue maturity:** Async state exists, but no full durable queue worker stack is visible as the default runtime path.
+- **Testing depth:** Foundations exist, but complete end-to-end coverage across all critical flows is not clearly demonstrated from repo structure alone.
+- **Enterprise controls depth:** Settings and institutional controls exist, but some controls are visibility/foundation level rather than full compliance workflows.
+- **Plan-code naming mismatch:** Internal billing IDs remain free/pro/agency while public packaging uses Starter/Growth/Enterprise (managed intentionally, but operationally sensitive).
+- **Potential messaging drift in app copy:** Some in-app text still references broader personas (e.g., SDR/founder in onboarding) despite agency-first positioning target.
+
+Evidence: `apps/web/lib/server/inbox/service.ts`, `packages/database/migrations/0005_inbox_integration_foundation.sql`, `packages/jobs/src/index.ts`, `packages/testing/*`, `apps/web/app/app/onboarding/page.tsx`, `packages/billing/src/plans.ts`.
 
 ## 10. Product Maturity Assessment
-The product is best described as an **advanced MVP**.
+**Assessment: Advanced MVP**
 
 Why:
-- It has multiple complete user-facing workflows, not just mocks: onboarding, sender setup, campaigns, prospects, research, generation, reply handling, billing, and inbox connection (`apps/web/app/app/...`, `apps/web/lib/server/...`).
-- It includes serious internal disciplines that many MVPs skip: audit events, usage metering, role-aware settings, evaluation harnesses, provider abstraction, structured exports, and database access-control groundwork (`DATA_STRATEGY.md`, `ARCHITECTURE.md`, `packages/validation/src/entities.ts`).
-- However, it is not yet an early production product in the strictest sense because the email send path is incomplete, queueing is still preparatory, one major inbox provider is only scaffolded, and the architecture docs themselves acknowledge partial repository migration status.
+- Core workflow from account creation to billing-gated app use to research/generation/reply operations is implemented.
+- Real integrations (Supabase, Stripe, Gmail) are present.
+- Security and multitenancy foundations are significantly beyond prototype stage (RLS + workspace integrity migrations).
+- Still, some areas are intentionally pre-enterprise or partially implemented (provider parity, queue depth, broader test completeness, full institutional-operational depth).
 
 ## 11. Suggested “As-Is” Business Description
-Outbound Copilot is a workspace-based AI outbound application for SDR teams, SaaS founders, and lead generation agencies. Today it helps teams set up sender context, research prospects from public websites, generate outbound email sequences, capture and classify inbound replies, draft follow-up responses, and track lightweight performance signals. It already includes billing, Gmail draft/import foundations, team roles, and structured data capture for future evaluation, but it is still in advanced MVP form rather than a fully complete outbound operating platform.
+OutFlow is a subscription SaaS workflow system for outbound agencies running personalized B2B cold email. It combines client/campaign context, prospect research, reviewed sequence drafting, reply handling, and Gmail draft handoff inside one workspace-scoped product. AI is used to assist research and writing, while operators retain approval control before anything is used.
 
 ## 12. Appendix: Evidence from Repository
-The strongest evidence for the current product state comes from:
+See `generated/business-report/repo_evidence.md` for file-by-file evidence notes and what each source supports.
 
-- Product positioning and public claims: `README.md`, `apps/web/app/page.tsx`, `apps/web/app/pricing/page.tsx`
-- Protected product workflows: `apps/web/app/app/page.tsx`, `apps/web/app/app/onboarding/page.tsx`, `apps/web/app/app/campaigns/[campaignId]/prospects/[prospectId]/page.tsx`, `apps/web/app/app/settings/page.tsx`
-- AI workflow mechanics: `apps/web/lib/server/prospect-research.ts`, `apps/web/lib/server/sequences.ts`, `apps/web/lib/server/replies.ts`
-- Provider abstraction and prompts: `apps/web/lib/server/model-providers.ts`, `apps/web/lib/server/openai-research-provider.ts`, `apps/web/lib/server/openai-sequence-provider.ts`, `apps/web/lib/server/openai-reply-provider.ts`
-- Billing and pricing mechanics: `packages/billing/src/plans.ts`, `packages/billing/src/entitlements.ts`, `apps/web/lib/server/billing.ts`
-- Database and access control: `packages/database/migrations/0001_initial_schema.sql`, `supabase/migrations/20260404121500_workspace_rls.sql`, `supabase/migrations/20260404200000_inbox_integration_foundation.sql`, `supabase/migrations/20260406131500_inbox_reply_ingestion.sql`
-- Training/evaluation/readiness: `DATA_STRATEGY.md`, `packages/testing/tests/run-evals.ts`, `infrastructure/demo-data/fixtures.ts`
-
-For a more detailed evidence appendix, see `generated/business-report/repo_evidence.md`.

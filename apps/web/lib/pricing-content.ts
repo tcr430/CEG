@@ -21,77 +21,71 @@ export const pricingPlans: PricingPlanPresentation[] = [
   {
     code: "free",
     label: "Starter",
-    headline: "Start with the core workflow.",
+    headline: "Validate one repeatable outbound workflow.",
     summary:
-      "Built for agencies starting a structured outbound workflow for a smaller active client book.",
+      "For teams moving from ad hoc outreach to a structured process with disciplined execution and clear review.",
     audience:
-      "Best for validating one repeatable workflow before scaling delivery volume.",
+      "Best for early-stage agency, SDR, and founder-led outbound where volume is still controlled.",
     bullets: [
-      "Campaign context, research, drafting, and reply handling in one workspace",
-      "Public-website research snapshots for prospect context",
-      "Monthly limits suited to early agency operations",
+      "Keep research, sequence drafts, and replies in one operating flow",
+      "Preserve campaign context from brief through draft handoff",
+      "Intentionally limited monthly capacity for proving one stable motion",
     ],
   },
   {
     code: "pro",
     label: "Growth",
-    headline: "Run active client campaigns with headroom.",
+    headline: "Run active outbound delivery with real headroom.",
     summary:
-      "The default fit for agencies running multiple active client campaigns with stronger workflow headroom.",
+      "Default plan for teams running consistent weekly outbound across multiple campaigns and accounts.",
     audience:
-      "Best for day-to-day agency delivery where consistency and review speed matter.",
+      "Best for agencies, SDR teams, and founders with active outbound delivery targets.",
     featured: true,
     bullets: [
-      "Sender-aware profiles across campaign, research, and drafting stages",
-      "Higher monthly capacity for research, sequence, reply, and regeneration workflows",
-      "Recommended for most multi-client agency operations",
+      "Use sender-aware profiles across research, sequences, and reply workflows",
+      "Get strong monthly headroom for research, generation, analysis, and iteration",
+      "Balanced choice for speed, consistency, and day-to-day delivery confidence",
     ],
   },
   {
     code: "agency",
     label: "Enterprise",
-    headline: "Keep larger-scale delivery moving smoothly.",
+    headline: "Support large-scale outbound and complex team load.",
     summary:
-      "For larger agency books of business that need the same controlled workflow with fewer operational limits.",
+      "For heavier-volume organizations coordinating multiple operators and sustained outbound throughput.",
     audience:
-      "Best for high-volume agency operations with heavier prospecting and iteration demand.",
+      "Best when outbound is core revenue infrastructure and monthly caps become an operational bottleneck.",
     bullets: [
-      "Sender-aware profiles across all workflow stages",
-      "Unlimited research, sequence, reply intelligence, and regeneration volume",
-      "Maximum operational capacity for sustained client delivery",
+      "Keep sender-aware context across every stage while team volume scales",
+      "Run research, sequence generation, and reply intelligence without monthly caps",
+      "Designed for heavy prospecting, rapid iteration, and complex delivery operations",
     ],
   },
 ];
 
 export const pricingFeatureRows: PricingFeatureRow[] = [
   {
-    feature: "Sender-aware profiles",
-    free: "Basic mode only",
+    feature: "Sender-aware workflow context",
+    free: "Basic mode",
     pro: "Included",
     agency: "Included",
   },
   {
-    feature: "Prospect website research",
-    free: "15 runs / month",
-    pro: "150 runs / month",
+    feature: "Prospect research volume",
+    free: "15 runs/mo",
+    pro: "150 runs/mo",
     agency: "Unlimited",
   },
   {
     feature: "Sequence generation volume",
-    free: "20 runs / month",
-    pro: "250 runs / month",
+    free: "20 runs/mo",
+    pro: "250 runs/mo",
     agency: "Unlimited",
   },
   {
-    feature: "Reply intelligence",
-    free: "20 analyses + 20 draft sets / month",
-    pro: "250 analyses + 250 draft sets / month",
-    agency: "Unlimited",
-  },
-  {
-    feature: "Regeneration support",
-    free: "10 regenerations / month",
-    pro: "120 regenerations / month",
+    feature: "Reply analysis + draft volume",
+    free: "20 + 20 /mo",
+    pro: "250 + 250 /mo",
     agency: "Unlimited",
   },
 ];

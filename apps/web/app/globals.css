@@ -992,6 +992,98 @@ h2 {
   align-content: start;
 }
 
+.billingDecisionShell {
+  width: min(1080px, 100%);
+  gap: 14px;
+  align-content: start;
+}
+
+.billingDecisionHero {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.billingDecisionHero h1 {
+  max-width: 15ch;
+}
+
+.billingDecisionHero .lede {
+  max-width: 64rem;
+}
+
+.billingDecisionTopActions {
+  margin: 2px 0 4px;
+}
+
+.billingDecisionGuide {
+  width: 100%;
+  padding: 18px 22px;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(30, 41, 59, 0.06);
+}
+
+.billingDecisionGuide h2 {
+  margin-bottom: 6px;
+  font-size: 1.2rem;
+}
+
+.billingDecisionGuide .statusMessage {
+  margin-top: 2px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.billingDecisionPlans {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+.billingDecisionPlans .pricingCard {
+  min-height: 100%;
+}
+
+.billingDecisionPlans .pricingPlanBadge {
+  font-size: 0.72rem;
+}
+
+.billingComparisonCard,
+.billingAccountCard {
+  width: 100%;
+}
+
+.billingComparisonCard {
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 14px 34px rgba(30, 41, 59, 0.06);
+}
+
+.billingComparisonCard .pricingComparisonHeader {
+  font-size: 0.74rem;
+}
+
+.billingComparisonCard .pricingComparisonRow {
+  padding: 11px 0;
+}
+
+.billingComparisonCard .pricingComparisonRow span {
+  font-size: 0.95rem;
+}
+
+.billingAccountCard {
+  margin-top: 2px;
+  padding-top: 18px;
+}
+
+@media (max-width: 1020px) {
+  .billingDecisionPlans {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pricingComparisonPanel {
   width: min(1080px, 100%);
 }
