@@ -1,3 +1,65 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+/*
+ * shadcn/ui theme tokens (Phase 0 of the Tailwind v4 + shadcn migration).
+ *
+ * The existing `.panel` / `.buttonPrimary` / `.field` / etc. classes below
+ * still own the visual language today. These tokens exist so later phases
+ * can drop in shadcn primitives without visual change, by mapping shadcn's
+ * expected `--color-*` names to an internal `--ui-*` namespace. That keeps
+ * the legacy `--muted` (text color) and `--accent` (brand blue) semantics
+ * intact while shadcn's conflicting semantic names (muted = subtle bg,
+ * accent = hover bg) get fresh values.
+ */
+@theme inline {
+  --color-background: var(--ui-background);
+  --color-foreground: var(--ui-foreground);
+  --color-card: var(--ui-card);
+  --color-card-foreground: var(--ui-card-foreground);
+  --color-popover: var(--ui-popover);
+  --color-popover-foreground: var(--ui-popover-foreground);
+  --color-primary: var(--ui-primary);
+  --color-primary-foreground: var(--ui-primary-foreground);
+  --color-secondary: var(--ui-secondary);
+  --color-secondary-foreground: var(--ui-secondary-foreground);
+  --color-muted: var(--ui-muted);
+  --color-muted-foreground: var(--ui-muted-foreground);
+  --color-accent: var(--ui-accent);
+  --color-accent-foreground: var(--ui-accent-foreground);
+  --color-destructive: var(--ui-destructive);
+  --color-destructive-foreground: var(--ui-destructive-foreground);
+  --color-border: var(--ui-border);
+  --color-input: var(--ui-input);
+  --color-ring: var(--ui-ring);
+  --radius-sm: calc(var(--ui-radius) - 8px);
+  --radius-md: calc(var(--ui-radius) - 4px);
+  --radius-lg: var(--ui-radius);
+  --radius-xl: calc(var(--ui-radius) + 4px);
+}
+
+/*
+ * Phase 0 Preflight compat: Tailwind's Preflight strips list markers and
+ * heading defaults. Restore them so legacy pages remain visually identical.
+ * Later phases can migrate these elements to shadcn primitives and remove
+ * these restorations.
+ */
+@layer base {
+  ul,
+  ol {
+    list-style: revert;
+    padding-inline-start: revert;
+    margin-block: revert;
+  }
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: revert;
+    font-weight: revert;
+  }
+}
+
 :root {
   color-scheme: light;
   --background: #eef1f5;
@@ -8,6 +70,30 @@
   --panel: rgba(255, 255, 255, 0.86);
   --border: rgba(17, 24, 39, 0.1);
   --shadow: 0 22px 60px rgba(30, 41, 59, 0.11);
+
+  /* shadcn/ui token values (Phase 0). See @theme block above for how these
+     are exposed to Tailwind utilities like bg-primary, text-muted-foreground,
+     rounded-lg, etc. Nothing on the page uses these yet. */
+  --ui-background: var(--background);
+  --ui-foreground: var(--foreground);
+  --ui-card: #ffffff;
+  --ui-card-foreground: var(--foreground);
+  --ui-popover: #ffffff;
+  --ui-popover-foreground: var(--foreground);
+  --ui-primary: var(--accent);
+  --ui-primary-foreground: #ffffff;
+  --ui-secondary: rgba(17, 24, 39, 0.06);
+  --ui-secondary-foreground: var(--foreground);
+  --ui-muted: rgba(17, 24, 39, 0.04);
+  --ui-muted-foreground: var(--muted);
+  --ui-accent: rgba(55, 92, 255, 0.08);
+  --ui-accent-foreground: var(--foreground);
+  --ui-destructive: #ef4444;
+  --ui-destructive-foreground: #ffffff;
+  --ui-border: var(--border);
+  --ui-input: var(--border);
+  --ui-ring: var(--accent);
+  --ui-radius: 1.5rem;
 }
 
 * {
