@@ -1,6 +1,5 @@
 ﻿import Link from "next/link";
 
-import { FeedbackBanner } from "../../../../components/feedback-banner";
 import {
   getWorkspaceBillingState,
   requireActiveWorkspaceAppContext,
@@ -11,7 +10,6 @@ import { SenderProfileForm } from "../sender-profile-form";
 type NewSenderProfilePageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
   }>;
 };
 
@@ -37,8 +35,6 @@ export default async function NewSenderProfilePage({
           sender-aware context is not available yet.
         </p>
       </section>
-
-      <FeedbackBanner error={params.error} />
 
       <div className="inlineActions profileHeaderActions">
         <Link

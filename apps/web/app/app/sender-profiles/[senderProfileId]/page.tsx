@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { FeedbackBanner } from "../../../../components/feedback-banner";
 import {
   getWorkspaceBillingState,
   requireActiveWorkspaceAppContext,
@@ -16,8 +15,6 @@ type SenderProfileDetailPageProps = {
   }>;
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
-    success?: string;
   }>;
 };
 
@@ -52,8 +49,6 @@ export default async function SenderProfileDetailPage({
           Keep sender context explicit and editable so future campaign and sequence workflows can reference this stored context directly instead of recreating it each time.
         </p>
       </section>
-
-      <FeedbackBanner error={resolvedSearchParams.error} success={resolvedSearchParams.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link

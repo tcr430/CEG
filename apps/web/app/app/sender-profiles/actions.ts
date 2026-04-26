@@ -1,17 +1,20 @@
-﻿"use server";
+"use server";
 
 import { randomUUID } from "node:crypto";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import type { ActionResult } from "../../../lib/action-result";
+import {
+  actionError,
+  actionOk,
+} from "../../../lib/server/action-result";
+import { getServerAuthContext } from "../../../lib/server/auth";
+import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
 import {
   createSenderProfileForWorkspace,
   updateSenderProfileForWorkspace,
 } from "../../../lib/server/sender-profiles";
-import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
-import { getServerAuthContext } from "../../../lib/server/auth";
-import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
 function readOptionalText(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
@@ -41,19 +44,26 @@ function readWorkspacePlanCode(
   auth: Awaited<ReturnType<typeof getServerAuthContext>>,
   workspaceId: string,
 ) {
-  return auth.user?.memberships.find((membership) => membership.workspaceId === workspaceId)
-    ?.billingPlanCode;
+  return auth.user?.memberships.find(
+    (membership) => membership.workspaceId === workspaceId,
+  )?.billingPlanCode;
 }
 
-function redirectWithError(path: string, error: unknown, fallbackMessage: string) {
-  redirect(`${path}${path.includes("?") ? "&" : "?"}error=${encodeUserFacingError(error, fallbackMessage)}`);
-}
+export type SenderProfileActionData = {
+  senderProfileId: string;
+  workspaceId: string;
+};
 
-export async function createSenderProfileAction(formData: FormData) {
+export async function createSenderProfileAction(
+  formData: FormData,
+): Promise<ActionResult<SenderProfileActionData>> {
   const workspaceId = formData.get("workspaceId");
 
-  if (typeof workspaceId !== "string") {
-    throw new Error("Workspace id is required.");
+  if (typeof workspaceId !== "string" || workspaceId.length === 0) {
+    return actionError(
+      new Error("Workspace id is required."),
+      "Select a workspace and try again.",
+    );
   }
 
   const auth = await getServerAuthContext();
@@ -61,7 +71,7 @@ export async function createSenderProfileAction(formData: FormData) {
 
   try {
     await assertWorkspaceSubscriptionActive({ workspaceId });
-    await createSenderProfileForWorkspace({
+    const created = await createSenderProfileForWorkspace({
       workspaceId,
       name: String(formData.get("name") ?? ""),
       senderType: String(formData.get("senderType") ?? "basic") as
@@ -92,24 +102,34 @@ export async function createSenderProfileAction(formData: FormData) {
       userId: auth.user?.userId,
       requestId,
     });
+
+    revalidatePath("/app/sender-profiles");
+    return actionOk({ senderProfileId: created.id, workspaceId });
   } catch (error) {
-    redirectWithError(
-      `/app/sender-profiles/new?workspace=${workspaceId}`,
+    return actionError(
       error,
       "We could not create that sender profile. Please review the form and try again.",
     );
   }
-
-  revalidatePath("/app/sender-profiles");
-  redirect(`/app/sender-profiles?workspace=${workspaceId}&success=Sender%20profile%20created.`);
 }
 
-export async function updateSenderProfileAction(formData: FormData) {
+export async function updateSenderProfileAction(
+  formData: FormData,
+): Promise<ActionResult<SenderProfileActionData>> {
   const workspaceId = formData.get("workspaceId");
   const senderProfileId = formData.get("senderProfileId");
 
-  if (typeof workspaceId !== "string" || typeof senderProfileId !== "string") {
-    throw new Error("Workspace id and sender profile id are required.");
+  if (typeof workspaceId !== "string" || workspaceId.length === 0) {
+    return actionError(
+      new Error("Workspace id is required."),
+      "Select a workspace and try again.",
+    );
+  }
+  if (typeof senderProfileId !== "string" || senderProfileId.length === 0) {
+    return actionError(
+      new Error("Sender profile id is required."),
+      "That sender profile could not be found.",
+    );
   }
 
   const auth = await getServerAuthContext();
@@ -117,7 +137,7 @@ export async function updateSenderProfileAction(formData: FormData) {
 
   try {
     await assertWorkspaceSubscriptionActive({ workspaceId });
-    await updateSenderProfileForWorkspace({
+    const updated = await updateSenderProfileForWorkspace({
       senderProfileId,
       workspaceId,
       name: String(formData.get("name") ?? ""),
@@ -149,14 +169,14 @@ export async function updateSenderProfileAction(formData: FormData) {
       userId: auth.user?.userId,
       requestId,
     });
+
+    revalidatePath("/app/sender-profiles");
+    revalidatePath(`/app/sender-profiles/${senderProfileId}`);
+    return actionOk({ senderProfileId: updated.id, workspaceId });
   } catch (error) {
-    redirectWithError(
-      `/app/sender-profiles/${senderProfileId}?workspace=${workspaceId}`,
+    return actionError(
       error,
       "We could not save that sender profile. Please try again.",
     );
   }
-
-  revalidatePath("/app/sender-profiles");
-  redirect(`/app/sender-profiles/${senderProfileId}?workspace=${workspaceId}&success=Sender%20profile%20updated.`);
 }
