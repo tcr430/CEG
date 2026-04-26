@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import { VercelAnalytics } from "../components/vercel-analytics";
 
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en">
       <body>
         {children}
+        <Toaster />
         <VercelAnalytics />
       </body>
     </html>
