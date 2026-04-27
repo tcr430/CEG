@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ActionEmptyState } from "../../../../components/action-empty-state";
-import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { PerformanceSummaryCard } from "../../../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
 import { WorkflowStageStrip } from "../../../../components/workflow-stage-strip";
@@ -15,7 +14,7 @@ import { getWorkspaceOnboardingSummary } from "../../../../lib/server/onboarding
 import { getCampaignPerformanceMetrics } from "../../../../lib/server/campaign-performance";
 import { buildShareablePerformanceSummary } from "../../../../lib/performance-summary";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
-import { createProspectAction, updateCampaignAction } from "../actions";
+import { updateCampaignAction } from "../actions";
 import { CampaignForm } from "../campaign-form";
 import { ProspectForm } from "../prospect-form";
 import { getUpgradePrompt } from "../../../../lib/upgrade-prompts";
@@ -34,8 +33,6 @@ type CampaignDetailPageProps = {
   }>;
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
-    success?: string;
   }>;
 };
 
@@ -111,8 +108,6 @@ export default async function CampaignDetailPage({
           Keep the campaign brief, sender-profile choice, target account list, and workflow history in one protected workspace-scoped place before adding research, generation, reply handling, and performance-aware iteration.
         </p>
       </section>
-
-      <FeedbackBanner error={resolvedSearchParams.error} success={resolvedSearchParams.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link
@@ -193,7 +188,6 @@ export default async function CampaignDetailPage({
 
           <div id="prospect-form">
             <ProspectForm
-              action={createProspectAction}
               workspaceId={workspace.workspaceId}
               campaignId={campaign.id}
             />

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
-import { FeedbackBanner } from "../../../components/feedback-banner";
 import { WorkflowStageStrip } from "../../../components/workflow-stage-strip";
 import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
 import { getCampaignsEmptyState } from "../../../lib/empty-state-guidance";
@@ -25,8 +24,6 @@ export const metadata: Metadata = {
 type CampaignsPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
-    success?: string;
   }>;
 };
 
@@ -66,8 +63,6 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
           Keep multiple client-facing outbound workflows visible in one workspace, with enough grouping, review context, and performance signal to move from brief to replies without turning the app into a CRM.
         </p>
       </section>
-
-      <FeedbackBanner error={params.error} success={params.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link href="/app" className="buttonSecondary">

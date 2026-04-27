@@ -1,6 +1,5 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
-import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { requireActiveWorkspaceAppContext } from "../../../../lib/server/billing";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
 import { createCampaignAction } from "../actions";
@@ -9,7 +8,6 @@ import { CampaignForm } from "../campaign-form";
 type NewCampaignPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
   }>;
 };
 
@@ -34,8 +32,6 @@ export default async function NewCampaignPage({
           sender-aware motion, or leave it empty for a basic-mode start.
         </p>
       </section>
-
-      <FeedbackBanner error={params.error} />
 
       <div className="inlineActions profileHeaderActions">
         <Link
