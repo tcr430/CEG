@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import { WorkflowStageStrip } from "../../../components/workflow-stage-strip";
 import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
@@ -65,18 +69,17 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link href="/app" className="buttonSecondary">
-          Back to dashboard
-        </Link>
-        <Link
-          href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
-          className="buttonPrimary"
-        >
-          New client workflow
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href="/app">Back to dashboard</Link>
+        </Button>
+        <Button asChild>
+          <Link href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}>
+            New client workflow
+          </Link>
+        </Button>
       </div>
 
-      <section className="panel" aria-labelledby="campaigns-title">
+      <Card className="p-6" aria-labelledby="campaigns-title">
         <WorkflowStageStrip
           label="Workflow moat"
           title="Campaigns should make the operating flow visible"
@@ -97,33 +100,36 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
         {campaigns.length > 0 ? (
           <>
             <div className="campaignPortfolioGrid">
-              <div className="dashboardCard nestedCard">
+              <Card className="p-4 nestedCard">
                 <p className="cardLabel">Workflow coverage</p>
                 <h3>{overview.campaignCount} campaign(s)</h3>
                 <p>{overview.activeCount} active. {overview.senderAwareCount} sender-aware. {overview.basicModeCount} basic mode.</p>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-4 nestedCard">
                 <p className="cardLabel">Performance signals</p>
                 <h3>{overview.totalOutboundMessages} outbound message(s)</h3>
                 <p>{overview.totalReplies} replies. {overview.totalPositiveReplies} positive replies.</p>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-4 nestedCard">
                 <p className="cardLabel">Quick switching</p>
                 <h3>Move between live client campaigns faster</h3>
                 <div className="inlineActions compactInlineActions">
                   {overview.quickSwitchCampaigns.map((item) => (
-                    <Link
+                    <Button
                       key={item.campaign.id}
-                      href={`/app/campaigns/${item.campaign.id}?workspace=${workspace.workspaceId}`}
-                      className="buttonSecondary quickSwitchLink"
+                      asChild
+                      variant="secondary"
+                      className="quickSwitchLink"
                     >
-                      {item.campaign.name}
-                      <small>{item.campaign.status}</small>
-                    </Link>
+                      <Link href={`/app/campaigns/${item.campaign.id}?workspace=${workspace.workspaceId}`}>
+                        {item.campaign.name}
+                        <small>{item.campaign.status}</small>
+                      </Link>
+                    </Button>
                   ))}
                 </div>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-4 nestedCard">
                 <p className="cardLabel">Campaign learning</p>
                 <h3>
                   {overview.topPerformers.length > 0
@@ -144,7 +150,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                 ) : (
                   <p>Performance rankings will appear once client campaigns start sending and receiving replies. They are meant to surface early history, not claim automatic optimization.</p>
                 )}
-              </div>
+              </Card>
             </div>
 
             <div className="stack">
@@ -155,7 +161,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                       <p className="cardLabel">Grouping</p>
                       <h3 id={`campaign-group-${group.status}`}>{group.label}</h3>
                     </div>
-                    <span className="pill">{group.campaigns.length}</span>
+                    <Badge variant="secondary">{group.campaigns.length}</Badge>
                   </div>
 
                   <div className="profileList">
@@ -163,40 +169,42 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                       <Link
                         key={item.campaign.id}
                         href={`/app/campaigns/${item.campaign.id}?workspace=${workspace.workspaceId}`}
-                        className="profileCard"
+                        className="block"
                       >
-                        <div className="profileCardHeader">
-                          <div>
-                            <p className="cardLabel">{item.campaign.status}</p>
-                            <h2>{item.campaign.name}</h2>
+                        <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                          <div className="profileCardHeader">
+                            <div>
+                              <p className="cardLabel">{item.campaign.status}</p>
+                              <h2>{item.campaign.name}</h2>
+                            </div>
+                            <Badge variant="secondary">
+                              {item.isSenderAware ? "Sender-aware" : "Basic mode"}
+                            </Badge>
                           </div>
-                          <span className="pill">
-                            {item.isSenderAware ? "Sender-aware" : "Basic mode"}
-                          </span>
-                        </div>
 
-                        <p>{item.campaign.offerSummary ?? "No offer summary yet."}</p>
-                        <p>
-                          {item.campaign.targetIcp ??
-                            "Add an ICP so later research, drafting, and review stages stay focused on the right client motion."}
-                        </p>
-                        <p>
-                          Open the campaign to manage the next stage directly: add target accounts, move them into research, review drafts, and track replies in one place. As reply history accumulates, the workflow can rely on more informed campaign-level guidance.
-                        </p>
-                        <div className="pillRow compactPillRow">
-                          <span className="pill">
-                            Outbound {item.performance?.outboundMessages ?? 0}
-                          </span>
-                          <span className="pill">
-                            Replies {item.performance?.replies ?? 0}
-                          </span>
-                          <span className="pill">
-                            Positive {item.performance?.positiveReplies ?? 0}
-                          </span>
-                          <span className="pill">
-                            Reply rate {formatPerformanceRate(item.performance?.replyRate)}
-                          </span>
-                        </div>
+                          <p>{item.campaign.offerSummary ?? "No offer summary yet."}</p>
+                          <p>
+                            {item.campaign.targetIcp ??
+                              "Add an ICP so later research, drafting, and review stages stay focused on the right client motion."}
+                          </p>
+                          <p>
+                            Open the campaign to manage the next stage directly: add target accounts, move them into research, review drafts, and track replies in one place. As reply history accumulates, the workflow can rely on more informed campaign-level guidance.
+                          </p>
+                          <div className="pillRow compactPillRow">
+                            <Badge variant="secondary">
+                              Outbound {item.performance?.outboundMessages ?? 0}
+                            </Badge>
+                            <Badge variant="secondary">
+                              Replies {item.performance?.replies ?? 0}
+                            </Badge>
+                            <Badge variant="secondary">
+                              Positive {item.performance?.positiveReplies ?? 0}
+                            </Badge>
+                            <Badge variant="secondary">
+                              Reply rate {formatPerformanceRate(item.performance?.replyRate)}
+                            </Badge>
+                          </div>
+                        </Card>
                       </Link>
                     ))}
                   </div>
@@ -213,25 +221,22 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
               nextAction={emptyState.nextAction}
               actions={
                 <>
-                  <Link
-                    href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
-                    className="buttonPrimary"
-                  >
-                    Create client workflow
-                  </Link>
-                  <Link
-                    href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}
-                    className="buttonSecondary"
-                  >
-                    Review sender profiles
-                  </Link>
+                  <Button asChild>
+                    <Link href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}>
+                      Create client workflow
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <Link href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}>
+                      Review sender profiles
+                    </Link>
+                  </Button>
                 </>
               }
             />
           </div>
         )}
-      </section>
+      </Card>
     </main>
   );
 }
-
