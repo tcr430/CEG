@@ -59,6 +59,9 @@ import {
   RegenerateSequencePartForm,
   ResearchForm,
 } from "./forms/prospect-action-forms";
+import { ProspectDetailTabs } from "./prospect-detail-tabs";
+
+const VALID_TABS = ["research", "sequence", "replies", "settings"] as const;
 
 type ProspectDetailPageProps = {
   params: Promise<{
@@ -67,6 +70,7 @@ type ProspectDetailPageProps = {
   }>;
   searchParams?: Promise<{
     workspace?: string;
+    tab?: string;
   }>;
 };
 
@@ -260,6 +264,852 @@ export default async function ProspectDetailPage({
   });
   const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
 
+  // Compute the smart default tab based on workflow progress, then honour a
+  // valid ?tab= URL param so a page refresh stays on the same view.
+  const computedDefault = !latestSnapshot ? "research" : !latestSequence ? "sequence" : "replies";
+  const urlTab = resolvedSearchParams.tab;
+  const defaultTab = VALID_TABS.includes(urlTab as (typeof VALID_TABS)[number])
+    ? (urlTab as (typeof VALID_TABS)[number])
+    : computedDefault;
+
+  // ── Tab content ────────────────────────────────────────────────────────────
+
+  const researchTabContent = (
+    <>
+      <ResearchForm
+        {...commonIds}
+        defaultWebsite={prospect.companyWebsite ?? ""}
+      />
+
+      {latestSnapshot ? (
+        <div className="dashboardCard researchSnapshotCard">
+          <p className="cardLabel">Stage 1 | Research snapshot</p>
+          <h2>{companyProfile?.companyName ?? prospect.companyName ?? "Company profile"}</h2>
+          <p>
+            {softLead(confidenceLabel)} summary: {companyProfile?.summary ?? "No summary extracted yet."}
+          </p>
+          <div className="researchSection">
+            <h3>Value proposition</h3>
+            <p>{companyProfile?.valuePropositions[0] ?? "No clear value proposition was extracted."}</p>
+          </div>
+          <div className="researchSection">
+            <h3>Likely target customer</h3>
+            <p>
+              {companyProfile?.likelyTargetCustomer ?? companyProfile?.targetCustomers[0] ??
+                "The target customer is still uncertain from the available public copy."}
+            </p>
+          </div>
+          <div className="researchSection">
+            <h3>Likely pain points</h3>
+            <ul className="researchList">
+              {painPoints.length > 0 ? (
+                painPoints.map((item: string) => <li key={item}>{item}</li>)
+              ) : (
+                <li>Evidence is still too thin to state pain points confidently.</li>
+              )}
+            </ul>
+          </div>
+          <div className="researchSection">
+            <h3>Personalization hooks</h3>
+            <ul className="researchList">
+              {hooks.length > 0 ? (
+                hooks.map((item: string) => <li key={item}>{item}</li>)
+              ) : (
+                <li>No strong hooks surfaced from the latest snapshot yet.</li>
+              )}
+            </ul>
+          </div>
+          <div className="researchSection">
+            <h3>Evidence</h3>
+            <ul className="researchList evidenceList">
+              {evidence.length > 0 ? (
+                evidence.map((item: EvidenceSnippet, index: number) => (
+                  <li key={`${item.sourceUrl}-${index}`}>
+                    <strong>{item.supports.join(", ") || "evidence"}</strong>
+                    <p>{item.snippet}</p>
+                    <small>{renderConfidenceLabel(item.confidence.score, item.confidence.label)}</small>
+                  </li>
+                ))
+              ) : (
+                <li>No evidence snippets were preserved.</li>
+              )}
+            </ul>
+          </div>
+          <div className="researchSection">
+            <h3>Confidence flags</h3>
+            <ul className="researchList">
+              {qualityFlags.length > 0 ? (
+                qualityFlags.map((flag: EvidenceFlag) => (
+                  <li key={flag.code}>{flag.message}</li>
+                ))
+              ) : (
+                <li>No warning flags on the latest snapshot.</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <ActionEmptyState
+          label="No research snapshot yet"
+          title={researchEmptyState.title}
+          description={researchEmptyState.description}
+          nextAction={researchEmptyState.nextAction}
+          actions={
+            <a href="#research-form" className="buttonPrimary">
+              Start research stage
+            </a>
+          }
+        />
+      )}
+    </>
+  );
+
+  const sequenceTabContent = (
+    <>
+      <GenerateSequenceForm {...commonIds} />
+
+      {latestSequence ? (
+        <div className="dashboardCard researchSnapshotCard">
+          <p className="cardLabel">Stage 3 | Review sequence draft</p>
+          <h2>Sequence version {latestSequence.sequenceVersion}</h2>
+          <p>
+            Generated for {latestSequence.generatedForMode.replaceAll("_", " ")} mode. This draft now joins the stored prospect workflow history.
+          </p>
+          <p className="statusMessage compactStatusMessage">
+            This is the review stage: refine the draft, move the right parts into the thread, and only then create inbox drafts or mark messages as sent.
+          </p>
+          <div className="researchSection">
+            <h3>Subject lines</h3>
+            <ul className="researchList">
+              {latestSequence.subjectLineSet.subjectLines.map((item, index) => (
+                <li key={item.text}>
+                  <strong>{item.text}</strong>
+                  <p>{item.rationale}</p>
+                  <ArtifactActionButtons
+                    workspaceId={workspace.workspaceId}
+                    campaignId={resolvedParams.campaignId}
+                    prospectId={prospect.id}
+                    artifactType="sequence_subject_line_option"
+                    optionIndex={index}
+                    allowSelect
+                  />
+                </li>
+              ))}
+            </ul>
+            <RegenerateSequencePartForm
+              {...commonIds}
+              targetPart="subject_line"
+              defaultFeedback="Keep the set sharper and more specific to this prospect."
+              buttonLabel="Regenerate subject set"
+              fieldLabel="Regenerate subject lines"
+            />
+          </div>
+          <div className="researchSection">
+            <h3>Opener options</h3>
+            <ul className="researchList">
+              {latestSequence.openerSet.openerOptions.map((item, index) => (
+                <li key={item.text}>
+                  <strong>{item.text}</strong>
+                  <p>{item.rationale}</p>
+                  <ArtifactActionButtons
+                    workspaceId={workspace.workspaceId}
+                    campaignId={resolvedParams.campaignId}
+                    prospectId={prospect.id}
+                    artifactType="sequence_opener_option"
+                    optionIndex={index}
+                    allowSelect
+                  />
+                </li>
+              ))}
+            </ul>
+            <RegenerateSequencePartForm
+              {...commonIds}
+              targetPart="opener"
+              defaultFeedback="Make the openers more tailored to the strongest research hook."
+              buttonLabel="Regenerate opener set"
+              fieldLabel="Regenerate opener options"
+            />
+          </div>
+          <div className="researchSection">
+            <h3>Initial email</h3>
+            <p><strong>{latestSequence.initialEmail.email.subject}</strong></p>
+            <p>{latestSequence.initialEmail.email.opener}</p>
+            <p>{latestSequence.initialEmail.email.body}</p>
+            <p><strong>CTA:</strong> {latestSequence.initialEmail.email.cta}</p>
+            <p><strong>Rationale:</strong> {latestSequence.initialEmail.rationale}</p>
+            <ArtifactActionButtons
+              workspaceId={workspace.workspaceId}
+              campaignId={resolvedParams.campaignId}
+              prospectId={prospect.id}
+              artifactType="sequence_initial_email"
+              copyText={[
+                latestSequence.initialEmail.email.subject,
+                latestSequence.initialEmail.email.opener,
+                latestSequence.initialEmail.email.body,
+                `CTA: ${latestSequence.initialEmail.email.cta}`,
+              ].join("\n\n")}
+              exportText={[
+                latestSequence.initialEmail.email.subject,
+                latestSequence.initialEmail.email.opener,
+                latestSequence.initialEmail.email.body,
+                `CTA: ${latestSequence.initialEmail.email.cta}`,
+              ].join("\n\n")}
+              exportFileName={`sequence-initial-${prospect.companyDomain ?? prospect.id}.txt`}
+              allowCopy
+              allowExport
+            />
+            {(() => {
+              const inboxDraft = inboxDraftsByArtifact.get(
+                buildSequenceInboxDraftArtifactId({
+                  sequenceRecordId: latestSequence.recordId,
+                  targetPart: "initial_email",
+                }),
+              );
+
+              if (inboxDraft) {
+                return (
+                  <p className="statusMessage compactStatusMessage">
+                    {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                  </p>
+                );
+              }
+
+              if (!activeInboxAccount) {
+                return (
+                  <p className="statusMessage compactStatusMessage">
+                    Connect Gmail in Settings to push this email into Gmail as a review draft.
+                  </p>
+                );
+              }
+
+              if (!prospect.email) {
+                return (
+                  <p className="statusMessage compactStatusMessage">
+                    Add a prospect email before creating a Gmail draft.
+                  </p>
+                );
+              }
+
+              return (
+                <CreateSequenceInboxDraftButton
+                  {...commonIds}
+                  artifactType="sequence_initial_email"
+                />
+              );
+            })()}
+            <RegenerateSequencePartForm
+              {...commonIds}
+              targetPart="initial_email"
+              defaultFeedback="Keep the message concise and improve the CTA."
+              buttonLabel="Regenerate initial email"
+              fieldLabel="Regenerate this email step"
+            />
+            <EditSequenceStepForm
+              {...commonIds}
+              targetPart="initial_email"
+              buttonLabel="Save reviewed initial email"
+              defaults={{
+                subject: latestSequence.initialEmail.email.subject,
+                opener: latestSequence.initialEmail.email.opener,
+                body: latestSequence.initialEmail.email.body,
+                cta: latestSequence.initialEmail.email.cta,
+                rationale: latestSequence.initialEmail.email.rationale,
+              }}
+            />
+          </div>
+          <div className="researchSection">
+            <h3>Follow-ups</h3>
+            <ul className="researchList sequenceStepList">
+              {latestSequence.followUpSequence.sequenceSteps.map((step) => (
+                <li key={step.stepNumber} className="sequenceStepItem">
+                  <strong>Step {step.stepNumber} | Wait {step.waitDays} day(s)</strong>
+                  <p><strong>{step.subject}</strong></p>
+                  <p>{step.opener}</p>
+                  <p>{step.body}</p>
+                  <p><strong>CTA:</strong> {step.cta}</p>
+                  <p><strong>Rationale:</strong> {step.rationale}</p>
+                  <ArtifactActionButtons
+                    workspaceId={workspace.workspaceId}
+                    campaignId={resolvedParams.campaignId}
+                    prospectId={prospect.id}
+                    artifactType="sequence_follow_up_step"
+                    targetStepNumber={step.stepNumber}
+                    copyText={[
+                      step.subject,
+                      step.opener,
+                      step.body,
+                      `CTA: ${step.cta}`,
+                    ].join("\n\n")}
+                    exportText={[
+                      step.subject,
+                      step.opener,
+                      step.body,
+                      `CTA: ${step.cta}`,
+                    ].join("\n\n")}
+                    exportFileName={`sequence-follow-up-${step.stepNumber}-${prospect.companyDomain ?? prospect.id}.txt`}
+                    allowCopy
+                    allowExport
+                  />
+                  {(() => {
+                    const inboxDraft = inboxDraftsByArtifact.get(
+                      buildSequenceInboxDraftArtifactId({
+                        sequenceRecordId: latestSequence.recordId,
+                        targetPart: "follow_up_step",
+                        targetStepNumber: step.stepNumber,
+                      }),
+                    );
+
+                    if (inboxDraft) {
+                      return (
+                        <p className="statusMessage compactStatusMessage">
+                          {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                        </p>
+                      );
+                    }
+
+                    if (!activeInboxAccount || !prospect.email) {
+                      return null;
+                    }
+
+                    return (
+                      <CreateSequenceInboxDraftButton
+                        {...commonIds}
+                        artifactType="sequence_follow_up_step"
+                        targetStepNumber={step.stepNumber}
+                      />
+                    );
+                  })()}
+                  <RegenerateSequencePartForm
+                    {...commonIds}
+                    targetPart="follow_up_step"
+                    targetStepNumber={step.stepNumber}
+                    defaultFeedback={`Refresh follow-up ${step.stepNumber} and keep it specific.`}
+                    buttonLabel="Regenerate step"
+                    fieldLabel="Regenerate this step"
+                  />
+                  <EditSequenceStepForm
+                    {...commonIds}
+                    targetPart="follow_up_step"
+                    targetStepNumber={step.stepNumber}
+                    buttonLabel="Save reviewed step"
+                    defaults={{
+                      subject: step.subject,
+                      opener: step.opener,
+                      body: step.body,
+                      cta: step.cta,
+                      rationale: step.rationale,
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+          {sequenceQualityReport ? (
+            <div className="researchSection">
+              <h3>Quality review</h3>
+              <div className="pillRow">
+                <span className="pill">
+                  Overall {formatQualityScore(sequenceQualityReport.summary.score)}
+                </span>
+                <span className="pill">{sequenceQualityReport.summary.label}</span>
+                {sequenceQualityReport.summary.blocked ? (
+                  <span className="pill">Review before use</span>
+                ) : null}
+              </div>
+              <ul className="researchList compactResearchList">
+                {sequenceQualityReport.dimensions.map((dimension) => (
+                  <li key={dimension.name}>
+                    <strong>{formatQualityName(dimension.name)}</strong>
+                    <p>
+                      {formatQualityScore(dimension.score)} | {dimension.details}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {sequenceFailedChecks.length > 0 ? (
+                <ul className="researchList compactResearchList">
+                  {sequenceFailedChecks.map((check) => (
+                    <li key={check.code}>
+                      <strong>{formatQualityName(check.code)}</strong>
+                      <p>{check.message}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="statusMessage compactStatusMessage">
+                  Deterministic quality checks passed for the current stored sequence.
+                </p>
+              )}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <ActionEmptyState
+          label="Stage 2 not started"
+          title={sequenceEmptyState.title}
+          description={sequenceEmptyState.description}
+          nextAction={sequenceEmptyState.nextAction}
+          actions={
+            <a href="#sequence-form" className="buttonPrimary">
+              Create draft for review
+            </a>
+          }
+        />
+      )}
+    </>
+  );
+
+  const repliesTabContent = (
+    <div className="dashboardCard researchSnapshotCard">
+      <p className="cardLabel">Stage 4</p>
+      <h2>Handle replies and follow-through</h2>
+      <p>
+        Capture inbound replies, add manual outbound notes, and attach generated
+        sequence drafts so the thread stays auditable and easy to scan. Reply analysis and draft replies are suggestions for review, not automatic decisions. The thread becomes stored inbox and reply context for later follow-through.
+      </p>
+
+      <div className="threadComposerGrid">
+        <InboundReplyForm {...commonIds} />
+        <ManualOutboundForm {...commonIds} />
+      </div>
+
+      <div className="inlineActions">
+        {replyState.latestInboundMessage ? (
+          <AnalyzeReplyButton {...commonIds} />
+        ) : null}
+
+        {replyState.latestAnalysis ? (
+          <GenerateReplyDraftsButton {...commonIds} />
+        ) : null}
+
+        {latestSequence ? (
+          <AppendSequenceButton {...commonIds} />
+        ) : null}
+      </div>
+
+      <p className="statusMessage compactStatusMessage">
+        AI proposes reply analysis and draft responses here. Your team still decides what to send, edit, save, or move into Gmail.
+      </p>
+
+      {!hasDraftBundles ? (
+        <ActionEmptyState
+          label="No reply drafts yet"
+          title={replyDraftEmptyState.title}
+          description={replyDraftEmptyState.description}
+          nextAction={replyDraftEmptyState.nextAction}
+          actions={
+            replyDraftState === "needs_inbound" ? (
+              <a href="#inbound-reply-form" className="buttonPrimary">
+                Save inbound reply
+              </a>
+            ) : replyDraftState === "needs_analysis" ? (
+              <AnalyzeReplyButton {...commonIds} />
+            ) : (
+              <GenerateReplyDraftsButton {...commonIds} className="buttonPrimary" />
+            )
+          }
+        />
+      ) : null}
+
+      {replyState.timeline.length > 0 ? (
+        <div className="threadTimeline">
+          {/* If thread volume grows substantially, move this timeline to paginated server slices. */}
+          {replyState.timeline.map((entry) => {
+            const messageSource = readMessageMetaString(
+              entry.message.metadata.source,
+              "manual",
+            );
+            const timelineLabel = readMessageMetaString(
+              entry.message.metadata.timelineLabel,
+              formatMessageBadge(entry.message.direction, messageSource),
+            );
+            const sequenceVersion = readMessageMetaNumber(
+              entry.message.metadata.sequenceVersion,
+            );
+            const inboxDraft = readInboxDraftLinkFromMessage(entry.message);
+            const sentTimestamp = entry.message.sentAt
+              ? entry.message.sentAt.toLocaleString("en-GB", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })
+              : null;
+
+            const analysisGuidance = entry.analysis
+              ? getReplyAnalysisGuidance({
+                  intent: entry.analysis.analysisOutput.analysis.intent,
+                  confidenceLabel: entry.analysis.analysisOutput.analysis.confidence.label,
+                })
+              : null;
+
+            return (
+              <article key={entry.message.id} className="threadTimelineItem">
+                <div className="threadTimelineRail" />
+                <div className="threadTimelineCard">
+                  <div className="threadTimelineHeader">
+                    <div>
+                      <p className="cardLabel">{timelineLabel}</p>
+                      <h3>
+                        {entry.message.subject ??
+                          (entry.message.direction === "inbound"
+                            ? "Inbound message"
+                            : "Outbound message")}
+                      </h3>
+                    </div>
+                    <div className="pillRow compactPillRow">
+                      <span className="pill">
+                        {formatMessageBadge(entry.message.direction, messageSource)}
+                      </span>
+                      <span className="pill">
+                        {formatMessageStatus(entry.message.status)}
+                      </span>
+                      <span className="pill">
+                        Message v{String(entry.message.metadata.messageVersion ?? 1)}
+                      </span>
+                      {sequenceVersion ? (
+                        <span className="pill">Sequence v{sequenceVersion}</span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <p className="threadMessageBody">
+                    {entry.message.bodyText ?? "No text captured."}
+                  </p>
+
+                  {entry.message.direction === "outbound" ? (
+                    <div className="inlineActions compactInlineActions">
+                      {inboxDraft ? (
+                        <p className="statusMessage compactStatusMessage">
+                          {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
+                          {sentTimestamp ? ` | ${sentTimestamp}` : ""}
+                        </p>
+                      ) : sentTimestamp ? (
+                        <p className="statusMessage compactStatusMessage">
+                          Sent {sentTimestamp}
+                        </p>
+                      ) : null}
+                      {entry.message.providerMessageId ? (
+                        <p className="statusMessage compactStatusMessage">
+                          Provider message id: {entry.message.providerMessageId}
+                        </p>
+                      ) : null}
+                      {entry.message.status !== "sent" && entry.message.status !== "delivered" ? (
+                        <MarkOutboundSentButton
+                          {...commonIds}
+                          messageId={entry.message.id}
+                          sendMode={inboxDraft ? "inferred" : "manual"}
+                          providerMessageId={inboxDraft?.providerMessageId ?? undefined}
+                          providerThreadId={inboxDraft?.providerThreadId ?? undefined}
+                          label={inboxDraft ? "Mark sent from inbox" : "Mark as sent"}
+                        />
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {entry.analysis ? (
+                    <div className="threadInsightCard">
+                      <div className="pillRow">
+                        <span className="pill">
+                          Intent: {formatIntent(entry.analysis.analysisOutput.analysis.intent)}
+                        </span>
+                        <span className="pill">
+                          Action: {formatIntent(entry.analysis.strategyOutput.strategy.recommendedAction)}
+                        </span>
+                        <span className="pill">
+                          {renderConfidenceLabel(
+                            entry.analysis.analysisOutput.analysis.confidence.score,
+                            entry.analysis.analysisOutput.analysis.confidence.label,
+                          )}
+                        </span>
+                        <span className="pill">Analysis v{entry.analysis.analysisVersion}</span>
+                      </div>
+                      {entry.analysis.analysisOutput.analysis.objectionType ? (
+                        <p>
+                          <strong>Objection type:</strong>{" "}
+                          {formatIntent(entry.analysis.analysisOutput.analysis.objectionType)}
+                        </p>
+                      ) : null}
+                      <p>
+                        <strong>Rationale:</strong> {entry.analysis.analysisOutput.analysis.rationale}
+                      </p>
+                      <p>
+                        <strong>Drafting strategy:</strong>{" "}
+                        {entry.analysis.strategyOutput.strategy.draftingStrategy}
+                      </p>
+                      {analysisGuidance ? (
+                        <p className="statusMessage">{analysisGuidance}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {entry.draftBundles.length > 0 ? (
+                    <div className="threadInsightCard">
+                      <h4>Draft reply versions</h4>
+                      <p className="statusMessage compactStatusMessage">
+                        Each version is a proposed response set. Review and edit before using it in a live client thread.
+                      </p>
+                      <div className="stack">
+                        {entry.draftBundles.map((bundle, bundleIndex) => (
+                          <section key={`${bundle.version}-${bundle.bundleId}`} className="threadDraftBundle">
+                            <div className="pillRow">
+                              <span className="pill">Drafts v{bundle.version}</span>
+                              <span className="pill">
+                                Action: {formatIntent(bundle.output.recommendedAction)}
+                              </span>
+                              <span className="pill">
+                                {renderConfidenceLabel(
+                                  bundle.output.confidence.score,
+                                  bundle.output.confidence.label,
+                                )}
+                              </span>
+                            </div>
+                            <p>
+                              <strong>Strategy:</strong> {bundle.output.draftingStrategy}
+                            </p>
+                            <ul className="researchList">
+                              {bundle.output.drafts.map((draft, draftIndex) => {
+                                const storedDraft = bundle.records[draftIndex] ?? null;
+                                const draftQuality = storedDraft?.qualityChecksJson ?? null;
+                                const failedDraftChecks = getFailedQualityChecks(draftQuality);
+
+                                return (
+                                  <li key={draft.slotId}>
+                                    <strong>{draft.label}</strong>
+                                    {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
+                                    <p>{draft.bodyText}</p>
+                                    <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
+                                    {bundleIndex === 0 ? (
+                                      <>
+                                        <ArtifactActionButtons
+                                          workspaceId={workspace.workspaceId}
+                                          campaignId={resolvedParams.campaignId}
+                                          prospectId={prospect.id}
+                                          artifactType="draft_reply_option"
+                                          targetSlotId={draft.slotId}
+                                          copyText={[
+                                            draft.subject ?? null,
+                                            draft.bodyText,
+                                          ].filter(Boolean).join("\n\n")}
+                                          exportText={[
+                                            draft.subject ?? null,
+                                            draft.bodyText,
+                                          ].filter(Boolean).join("\n\n")}
+                                          exportFileName={`reply-draft-${draft.slotId}-${prospect.companyDomain ?? prospect.id}.txt`}
+                                          allowSelect
+                                          allowCopy
+                                          allowExport
+                                        />
+                                        {(() => {
+                                          const replyInboxDraft = inboxDraftsByArtifact.get(
+                                            buildReplyInboxDraftArtifactId({
+                                              inboundMessageId: entry.message.id,
+                                              slotId: draft.slotId,
+                                            }),
+                                          );
+
+                                          if (replyInboxDraft) {
+                                            return (
+                                              <p className="statusMessage compactStatusMessage">
+                                                {formatInboxDraftStatus(replyInboxDraft.status)} | {replyInboxDraft.providerDraftId}
+                                              </p>
+                                            );
+                                          }
+
+                                          if (!activeInboxAccount) {
+                                            return (
+                                              <p className="statusMessage compactStatusMessage">
+                                                Connect Gmail in Settings to turn this into a review draft.
+                                              </p>
+                                            );
+                                          }
+
+                                          if (!prospect.email) {
+                                            return (
+                                              <p className="statusMessage compactStatusMessage">
+                                                Add a prospect email before creating a Gmail draft.
+                                              </p>
+                                            );
+                                          }
+
+                                          return (
+                                            <CreateReplyInboxDraftButton
+                                              {...commonIds}
+                                              targetSlotId={draft.slotId}
+                                            />
+                                          );
+                                        })()}
+                                      </>
+                                    ) : null}
+                                    {draftQuality ? (
+                                      <div className="researchSection compactSection">
+                                        <div className="pillRow">
+                                          <span className="pill">
+                                            Quality {formatQualityScore(draftQuality.summary.score)}
+                                          </span>
+                                          <span className="pill">
+                                            {draftQuality.summary.label}
+                                          </span>
+                                          {draftQuality.summary.blocked ? (
+                                            <span className="pill">Review before sending</span>
+                                          ) : null}
+                                        </div>
+                                        <ul className="researchList compactResearchList">
+                                          {draftQuality.dimensions.map((dimension) => (
+                                            <li key={dimension.name}>
+                                              <strong>{formatQualityName(dimension.name)}</strong>
+                                              <p>
+                                                {formatQualityScore(dimension.score)} | {dimension.details}
+                                              </p>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                        {failedDraftChecks.length > 0 ? (
+                                          <ul className="researchList compactResearchList">
+                                            {failedDraftChecks.map((check) => (
+                                              <li key={check.code}>
+                                                <strong>{formatQualityName(check.code)}</strong>
+                                                <p>{check.message}</p>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        ) : (
+                                          <p className="statusMessage compactStatusMessage">
+                                            Deterministic checks passed for this stored draft version.
+                                          </p>
+                                        )}
+                                      </div>
+                                    ) : null}
+                                    {bundleIndex === 0 ? (
+                                      <>
+                                        <RegenerateReplyDraftForm
+                                          {...commonIds}
+                                          targetSlotId={draft.slotId}
+                                          defaultFeedback="Make this a little shorter and softer."
+                                        />
+                                        <EditReplyDraftForm
+                                          {...commonIds}
+                                          targetSlotId={draft.slotId}
+                                          defaults={{
+                                            subject: draft.subject ?? "",
+                                            bodyText: draft.bodyText,
+                                            strategyNote: draft.strategyNote,
+                                          }}
+                                        />
+                                      </>
+                                    ) : null}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </section>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <ActionEmptyState
+          label="No thread activity yet"
+          title="Start the first prospect thread"
+          description="Store the first inbound or outbound message so analysis, draft replies, and future inbox sync all attach to a clean timeline."
+          nextAction="Save the first message, then use analysis and drafting from the stored thread history."
+          actions={
+            <>
+              <a href="#inbound-reply-form" className="buttonPrimary">
+                Save inbound reply
+              </a>
+              {latestSequence ? (
+                <AppendSequenceButton {...commonIds} />
+              ) : null}
+            </>
+          }
+        />
+      )}
+    </div>
+  );
+
+  const settingsTabContent = (
+    <>
+      <div className="dashboardCard">
+        <p className="cardLabel">Target account</p>
+        <h2>{prospect.contactName ?? prospect.companyName ?? "Prospect"}</h2>
+        <p>{prospect.companyWebsite ?? "Add a public website URL to run research."}</p>
+        <p>
+          This prospect record is the anchor for stored company context, research snapshots, draft history, and reply handling over time.
+        </p>
+        <div className="pillRow">
+          <span className="pill">{prospect.status}</span>
+          {latestSnapshot ? (
+            <span className="pill">
+              {renderConfidenceLabel(quality?.overall.score ?? 0, confidenceLabel)}
+            </span>
+          ) : null}
+          {latestSequence ? (
+            <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
+          ) : null}
+          {replyState.thread ? <span className="pill">Thread active</span> : null}
+          <span className="pill">{billing.planLabel} plan</span>
+        </div>
+      </div>
+
+      <div className="dashboardCard">
+        <p className="cardLabel">Workflow headroom</p>
+        <h2>Current workspace limits</h2>
+        <ul className="researchList compactResearchList">
+          <li>
+            <strong>Sender-aware profiles</strong>
+            <p>
+              {billing.features.senderAwareProfiles.allowed
+                ? "Included on this plan."
+                : "Basic mode only on this plan."}
+            </p>
+          </li>
+          <li>
+            <strong>Website research</strong>
+            <p>{formatAllowance(billing.limits.websiteResearch.remaining, "research runs")}</p>
+          </li>
+          <li>
+            <strong>Sequence generation</strong>
+            <p>{formatAllowance(billing.limits.sequenceGeneration.remaining, "sequence runs")}</p>
+          </li>
+          <li>
+            <strong>Reply intelligence</strong>
+            <p>
+              {formatAllowance(billing.limits.replyAnalysis.remaining, "reply analyses")} and {" "}
+              {formatAllowance(billing.limits.replyDraftGeneration.remaining, "draft generations")}
+            </p>
+          </li>
+          <li>
+            <strong>Regenerations</strong>
+            <p>{formatAllowance(billing.limits.regenerations.remaining, "regenerations")}</p>
+          </li>
+        </ul>
+      </div>
+
+      {workflowUpgradePrompt ? (
+        <UpgradePromptCard
+          workspaceId={workspace.workspaceId}
+          prompt={workflowUpgradePrompt}
+        />
+      ) : null}
+
+      <div className="dashboardCard">
+        <p className="cardLabel">Workflow memory</p>
+        <h2>What this workflow preserves over time</h2>
+        <p>
+          The thread now preserves manual outbound messages, generated outbound sequence
+          drafts, inbound prospect replies, reply analyses, and draft reply versions so
+          future inbox sync can attach to a clean server-side timeline. That includes what the system proposed and what a human later edited or approved when the workflow captures it. In practical terms, this is where prospect-level operational memory is already real in the product today.
+        </p>
+      </div>
+    </>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <main className="shell">
       <section className="hero">
@@ -279,868 +1129,55 @@ export default async function ProspectDetailPage({
         </Link>
       </div>
 
-      <section className="profileDetailGrid">
-        <div className="stack">
-          <WorkflowStageStrip
-            label="Workflow moat"
-            title="Keep this account inside one end-to-end workflow"
-            description="This screen is where the product should feel most productized: the same prospect record carries research, draft generation, human review, reply handling, and the structured signals that make later guidance more informed over time."
-            stages={workflowStages}
-            nextActionLabel={workflowNextAction ? "Current focus" : undefined}
-            nextActionTitle={workflowNextAction?.label}
-            nextActionNote={workflowNextAction?.note}
-          />
+      <WorkflowStageStrip
+        label="Workflow moat"
+        title="Keep this account inside one end-to-end workflow"
+        description="This screen is where the product should feel most productized: the same prospect record carries research, draft generation, human review, reply handling, and the structured signals that make later guidance more informed over time."
+        stages={workflowStages}
+        nextActionLabel={workflowNextAction ? "Current focus" : undefined}
+        nextActionTitle={workflowNextAction?.label}
+        nextActionNote={workflowNextAction?.note}
+      />
 
-          <div className="dashboardCard">
-            <p className="cardLabel">Target account</p>
-            <h2>{prospect.contactName ?? prospect.companyName ?? "Prospect"}</h2>
-            <p>{prospect.companyWebsite ?? "Add a public website URL to run research."}</p>
-            <p>
-              This prospect record is the anchor for stored company context, research snapshots, draft history, and reply handling over time.
-            </p>
-            <div className="pillRow">
-              <span className="pill">{prospect.status}</span>
-              {latestSnapshot ? (
-                <span className="pill">
-                  {renderConfidenceLabel(quality?.overall.score ?? 0, confidenceLabel)}
-                </span>
-              ) : null}
-              {latestSequence ? (
-                <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
-              ) : null}
-              {replyState.thread ? <span className="pill">Thread active</span> : null}
-              <span className="pill">{billing.planLabel} plan</span>
-            </div>
-          </div>
-          <div className="dashboardCard">
-            <p className="cardLabel">Run status</p>
-            <h2>Current stage activity</h2>
-            <p>
-              Research and generation still complete inline today, but each run now records durable state so retries and future queue workers can resume safely.
-            </p>
-            <ul className="researchList compactResearchList">
-              {asyncOperations.map((job) => {
-                const lastTimestamp =
-                  formatAsyncOperationTimestamp(job.lastTriggeredAt) ??
-                  formatAsyncOperationTimestamp(job.lastSucceededAt) ??
-                  formatAsyncOperationTimestamp(job.updatedAt);
+      <div className="dashboardCard">
+        <p className="cardLabel">Run status</p>
+        <h2>Current stage activity</h2>
+        <p>
+          Research and generation still complete inline today, but each run now records durable state so retries and future queue workers can resume safely.
+        </p>
+        <ul className="researchList compactResearchList">
+          {asyncOperations.map((job) => {
+            const lastTimestamp =
+              formatAsyncOperationTimestamp(job.lastTriggeredAt) ??
+              formatAsyncOperationTimestamp(job.lastSucceededAt) ??
+              formatAsyncOperationTimestamp(job.updatedAt);
 
-                return (
-                  <li key={job.kind}>
-                    <strong>{formatAsyncOperationLabel(job.kind)}</strong>
-                    <p>
-                      {formatAsyncOperationStatus(job.status)}
-                      {lastTimestamp ? ` | ${lastTimestamp}` : ""}
-                    </p>
-                    {job.status === "failed" && job.errorSummary ? <p>{job.errorSummary}</p> : null}
-                    {job.status === "running" ? (
-                      <p>Duplicate triggers are blocked while the current run is still fresh.</p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          <div className="dashboardCard">
-            <p className="cardLabel">Workflow headroom</p>
-            <h2>Current workspace limits</h2>
-            <ul className="researchList compactResearchList">
-              <li>
-                <strong>Sender-aware profiles</strong>
+            return (
+              <li key={job.kind}>
+                <strong>{formatAsyncOperationLabel(job.kind)}</strong>
                 <p>
-                  {billing.features.senderAwareProfiles.allowed
-                    ? "Included on this plan."
-                    : "Basic mode only on this plan."}
+                  {formatAsyncOperationStatus(job.status)}
+                  {lastTimestamp ? ` | ${lastTimestamp}` : ""}
                 </p>
+                {job.status === "failed" && job.errorSummary ? <p>{job.errorSummary}</p> : null}
+                {job.status === "running" ? (
+                  <p>Duplicate triggers are blocked while the current run is still fresh.</p>
+                ) : null}
               </li>
-              <li>
-                <strong>Website research</strong>
-                <p>{formatAllowance(billing.limits.websiteResearch.remaining, "research runs")}</p>
-              </li>
-              <li>
-                <strong>Sequence generation</strong>
-                <p>{formatAllowance(billing.limits.sequenceGeneration.remaining, "sequence runs")}</p>
-              </li>
-              <li>
-                <strong>Reply intelligence</strong>
-                <p>
-                  {formatAllowance(billing.limits.replyAnalysis.remaining, "reply analyses")} and {" "}
-                  {formatAllowance(billing.limits.replyDraftGeneration.remaining, "draft generations")}
-                </p>
-              </li>
-              <li>
-                <strong>Regenerations</strong>
-                <p>{formatAllowance(billing.limits.regenerations.remaining, "regenerations")}</p>
-              </li>
-            </ul>
-          </div>
+            );
+          })}
+        </ul>
+      </div>
 
-          {workflowUpgradePrompt ? (
-            <UpgradePromptCard
-              workspaceId={workspace.workspaceId}
-              prompt={workflowUpgradePrompt}
-            />
-          ) : null}
-
-          <ResearchForm
-            {...commonIds}
-            defaultWebsite={prospect.companyWebsite ?? ""}
-          />
-
-          <GenerateSequenceForm {...commonIds} />
-
-          <div className="dashboardCard researchSnapshotCard">
-            <p className="cardLabel">Stage 4</p>
-            <h2>Handle replies and follow-through</h2>
-            <p>
-              Capture inbound replies, add manual outbound notes, and attach generated
-              sequence drafts so the thread stays auditable and easy to scan. Reply analysis and draft replies are suggestions for review, not automatic decisions. The thread becomes stored inbox and reply context for later follow-through.
-            </p>
-
-            <div className="threadComposerGrid">
-              <InboundReplyForm {...commonIds} />
-              <ManualOutboundForm {...commonIds} />
-            </div>
-
-            <div className="inlineActions">
-              {replyState.latestInboundMessage ? (
-                <AnalyzeReplyButton {...commonIds} />
-              ) : null}
-
-              {replyState.latestAnalysis ? (
-                <GenerateReplyDraftsButton {...commonIds} />
-              ) : null}
-
-              {latestSequence ? (
-                <AppendSequenceButton {...commonIds} />
-              ) : null}
-            </div>
-
-            <p className="statusMessage compactStatusMessage">
-              AI proposes reply analysis and draft responses here. Your team still decides what to send, edit, save, or move into Gmail.
-            </p>
-
-            {!hasDraftBundles ? (
-              <ActionEmptyState
-                label="No reply drafts yet"
-                title={replyDraftEmptyState.title}
-                description={replyDraftEmptyState.description}
-                nextAction={replyDraftEmptyState.nextAction}
-                actions={
-                  replyDraftState === "needs_inbound" ? (
-                    <a href="#inbound-reply-form" className="buttonPrimary">
-                      Save inbound reply
-                    </a>
-                  ) : replyDraftState === "needs_analysis" ? (
-                    <AnalyzeReplyButton {...commonIds} />
-                  ) : (
-                    <GenerateReplyDraftsButton {...commonIds} className="buttonPrimary" />
-                  )
-                }
-              />
-            ) : null}
-
-            {replyState.timeline.length > 0 ? (
-              <div className="threadTimeline">
-                {/* If thread volume grows substantially, move this timeline to paginated server slices. */}
-                {replyState.timeline.map((entry) => {
-                  const messageSource = readMessageMetaString(
-                    entry.message.metadata.source,
-                    "manual",
-                  );
-                  const timelineLabel = readMessageMetaString(
-                    entry.message.metadata.timelineLabel,
-                    formatMessageBadge(entry.message.direction, messageSource),
-                  );
-                  const sequenceVersion = readMessageMetaNumber(
-                    entry.message.metadata.sequenceVersion,
-                  );
-                  const inboxDraft = readInboxDraftLinkFromMessage(entry.message);
-                  const sentTimestamp = entry.message.sentAt
-                    ? entry.message.sentAt.toLocaleString("en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })
-                    : null;
-
-                  const analysisGuidance = entry.analysis
-                    ? getReplyAnalysisGuidance({
-                        intent: entry.analysis.analysisOutput.analysis.intent,
-                        confidenceLabel: entry.analysis.analysisOutput.analysis.confidence.label,
-                      })
-                    : null;
-
-                  return (
-                    <article key={entry.message.id} className="threadTimelineItem">
-                      <div className="threadTimelineRail" />
-                      <div className="threadTimelineCard">
-                        <div className="threadTimelineHeader">
-                          <div>
-                            <p className="cardLabel">{timelineLabel}</p>
-                            <h3>
-                              {entry.message.subject ??
-                                (entry.message.direction === "inbound"
-                                  ? "Inbound message"
-                                  : "Outbound message")}
-                            </h3>
-                          </div>
-                          <div className="pillRow compactPillRow">
-                            <span className="pill">
-                              {formatMessageBadge(entry.message.direction, messageSource)}
-                            </span>
-                            <span className="pill">
-                              {formatMessageStatus(entry.message.status)}
-                            </span>
-                            <span className="pill">
-                              Message v{String(entry.message.metadata.messageVersion ?? 1)}
-                            </span>
-                            {sequenceVersion ? (
-                              <span className="pill">Sequence v{sequenceVersion}</span>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <p className="threadMessageBody">
-                          {entry.message.bodyText ?? "No text captured."}
-                        </p>
-
-                        {entry.message.direction === "outbound" ? (
-                          <div className="inlineActions compactInlineActions">
-                            {inboxDraft ? (
-                              <p className="statusMessage compactStatusMessage">
-                                {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
-                                {sentTimestamp ? ` | ${sentTimestamp}` : ""}
-                              </p>
-                            ) : sentTimestamp ? (
-                              <p className="statusMessage compactStatusMessage">
-                                Sent {sentTimestamp}
-                              </p>
-                            ) : null}
-                            {entry.message.providerMessageId ? (
-                              <p className="statusMessage compactStatusMessage">
-                                Provider message id: {entry.message.providerMessageId}
-                              </p>
-                            ) : null}
-                            {entry.message.status !== "sent" && entry.message.status !== "delivered" ? (
-                              <MarkOutboundSentButton
-                                {...commonIds}
-                                messageId={entry.message.id}
-                                sendMode={inboxDraft ? "inferred" : "manual"}
-                                providerMessageId={inboxDraft?.providerMessageId ?? undefined}
-                                providerThreadId={inboxDraft?.providerThreadId ?? undefined}
-                                label={inboxDraft ? "Mark sent from inbox" : "Mark as sent"}
-                              />
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        {entry.analysis ? (
-                          <div className="threadInsightCard">
-                            <div className="pillRow">
-                              <span className="pill">
-                                Intent: {formatIntent(entry.analysis.analysisOutput.analysis.intent)}
-                              </span>
-                              <span className="pill">
-                                Action: {formatIntent(entry.analysis.strategyOutput.strategy.recommendedAction)}
-                              </span>
-                              <span className="pill">
-                                {renderConfidenceLabel(
-                                  entry.analysis.analysisOutput.analysis.confidence.score,
-                                  entry.analysis.analysisOutput.analysis.confidence.label,
-                                )}
-                              </span>
-                              <span className="pill">Analysis v{entry.analysis.analysisVersion}</span>
-                            </div>
-                            {entry.analysis.analysisOutput.analysis.objectionType ? (
-                              <p>
-                                <strong>Objection type:</strong>{" "}
-                                {formatIntent(entry.analysis.analysisOutput.analysis.objectionType)}
-                              </p>
-                            ) : null}
-                            <p>
-                              <strong>Rationale:</strong> {entry.analysis.analysisOutput.analysis.rationale}
-                            </p>
-                            <p>
-                              <strong>Drafting strategy:</strong>{" "}
-                              {entry.analysis.strategyOutput.strategy.draftingStrategy}
-                            </p>
-                            {analysisGuidance ? (
-                              <p className="statusMessage">{analysisGuidance}</p>
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        {entry.draftBundles.length > 0 ? (
-                          <div className="threadInsightCard">
-                            <h4>Draft reply versions</h4>
-                            <p className="statusMessage compactStatusMessage">
-                              Each version is a proposed response set. Review and edit before using it in a live client thread.
-                            </p>
-                            <div className="stack">
-                              {entry.draftBundles.map((bundle, bundleIndex) => (
-                                <section key={`${bundle.version}-${bundle.bundleId}`} className="threadDraftBundle">
-                                  <div className="pillRow">
-                                    <span className="pill">Drafts v{bundle.version}</span>
-                                    <span className="pill">
-                                      Action: {formatIntent(bundle.output.recommendedAction)}
-                                    </span>
-                                    <span className="pill">
-                                      {renderConfidenceLabel(
-                                        bundle.output.confidence.score,
-                                        bundle.output.confidence.label,
-                                      )}
-                                    </span>
-                                  </div>
-                                  <p>
-                                    <strong>Strategy:</strong> {bundle.output.draftingStrategy}
-                                  </p>
-                                  <ul className="researchList">
-                                    {bundle.output.drafts.map((draft, draftIndex) => {
-                                      const storedDraft = bundle.records[draftIndex] ?? null;
-                                      const draftQuality = storedDraft?.qualityChecksJson ?? null;
-                                      const failedDraftChecks = getFailedQualityChecks(draftQuality);
-
-                                      return (
-                                        <li key={draft.slotId}>
-                                          <strong>{draft.label}</strong>
-                                          {draft.subject ? <p><strong>{draft.subject}</strong></p> : null}
-                                          <p>{draft.bodyText}</p>
-                                          <p><strong>Strategy note:</strong> {draft.strategyNote}</p>
-                                          {bundleIndex === 0 ? (
-                                            <>
-                                              <ArtifactActionButtons
-                                                workspaceId={workspace.workspaceId}
-                                                campaignId={resolvedParams.campaignId}
-                                                prospectId={prospect.id}
-                                                artifactType="draft_reply_option"
-                                                targetSlotId={draft.slotId}
-                                                copyText={[
-                                                  draft.subject ?? null,
-                                                  draft.bodyText,
-                                                ].filter(Boolean).join("\n\n")}
-                                                exportText={[
-                                                  draft.subject ?? null,
-                                                  draft.bodyText,
-                                                ].filter(Boolean).join("\n\n")}
-                                                exportFileName={`reply-draft-${draft.slotId}-${prospect.companyDomain ?? prospect.id}.txt`}
-                                                allowSelect
-                                                allowCopy
-                                                allowExport
-                                              />
-                                              {(() => {
-                                                const replyInboxDraft = inboxDraftsByArtifact.get(
-                                                  buildReplyInboxDraftArtifactId({
-                                                    inboundMessageId: entry.message.id,
-                                                    slotId: draft.slotId,
-                                                  }),
-                                                );
-
-                                                if (replyInboxDraft) {
-                                                  return (
-                                                    <p className="statusMessage compactStatusMessage">
-                                                      {formatInboxDraftStatus(replyInboxDraft.status)} | {replyInboxDraft.providerDraftId}
-                                                    </p>
-                                                  );
-                                                }
-
-                                                if (!activeInboxAccount) {
-                                                  return (
-                                                    <p className="statusMessage compactStatusMessage">
-                                                      Connect Gmail in Settings to turn this into a review draft.
-                                                    </p>
-                                                  );
-                                                }
-
-                                                if (!prospect.email) {
-                                                  return (
-                                                    <p className="statusMessage compactStatusMessage">
-                                                      Add a prospect email before creating a Gmail draft.
-                                                    </p>
-                                                  );
-                                                }
-
-                                                return (
-                                                  <CreateReplyInboxDraftButton
-                                                    {...commonIds}
-                                                    targetSlotId={draft.slotId}
-                                                  />
-                                                );
-                                              })()}
-                                            </>
-                                          ) : null}
-                                          {draftQuality ? (
-                                            <div className="researchSection compactSection">
-                                              <div className="pillRow">
-                                                <span className="pill">
-                                                  Quality {formatQualityScore(draftQuality.summary.score)}
-                                                </span>
-                                                <span className="pill">
-                                                  {draftQuality.summary.label}
-                                                </span>
-                                                {draftQuality.summary.blocked ? (
-                                                  <span className="pill">Review before sending</span>
-                                                ) : null}
-                                              </div>
-                                              <ul className="researchList compactResearchList">
-                                                {draftQuality.dimensions.map((dimension) => (
-                                                  <li key={dimension.name}>
-                                                    <strong>{formatQualityName(dimension.name)}</strong>
-                                                    <p>
-                                                      {formatQualityScore(dimension.score)} | {dimension.details}
-                                                    </p>
-                                                  </li>
-                                                ))}
-                                              </ul>
-                                              {failedDraftChecks.length > 0 ? (
-                                                <ul className="researchList compactResearchList">
-                                                  {failedDraftChecks.map((check) => (
-                                                    <li key={check.code}>
-                                                      <strong>{formatQualityName(check.code)}</strong>
-                                                      <p>{check.message}</p>
-                                                    </li>
-                                                  ))}
-                                                </ul>
-                                              ) : (
-                                                <p className="statusMessage compactStatusMessage">
-                                                  Deterministic checks passed for this stored draft version.
-                                                </p>
-                                              )}
-                                            </div>
-                                          ) : null}
-                                          {bundleIndex === 0 ? (
-                                            <>
-                                              <RegenerateReplyDraftForm
-                                                {...commonIds}
-                                                targetSlotId={draft.slotId}
-                                                defaultFeedback="Make this a little shorter and softer."
-                                              />
-                                              <EditReplyDraftForm
-                                                {...commonIds}
-                                                targetSlotId={draft.slotId}
-                                                defaults={{
-                                                  subject: draft.subject ?? "",
-                                                  bodyText: draft.bodyText,
-                                                  strategyNote: draft.strategyNote,
-                                                }}
-                                              />
-                                            </>
-                                          ) : null}
-                                        </li>
-                                      );
-                                    })}
-                                  </ul>
-                                </section>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <ActionEmptyState
-                label="No thread activity yet"
-                title="Start the first prospect thread"
-                description="Store the first inbound or outbound message so analysis, draft replies, and future inbox sync all attach to a clean timeline."
-                nextAction="Save the first message, then use analysis and drafting from the stored thread history."
-                actions={
-                  <>
-                    <a href="#inbound-reply-form" className="buttonPrimary">
-                      Save inbound reply
-                    </a>
-                    {latestSequence ? (
-                      <AppendSequenceButton {...commonIds} />
-                    ) : null}
-                  </>
-                }
-              />
-            )}
-          </div>
-
-          {latestSnapshot ? (
-            <div className="dashboardCard researchSnapshotCard">
-              <p className="cardLabel">Stage 1 | Research snapshot</p>
-              <h2>{companyProfile?.companyName ?? prospect.companyName ?? "Company profile"}</h2>
-              <p>
-                {softLead(confidenceLabel)} summary: {companyProfile?.summary ?? "No summary extracted yet."}
-              </p>
-              <div className="researchSection">
-                <h3>Value proposition</h3>
-                <p>{companyProfile?.valuePropositions[0] ?? "No clear value proposition was extracted."}</p>
-              </div>
-              <div className="researchSection">
-                <h3>Likely target customer</h3>
-                <p>
-                  {companyProfile?.likelyTargetCustomer ?? companyProfile?.targetCustomers[0] ??
-                    "The target customer is still uncertain from the available public copy."}
-                </p>
-              </div>
-              <div className="researchSection">
-                <h3>Likely pain points</h3>
-                <ul className="researchList">
-                  {painPoints.length > 0 ? (
-                    painPoints.map((item: string) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>Evidence is still too thin to state pain points confidently.</li>
-                  )}
-                </ul>
-              </div>
-              <div className="researchSection">
-                <h3>Personalization hooks</h3>
-                <ul className="researchList">
-                  {hooks.length > 0 ? (
-                    hooks.map((item: string) => <li key={item}>{item}</li>)
-                  ) : (
-                    <li>No strong hooks surfaced from the latest snapshot yet.</li>
-                  )}
-                </ul>
-              </div>
-              <div className="researchSection">
-                <h3>Evidence</h3>
-                <ul className="researchList evidenceList">
-                  {evidence.length > 0 ? (
-                    evidence.map((item: EvidenceSnippet, index: number) => (
-                      <li key={`${item.sourceUrl}-${index}`}>
-                        <strong>{item.supports.join(", ") || "evidence"}</strong>
-                        <p>{item.snippet}</p>
-                        <small>{renderConfidenceLabel(item.confidence.score, item.confidence.label)}</small>
-                      </li>
-                    ))
-                  ) : (
-                    <li>No evidence snippets were preserved.</li>
-                  )}
-                </ul>
-              </div>
-              <div className="researchSection">
-                <h3>Confidence flags</h3>
-                <ul className="researchList">
-                  {qualityFlags.length > 0 ? (
-                    qualityFlags.map((flag: EvidenceFlag) => (
-                      <li key={flag.code}>{flag.message}</li>
-                    ))
-                  ) : (
-                    <li>No warning flags on the latest snapshot.</li>
-                  )}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <ActionEmptyState
-              label="No research snapshot yet"
-              title={researchEmptyState.title}
-              description={researchEmptyState.description}
-              nextAction={researchEmptyState.nextAction}
-              actions={
-                <a href="#research-form" className="buttonPrimary">
-                  Start research stage
-                </a>
-              }
-            />
-          )}
-
-          {latestSequence ? (
-            <div className="dashboardCard researchSnapshotCard">
-              <p className="cardLabel">Stage 3 | Review sequence draft</p>
-              <h2>Sequence version {latestSequence.sequenceVersion}</h2>
-              <p>
-                Generated for {latestSequence.generatedForMode.replaceAll("_", " ")} mode. This draft now joins the stored prospect workflow history.
-              </p>
-              <p className="statusMessage compactStatusMessage">
-                This is the review stage: refine the draft, move the right parts into the thread, and only then create inbox drafts or mark messages as sent.
-              </p>
-              <div className="researchSection">
-                <h3>Subject lines</h3>
-                <ul className="researchList">
-                  {latestSequence.subjectLineSet.subjectLines.map((item, index) => (
-                    <li key={item.text}>
-                      <strong>{item.text}</strong>
-                      <p>{item.rationale}</p>
-                      <ArtifactActionButtons
-                        workspaceId={workspace.workspaceId}
-                        campaignId={resolvedParams.campaignId}
-                        prospectId={prospect.id}
-                        artifactType="sequence_subject_line_option"
-                        optionIndex={index}
-                        allowSelect
-                      />
-                    </li>
-                  ))}
-                </ul>
-                <RegenerateSequencePartForm
-                  {...commonIds}
-                  targetPart="subject_line"
-                  defaultFeedback="Keep the set sharper and more specific to this prospect."
-                  buttonLabel="Regenerate subject set"
-                  fieldLabel="Regenerate subject lines"
-                />
-              </div>
-              <div className="researchSection">
-                <h3>Opener options</h3>
-                <ul className="researchList">
-                  {latestSequence.openerSet.openerOptions.map((item, index) => (
-                    <li key={item.text}>
-                      <strong>{item.text}</strong>
-                      <p>{item.rationale}</p>
-                      <ArtifactActionButtons
-                        workspaceId={workspace.workspaceId}
-                        campaignId={resolvedParams.campaignId}
-                        prospectId={prospect.id}
-                        artifactType="sequence_opener_option"
-                        optionIndex={index}
-                        allowSelect
-                      />
-                    </li>
-                  ))}
-                </ul>
-                <RegenerateSequencePartForm
-                  {...commonIds}
-                  targetPart="opener"
-                  defaultFeedback="Make the openers more tailored to the strongest research hook."
-                  buttonLabel="Regenerate opener set"
-                  fieldLabel="Regenerate opener options"
-                />
-              </div>
-              <div className="researchSection">
-                <h3>Initial email</h3>
-                <p><strong>{latestSequence.initialEmail.email.subject}</strong></p>
-                <p>{latestSequence.initialEmail.email.opener}</p>
-                <p>{latestSequence.initialEmail.email.body}</p>
-                <p><strong>CTA:</strong> {latestSequence.initialEmail.email.cta}</p>
-                <p><strong>Rationale:</strong> {latestSequence.initialEmail.rationale}</p>
-                <ArtifactActionButtons
-                  workspaceId={workspace.workspaceId}
-                  campaignId={resolvedParams.campaignId}
-                  prospectId={prospect.id}
-                  artifactType="sequence_initial_email"
-                  copyText={[
-                    latestSequence.initialEmail.email.subject,
-                    latestSequence.initialEmail.email.opener,
-                    latestSequence.initialEmail.email.body,
-                    `CTA: ${latestSequence.initialEmail.email.cta}`,
-                  ].join("\n\n")}
-                  exportText={[
-                    latestSequence.initialEmail.email.subject,
-                    latestSequence.initialEmail.email.opener,
-                    latestSequence.initialEmail.email.body,
-                    `CTA: ${latestSequence.initialEmail.email.cta}`,
-                  ].join("\n\n")}
-                  exportFileName={`sequence-initial-${prospect.companyDomain ?? prospect.id}.txt`}
-                  allowCopy
-                  allowExport
-                />
-                {(() => {
-                  const inboxDraft = inboxDraftsByArtifact.get(
-                    buildSequenceInboxDraftArtifactId({
-                      sequenceRecordId: latestSequence.recordId,
-                      targetPart: "initial_email",
-                    }),
-                  );
-
-                  if (inboxDraft) {
-                    return (
-                      <p className="statusMessage compactStatusMessage">
-                        {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
-                      </p>
-                    );
-                  }
-
-                  if (!activeInboxAccount) {
-                    return (
-                      <p className="statusMessage compactStatusMessage">
-                        Connect Gmail in Settings to push this email into Gmail as a review draft.
-                      </p>
-                    );
-                  }
-
-                  if (!prospect.email) {
-                    return (
-                      <p className="statusMessage compactStatusMessage">
-                        Add a prospect email before creating a Gmail draft.
-                      </p>
-                    );
-                  }
-
-                  return (
-                    <CreateSequenceInboxDraftButton
-                      {...commonIds}
-                      artifactType="sequence_initial_email"
-                    />
-                  );
-                })()}
-                <RegenerateSequencePartForm
-                  {...commonIds}
-                  targetPart="initial_email"
-                  defaultFeedback="Keep the message concise and improve the CTA."
-                  buttonLabel="Regenerate initial email"
-                  fieldLabel="Regenerate this email step"
-                />
-                <EditSequenceStepForm
-                  {...commonIds}
-                  targetPart="initial_email"
-                  buttonLabel="Save reviewed initial email"
-                  defaults={{
-                    subject: latestSequence.initialEmail.email.subject,
-                    opener: latestSequence.initialEmail.email.opener,
-                    body: latestSequence.initialEmail.email.body,
-                    cta: latestSequence.initialEmail.email.cta,
-                    rationale: latestSequence.initialEmail.email.rationale,
-                  }}
-                />
-              </div>
-              <div className="researchSection">
-                <h3>Follow-ups</h3>
-                <ul className="researchList sequenceStepList">
-                  {latestSequence.followUpSequence.sequenceSteps.map((step) => (
-                    <li key={step.stepNumber} className="sequenceStepItem">
-                      <strong>Step {step.stepNumber} | Wait {step.waitDays} day(s)</strong>
-                      <p><strong>{step.subject}</strong></p>
-                      <p>{step.opener}</p>
-                      <p>{step.body}</p>
-                      <p><strong>CTA:</strong> {step.cta}</p>
-                      <p><strong>Rationale:</strong> {step.rationale}</p>
-                      <ArtifactActionButtons
-                        workspaceId={workspace.workspaceId}
-                        campaignId={resolvedParams.campaignId}
-                        prospectId={prospect.id}
-                        artifactType="sequence_follow_up_step"
-                        targetStepNumber={step.stepNumber}
-                        copyText={[
-                          step.subject,
-                          step.opener,
-                          step.body,
-                          `CTA: ${step.cta}`,
-                        ].join("\n\n")}
-                        exportText={[
-                          step.subject,
-                          step.opener,
-                          step.body,
-                          `CTA: ${step.cta}`,
-                        ].join("\n\n")}
-                        exportFileName={`sequence-follow-up-${step.stepNumber}-${prospect.companyDomain ?? prospect.id}.txt`}
-                        allowCopy
-                        allowExport
-                      />
-                      {(() => {
-                        const inboxDraft = inboxDraftsByArtifact.get(
-                          buildSequenceInboxDraftArtifactId({
-                            sequenceRecordId: latestSequence.recordId,
-                            targetPart: "follow_up_step",
-                            targetStepNumber: step.stepNumber,
-                          }),
-                        );
-
-                        if (inboxDraft) {
-                          return (
-                            <p className="statusMessage compactStatusMessage">
-                              {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
-                            </p>
-                          );
-                        }
-
-                        if (!activeInboxAccount || !prospect.email) {
-                          return null;
-                        }
-
-                        return (
-                          <CreateSequenceInboxDraftButton
-                            {...commonIds}
-                            artifactType="sequence_follow_up_step"
-                            targetStepNumber={step.stepNumber}
-                          />
-                        );
-                      })()}
-                      <RegenerateSequencePartForm
-                        {...commonIds}
-                        targetPart="follow_up_step"
-                        targetStepNumber={step.stepNumber}
-                        defaultFeedback={`Refresh follow-up ${step.stepNumber} and keep it specific.`}
-                        buttonLabel="Regenerate step"
-                        fieldLabel="Regenerate this step"
-                      />
-                      <EditSequenceStepForm
-                        {...commonIds}
-                        targetPart="follow_up_step"
-                        targetStepNumber={step.stepNumber}
-                        buttonLabel="Save reviewed step"
-                        defaults={{
-                          subject: step.subject,
-                          opener: step.opener,
-                          body: step.body,
-                          cta: step.cta,
-                          rationale: step.rationale,
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {sequenceQualityReport ? (
-                <div className="researchSection">
-                  <h3>Quality review</h3>
-                  <div className="pillRow">
-                    <span className="pill">
-                      Overall {formatQualityScore(sequenceQualityReport.summary.score)}
-                    </span>
-                    <span className="pill">{sequenceQualityReport.summary.label}</span>
-                    {sequenceQualityReport.summary.blocked ? (
-                      <span className="pill">Review before use</span>
-                    ) : null}
-                  </div>
-                  <ul className="researchList compactResearchList">
-                    {sequenceQualityReport.dimensions.map((dimension) => (
-                      <li key={dimension.name}>
-                        <strong>{formatQualityName(dimension.name)}</strong>
-                        <p>
-                          {formatQualityScore(dimension.score)} | {dimension.details}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                  {sequenceFailedChecks.length > 0 ? (
-                    <ul className="researchList compactResearchList">
-                      {sequenceFailedChecks.map((check) => (
-                        <li key={check.code}>
-                          <strong>{formatQualityName(check.code)}</strong>
-                          <p>{check.message}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="statusMessage compactStatusMessage">
-                      Deterministic quality checks passed for the current stored sequence.
-                    </p>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <ActionEmptyState
-              label="Stage 2 not started"
-              title={sequenceEmptyState.title}
-              description={sequenceEmptyState.description}
-              nextAction={sequenceEmptyState.nextAction}
-              actions={
-                <a href="#sequence-form" className="buttonPrimary">
-                  Create draft for review
-                </a>
-              }
-            />
-          )}
-        </div>
-
-        <div className="dashboardCard">
-          <p className="cardLabel">Workflow memory</p>
-          <h2>What this workflow preserves over time</h2>
-          <p>
-            The thread now preserves manual outbound messages, generated outbound sequence
-            drafts, inbound prospect replies, reply analyses, and draft reply versions so
-            future inbox sync can attach to a clean server-side timeline. That includes what the system proposed and what a human later edited or approved when the workflow captures it. In practical terms, this is where prospect-level operational memory is already real in the product today.
-          </p>
-        </div>
-      </section>
+      <ProspectDetailTabs
+        defaultTab={defaultTab}
+        tabs={[
+          { id: "research", label: "Research", content: researchTabContent },
+          { id: "sequence", label: "Sequence", content: sequenceTabContent },
+          { id: "replies", label: "Replies", content: repliesTabContent },
+          { id: "settings", label: "Settings", content: settingsTabContent },
+        ]}
+      />
     </main>
   );
 }
