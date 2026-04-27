@@ -1,10 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { inviteWorkspaceMemberAction } from "../actions";
@@ -53,11 +62,12 @@ export function InviteMemberForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="stack" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
-      <label>
-        <span>Invite email</span>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="invite-email">Invite email</Label>
+        <Input
+          id="invite-email"
           type="email"
           placeholder="teammate@company.com"
           {...form.register("email")}
@@ -65,19 +75,30 @@ export function InviteMemberForm({
           required
         />
         {errors.email ? (
-          <small className="text-xs text-destructive">{errors.email.message}</small>
+          <p className="text-xs text-destructive">{errors.email.message}</p>
         ) : null}
-      </label>
-      <label>
-        <span>Role</span>
-        <select {...form.register("role")}>
-          {allowedRoles.map((role) => (
-            <option key={role} value={role}>
-              {role === "admin" ? "Admin" : "Member"}
-            </option>
-          ))}
-        </select>
-      </label>
+      </div>
+      <div className="grid gap-2">
+        <Label>Role</Label>
+        <Controller
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {allowedRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role === "admin" ? "Admin" : "Member"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
       <Button type="submit" variant="secondary" disabled={isPending}>
         {isPending ? "Saving invite..." : "Invite member"}
       </Button>

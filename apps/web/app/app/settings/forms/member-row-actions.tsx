@@ -1,10 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { ConfirmActionButton } from "../../../../components/confirm-action-button";
 import { useActionSubmit } from "../../../../lib/use-action-form";
@@ -49,13 +57,27 @@ export function UpdateMemberRoleForm({
     <form onSubmit={onSubmit} className="inlineActions profileHeaderActions">
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("targetUserId")} />
-      <select {...form.register("role")}>
-        {roleOptions.map((role) => (
-          <option key={role} value={role}>
-            {role === "admin" ? "Admin" : "Member"}
-          </option>
-        ))}
-      </select>
+      <div className="grid gap-2">
+        <Label className="sr-only">Role</Label>
+        <Controller
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {roleOptions.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role === "admin" ? "Admin" : "Member"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
       <Button type="submit" variant="secondary" disabled={isPending}>
         {isPending ? "Updating role..." : "Update role"}
       </Button>

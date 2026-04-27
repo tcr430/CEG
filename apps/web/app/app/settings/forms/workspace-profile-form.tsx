@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { updateWorkspaceProfileAction } from "../actions";
@@ -62,56 +65,60 @@ export function WorkspaceProfileForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="stack" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
-      <label>
-        <span>Workspace name</span>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="ws-name">Workspace name</Label>
+        <Input
+          id="ws-name"
           {...form.register("name")}
           disabled={!canEdit}
           aria-invalid={errors.name ? true : undefined}
           required
         />
         {errors.name ? (
-          <small className="text-xs text-destructive">{errors.name.message}</small>
+          <p className="text-xs text-destructive">{errors.name.message}</p>
         ) : null}
-      </label>
-      <label>
-        <span>Company name</span>
-        <input {...form.register("companyName")} disabled={!canEdit} />
-      </label>
-      <label>
-        <span>Website</span>
-        <input
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ws-company">Company name</Label>
+        <Input id="ws-company" {...form.register("companyName")} disabled={!canEdit} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ws-website">Website</Label>
+        <Input
+          id="ws-website"
           {...form.register("websiteUrl")}
           type="url"
           disabled={!canEdit}
           placeholder="https://example.com"
         />
-      </label>
-      <label>
-        <span>Support email</span>
-        <input
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ws-support">Support email</Label>
+        <Input
+          id="ws-support"
           {...form.register("supportEmail")}
           type="email"
           disabled={!canEdit}
         />
-      </label>
-      <label>
-        <span>Description</span>
-        <textarea
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ws-description">Description</Label>
+        <Textarea
+          id="ws-description"
           {...form.register("description")}
           rows={4}
           disabled={!canEdit}
           placeholder="Short operating context for this workspace."
         />
-      </label>
+      </div>
       {canEdit ? (
         <Button type="submit" variant="secondary" disabled={isPending}>
           {isPending ? "Saving workspace..." : "Save workspace settings"}
         </Button>
       ) : (
-        <p className="statusMessage">
+        <p className="text-sm text-muted-foreground">
           Only owners and admins can change workspace settings.
         </p>
       )}

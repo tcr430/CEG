@@ -1,10 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { updateInstitutionalControlsAction } from "../actions";
@@ -62,74 +72,88 @@ export function InstitutionalControlsForm({
   });
 
   return (
-    <form onSubmit={onSubmit} className="stack" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
-      <label>
-        <span>Data retention preference</span>
-        <select
-          {...form.register("dataRetentionPreference")}
-          disabled={!canEdit}
-        >
-          <option value="standard">Standard retention</option>
-          <option value="minimized">Minimized retention</option>
-          <option value="extended">Extended retention</option>
-        </select>
-      </label>
-      <label>
-        <span>Operational note</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label>Data retention preference</Label>
+        <Controller
+          control={form.control}
+          name="dataRetentionPreference"
+          render={({ field }) => (
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={!canEdit}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">Standard retention</SelectItem>
+                <SelectItem value="minimized">Minimized retention</SelectItem>
+                <SelectItem value="extended">Extended retention</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ic-notes">Operational note</Label>
+        <Textarea
+          id="ic-notes"
           {...form.register("dataRetentionNotes")}
           rows={3}
           disabled={!canEdit}
           placeholder="Example: Retain only active evaluation data beyond standard windows."
         />
-      </label>
-      <label>
-        <span>Export/delete request contact</span>
-        <input
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="ic-contact">Export/delete request contact</Label>
+        <Input
+          id="ic-contact"
           {...form.register("requestContactChannel")}
           disabled={!canEdit}
           placeholder="support@company.com"
         />
-      </label>
-      <label>
+      </div>
+      <label className="flex items-center gap-2">
         <input
           type="checkbox"
           {...form.register("exportRequestsVisible")}
           disabled={!canEdit}
         />
-        <span>Show export request visibility</span>
+        <span className="text-sm">Show export request visibility</span>
       </label>
-      <label>
+      <label className="flex items-center gap-2">
         <input
           type="checkbox"
           {...form.register("deleteRequestsVisible")}
           disabled={!canEdit}
         />
-        <span>Show delete request visibility</span>
+        <span className="text-sm">Show delete request visibility</span>
       </label>
-      <label>
+      <label className="flex items-center gap-2">
         <input
           type="checkbox"
           {...form.register("auditVisibleToWorkspaceAdmins")}
           disabled={!canEdit}
         />
-        <span>Show audit access visibility to owners and admins</span>
+        <span className="text-sm">Show audit access visibility to owners and admins</span>
       </label>
-      <label>
+      <label className="flex items-center gap-2">
         <input
           type="checkbox"
           {...form.register("configurationSummaryVisible")}
           disabled={!canEdit}
         />
-        <span>Show provider readiness summaries</span>
+        <span className="text-sm">Show provider readiness summaries</span>
       </label>
       {canEdit ? (
         <Button type="submit" variant="secondary" disabled={isPending}>
           {isPending ? "Saving controls..." : "Save institutional controls"}
         </Button>
       ) : (
-        <p className="statusMessage">
+        <p className="text-sm text-muted-foreground">
           Members can review these controls, but only owners and admins can update them.
         </p>
       )}

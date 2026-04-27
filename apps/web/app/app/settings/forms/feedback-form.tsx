@@ -1,10 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { submitWorkspaceFeedbackAction } from "../actions";
@@ -50,22 +59,34 @@ export function FeedbackForm({ workspaceId, pagePath }: FeedbackFormProps) {
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="stack" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-4" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("pagePath")} />
-      <label>
-        <span>Category</span>
-        <select {...form.register("category")}>
-          <option value="bug">Bug</option>
-          <option value="workflow">Workflow friction</option>
-          <option value="output_quality">Output quality</option>
-          <option value="billing">Billing</option>
-          <option value="other">Other</option>
-        </select>
-      </label>
-      <label>
-        <span>What should we know?</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label>Category</Label>
+        <Controller
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bug">Bug</SelectItem>
+                <SelectItem value="workflow">Workflow friction</SelectItem>
+                <SelectItem value="output_quality">Output quality</SelectItem>
+                <SelectItem value="billing">Billing</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="feedback-message">What should we know?</Label>
+        <Textarea
+          id="feedback-message"
           {...form.register("message")}
           rows={5}
           maxLength={1200}
@@ -74,9 +95,9 @@ export function FeedbackForm({ workspaceId, pagePath }: FeedbackFormProps) {
           required
         />
         {errors.message ? (
-          <small className="text-xs text-destructive">{errors.message.message}</small>
+          <p className="text-xs text-destructive">{errors.message.message}</p>
         ) : null}
-      </label>
+      </div>
       <Button type="submit" variant="secondary" disabled={isPending}>
         {isPending ? "Sending feedback..." : "Send feedback"}
       </Button>
