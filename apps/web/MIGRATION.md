@@ -64,8 +64,8 @@ When migrating a page (Phase 6) replace these patterns:
 | `.statusMessage` (success/info banner)   | `toast.success(...)` / `toast.info(...)` from `sonner`                                                                                                         |
 | `.statusMessage` (error banner)          | `toast.error(...)`                                                                                                                                             |
 | `<FeedbackBanner>` (retired in Phase 3e) | `toast` calls inside the form's submit handler; `UrlFeedbackToaster` for redirect-driven `?error=` / `?success=` / `?notice=` query params                     |
-| `confirm()` browser prompt               | `<AlertDialog>` (`AlertDialogTrigger` / `AlertDialogContent` / `AlertDialogAction`)                                                                            |
-| Inline regenerate / edit forms           | `<Sheet>` (`SheetTrigger` / `SheetContent` opening from the right)                                                                                             |
+| Destructive button (mark sent, remove member, delete) | `<ConfirmActionButton>` — wraps the action in `<AlertDialog>` (Phase 4)                                                                                |
+| Inline regenerate / edit forms           | `<Sheet>` side panel; the form lives inside `SheetContent` and the trigger button keeps its label (Phase 4)                                                    |
 
 Components live in [`components/ui/`](components/ui/). Import paths use
 the `@/` alias, e.g. `import { Button } from "@/components/ui/button"`.

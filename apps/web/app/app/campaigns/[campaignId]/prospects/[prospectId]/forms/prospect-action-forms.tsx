@@ -2,12 +2,21 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useTransition, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
+import { ConfirmActionButton } from "../../../../../../../components/confirm-action-button";
 import type { ActionResult } from "../../../../../../../lib/action-result";
 import { useActionSubmit } from "../../../../../../../lib/use-action-form";
 import { useRouter } from "next/navigation";
@@ -428,7 +437,7 @@ export function MarkOutboundSentButton({
   label,
 }: MarkSentProps) {
   return (
-    <ActionButton
+    <ConfirmActionButton
       action={markOutboundMessageSentAction}
       payload={{
         workspaceId,
@@ -439,12 +448,13 @@ export function MarkOutboundSentButton({
         providerMessageId,
         providerThreadId,
       }}
-      className="buttonSecondary"
+      label={label}
+      title="Mark this message as sent?"
+      description="This records the message as sent in the thread history. The state change is hard to reverse — only confirm if the email actually went out."
+      confirmLabel="Mark as sent"
       pendingLabel="Updating send state..."
       successMessage="Send state updated."
-    >
-      {label}
-    </ActionButton>
+    />
   );
 }
 
@@ -525,6 +535,7 @@ export function RegenerateSequencePartForm({
   buttonLabel: string;
   fieldLabel: string;
 }) {
+  const [open, setOpen] = useState(false);
   const form = useForm<RegenSequenceValues>({
     resolver: zodResolver(regenSequenceSchema),
     defaultValues: {
@@ -539,32 +550,46 @@ export function RegenerateSequencePartForm({
     form,
     action: regenerateSequencePartAction,
     successMessage: "Sequence section regenerated.",
+    onSuccess: () => setOpen(false),
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="panel prospectResearchForm compactPanel"
-      noValidate
-    >
-      <input type="hidden" {...form.register("workspaceId")} />
-      <input type="hidden" {...form.register("campaignId")} />
-      <input type="hidden" {...form.register("prospectId")} />
-      <input type="hidden" {...form.register("targetPart")} />
-      {targetStepNumber !== undefined ? (
-        <input type="hidden" {...form.register("targetStepNumber")} />
-      ) : null}
-
-      <label className="field">
-        <span>{fieldLabel}</span>
-        <textarea {...form.register("feedback")} rows={3} />
-      </label>
-      <div className="inlineActions">
-        <Button type="submit" variant="secondary" disabled={isPending}>
-          {isPending ? "Regenerating..." : buttonLabel}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button type="button" variant="secondary">
+          {buttonLabel}
         </Button>
-      </div>
-    </form>
+      </SheetTrigger>
+      <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{buttonLabel}</SheetTitle>
+          <SheetDescription>
+            Regenerating overwrites the current draft for this section.
+            Capture clear feedback so the new version stays grounded in
+            the same campaign brief.
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+          <input type="hidden" {...form.register("workspaceId")} />
+          <input type="hidden" {...form.register("campaignId")} />
+          <input type="hidden" {...form.register("prospectId")} />
+          <input type="hidden" {...form.register("targetPart")} />
+          {targetStepNumber !== undefined ? (
+            <input type="hidden" {...form.register("targetStepNumber")} />
+          ) : null}
+
+          <label className="field">
+            <span>{fieldLabel}</span>
+            <textarea {...form.register("feedback")} rows={5} />
+          </label>
+          <div className="inlineActions">
+            <Button type="submit" variant="secondary" disabled={isPending}>
+              {isPending ? "Regenerating..." : buttonLabel}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -601,6 +626,7 @@ export function EditSequenceStepForm({
   };
   buttonLabel: string;
 }) {
+  const [open, setOpen] = useState(false);
   const form = useForm<EditStepValues>({
     resolver: zodResolver(editStepSchema),
     defaultValues: {
@@ -615,48 +641,64 @@ export function EditSequenceStepForm({
     form,
     action: editSequenceStepAction,
     successMessage: "Sequence edit saved.",
+    onSuccess: () => setOpen(false),
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="panel prospectResearchForm compactPanel"
-      noValidate
-    >
-      <input type="hidden" {...form.register("workspaceId")} />
-      <input type="hidden" {...form.register("campaignId")} />
-      <input type="hidden" {...form.register("prospectId")} />
-      <input type="hidden" {...form.register("targetPart")} />
-      {targetStepNumber !== undefined ? (
-        <input type="hidden" {...form.register("targetStepNumber")} />
-      ) : null}
-
-      <label className="field">
-        <span>Subject</span>
-        <input {...form.register("subject")} />
-      </label>
-      <label className="field">
-        <span>Opener</span>
-        <textarea {...form.register("opener")} rows={3} />
-      </label>
-      <label className="field">
-        <span>Body</span>
-        <textarea {...form.register("body")} rows={targetPart === "initial_email" ? 6 : 5} />
-      </label>
-      <label className="field">
-        <span>CTA</span>
-        <input {...form.register("cta")} />
-      </label>
-      <label className="field">
-        <span>Rationale</span>
-        <textarea {...form.register("rationale")} rows={3} />
-      </label>
-      <div className="inlineActions">
-        <Button type="submit" variant="secondary" disabled={isPending}>
-          {isPending ? "Saving edit..." : buttonLabel}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button type="button" variant="secondary">
+          {buttonLabel}
         </Button>
-      </div>
-    </form>
+      </SheetTrigger>
+      <SheetContent className="overflow-y-auto sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>{buttonLabel}</SheetTitle>
+          <SheetDescription>
+            Saving overwrites the current stored draft for this step.
+            The previous version stays in sequence history.
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+          <input type="hidden" {...form.register("workspaceId")} />
+          <input type="hidden" {...form.register("campaignId")} />
+          <input type="hidden" {...form.register("prospectId")} />
+          <input type="hidden" {...form.register("targetPart")} />
+          {targetStepNumber !== undefined ? (
+            <input type="hidden" {...form.register("targetStepNumber")} />
+          ) : null}
+
+          <label className="field">
+            <span>Subject</span>
+            <input {...form.register("subject")} />
+          </label>
+          <label className="field">
+            <span>Opener</span>
+            <textarea {...form.register("opener")} rows={3} />
+          </label>
+          <label className="field">
+            <span>Body</span>
+            <textarea
+              {...form.register("body")}
+              rows={targetPart === "initial_email" ? 6 : 5}
+            />
+          </label>
+          <label className="field">
+            <span>CTA</span>
+            <input {...form.register("cta")} />
+          </label>
+          <label className="field">
+            <span>Rationale</span>
+            <textarea {...form.register("rationale")} rows={3} />
+          </label>
+          <div className="inlineActions">
+            <Button type="submit" variant="secondary" disabled={isPending}>
+              {isPending ? "Saving edit..." : buttonLabel}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -678,6 +720,7 @@ export function RegenerateReplyDraftForm({
   targetSlotId: string;
   defaultFeedback: string;
 }) {
+  const [open, setOpen] = useState(false);
   const form = useForm<RegenReplyValues>({
     resolver: zodResolver(regenReplySchema),
     defaultValues: {
@@ -690,29 +733,42 @@ export function RegenerateReplyDraftForm({
     form,
     action: regenerateReplyDraftAction,
     successMessage: "Draft option regenerated.",
+    onSuccess: () => setOpen(false),
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="panel prospectResearchForm compactPanel"
-      noValidate
-    >
-      <input type="hidden" {...form.register("workspaceId")} />
-      <input type="hidden" {...form.register("campaignId")} />
-      <input type="hidden" {...form.register("prospectId")} />
-      <input type="hidden" {...form.register("targetSlotId")} />
-
-      <label className="field">
-        <span>Regeneration feedback</span>
-        <textarea {...form.register("feedback")} rows={3} />
-      </label>
-      <div className="inlineActions">
-        <Button type="submit" variant="secondary" disabled={isPending}>
-          {isPending ? "Regenerating..." : "Regenerate this option"}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button type="button" variant="secondary">
+          Regenerate this option
         </Button>
-      </div>
-    </form>
+      </SheetTrigger>
+      <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>Regenerate this draft option</SheetTitle>
+          <SheetDescription>
+            Regenerating overwrites this slot with a new AI-proposed
+            draft. Use the feedback to steer tone, length, or strategy.
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+          <input type="hidden" {...form.register("workspaceId")} />
+          <input type="hidden" {...form.register("campaignId")} />
+          <input type="hidden" {...form.register("prospectId")} />
+          <input type="hidden" {...form.register("targetSlotId")} />
+
+          <label className="field">
+            <span>Regeneration feedback</span>
+            <textarea {...form.register("feedback")} rows={5} />
+          </label>
+          <div className="inlineActions">
+            <Button type="submit" variant="secondary" disabled={isPending}>
+              {isPending ? "Regenerating..." : "Regenerate this option"}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -736,6 +792,7 @@ export function EditReplyDraftForm({
   targetSlotId: string;
   defaults: { subject: string; bodyText: string; strategyNote: string };
 }) {
+  const [open, setOpen] = useState(false);
   const form = useForm<EditReplyDraftValues>({
     resolver: zodResolver(editReplyDraftSchema),
     defaultValues: { ...props, targetSlotId, ...defaults },
@@ -744,36 +801,49 @@ export function EditReplyDraftForm({
     form,
     action: editReplyDraftAction,
     successMessage: "Draft edit saved.",
+    onSuccess: () => setOpen(false),
   });
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="panel prospectResearchForm compactPanel"
-      noValidate
-    >
-      <input type="hidden" {...form.register("workspaceId")} />
-      <input type="hidden" {...form.register("campaignId")} />
-      <input type="hidden" {...form.register("prospectId")} />
-      <input type="hidden" {...form.register("targetSlotId")} />
-
-      <label className="field">
-        <span>Subject</span>
-        <input {...form.register("subject")} />
-      </label>
-      <label className="field">
-        <span>Body</span>
-        <textarea {...form.register("bodyText")} rows={5} />
-      </label>
-      <label className="field">
-        <span>Strategy note</span>
-        <textarea {...form.register("strategyNote")} rows={3} />
-      </label>
-      <div className="inlineActions">
-        <Button type="submit" variant="secondary" disabled={isPending}>
-          {isPending ? "Saving..." : "Save reviewed draft"}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button type="button" variant="secondary">
+          Edit this draft
         </Button>
-      </div>
-    </form>
+      </SheetTrigger>
+      <SheetContent className="overflow-y-auto sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>Edit reviewed draft</SheetTitle>
+          <SheetDescription>
+            Saving overwrites this draft slot with the reviewed copy.
+            The previous AI version is preserved in draft history.
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+          <input type="hidden" {...form.register("workspaceId")} />
+          <input type="hidden" {...form.register("campaignId")} />
+          <input type="hidden" {...form.register("prospectId")} />
+          <input type="hidden" {...form.register("targetSlotId")} />
+
+          <label className="field">
+            <span>Subject</span>
+            <input {...form.register("subject")} />
+          </label>
+          <label className="field">
+            <span>Body</span>
+            <textarea {...form.register("bodyText")} rows={6} />
+          </label>
+          <label className="field">
+            <span>Strategy note</span>
+            <textarea {...form.register("strategyNote")} rows={3} />
+          </label>
+          <div className="inlineActions">
+            <Button type="submit" variant="secondary" disabled={isPending}>
+              {isPending ? "Saving..." : "Save reviewed draft"}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 }

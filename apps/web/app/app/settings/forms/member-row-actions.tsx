@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 
+import { ConfirmActionButton } from "../../../../components/confirm-action-button";
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import {
   removeWorkspaceMemberAction,
@@ -62,13 +63,6 @@ export function UpdateMemberRoleForm({
   );
 }
 
-const removeMemberSchema = z.object({
-  workspaceId: z.string().min(1),
-  targetUserId: z.string().min(1),
-});
-
-type RemoveMemberValues = z.infer<typeof removeMemberSchema>;
-
 type RemoveMemberFormProps = {
   workspaceId: string;
   targetUserId: string;
@@ -78,24 +72,19 @@ export function RemoveMemberForm({
   workspaceId,
   targetUserId,
 }: RemoveMemberFormProps) {
-  const form = useForm<RemoveMemberValues>({
-    resolver: zodResolver(removeMemberSchema),
-    defaultValues: { workspaceId, targetUserId },
-  });
-
-  const { onSubmit, isPending } = useActionSubmit({
-    form,
-    action: removeWorkspaceMemberAction,
-    successMessage: "Workspace member removed.",
-  });
-
   return (
-    <form onSubmit={onSubmit} className="inlineActions profileHeaderActions">
-      <input type="hidden" {...form.register("workspaceId")} />
-      <input type="hidden" {...form.register("targetUserId")} />
-      <Button type="submit" variant="secondary" disabled={isPending}>
-        {isPending ? "Removing member..." : "Remove member"}
-      </Button>
-    </form>
+    <div className="inlineActions profileHeaderActions">
+      <ConfirmActionButton
+        action={removeWorkspaceMemberAction}
+        payload={{ workspaceId, targetUserId }}
+        label="Remove member"
+        title="Remove this workspace member?"
+        description="They lose access to campaigns, prospect history, and reply context immediately. You can re-invite them later, but their session ends as soon as you confirm."
+        confirmLabel="Remove member"
+        confirmVariant="destructive"
+        pendingLabel="Removing member..."
+        successMessage="Workspace member removed."
+      />
+    </div>
   );
 }
