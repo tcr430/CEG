@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
 import {
   getWorkspaceBillingState,
   requireActiveWorkspaceAppContext,
@@ -51,16 +55,15 @@ export default async function SenderProfileDetailPage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link
-          href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}
-          className="buttonSecondary"
-        >
-          Back to profiles
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}>
+            Back to profiles
+          </Link>
+        </Button>
       </div>
 
       <section className="profileDetailGrid">
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Profile summary</p>
           <h2>{profile.senderType.replaceAll("_", " ")}</h2>
           <p>{profile.companyName ?? "No company set yet."}</p>
@@ -72,11 +75,11 @@ export default async function SenderProfileDetailPage({
             This record preserves reusable sender voice, proof, positioning, and workflow goals so later campaign briefs and drafts can start from stored context.
           </p>
           <div className="pillRow">
-            <span className="pill">{profile.status}</span>
-            <span className="pill">{billing.planLabel} plan</span>
-            {profile.isDefault ? <span className="pill">Default</span> : null}
+            <Badge variant="secondary">{profile.status}</Badge>
+            <Badge variant="secondary">{billing.planLabel} plan</Badge>
+            {profile.isDefault ? <Badge variant="secondary">Default</Badge> : null}
           </div>
-        </div>
+        </Card>
 
         <SenderProfileForm
           action={updateSenderProfileAction}
@@ -90,6 +93,3 @@ export default async function SenderProfileDetailPage({
     </main>
   );
 }
-
-
-

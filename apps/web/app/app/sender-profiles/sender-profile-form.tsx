@@ -3,10 +3,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SenderProfile } from "@ceg/validation";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../lib/use-action-form";
 
@@ -130,131 +140,151 @@ export function SenderProfileForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="panel senderProfileForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5 senderProfileForm" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       {profile !== undefined ? (
         <input type="hidden" {...form.register("senderProfileId")} />
       ) : null}
 
       {!allowSenderAwareProfiles ? (
-        <p className="statusMessage">
+        <p className="text-sm text-muted-foreground">
           {planLabel ?? "Current plan"} currently supports basic mode only.
           Sender-aware SDR, founder, and agency profiles unlock on a paid plan.
         </p>
       ) : null}
 
       <div className="formGrid">
-        <label className="field">
-          <span>Sender type</span>
-          <select {...form.register("senderType")}>
-            <option value="sdr" disabled={!allowSenderAwareProfiles}>
-              SDR
-            </option>
-            <option value="saas_founder" disabled={!allowSenderAwareProfiles}>
-              SaaS founder
-            </option>
-            <option value="agency" disabled={!allowSenderAwareProfiles}>
-              Lead gen agency
-            </option>
-            <option value="basic">Basic mode fallback</option>
-          </select>
+        <div className="grid gap-2">
+          <Label>Sender type</Label>
+          <Controller
+            control={form.control}
+            name="senderType"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sdr" disabled={!allowSenderAwareProfiles}>
+                    SDR
+                  </SelectItem>
+                  <SelectItem value="saas_founder" disabled={!allowSenderAwareProfiles}>
+                    SaaS founder
+                  </SelectItem>
+                  <SelectItem value="agency" disabled={!allowSenderAwareProfiles}>
+                    Lead gen agency
+                  </SelectItem>
+                  <SelectItem value="basic">Basic mode fallback</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.senderType ? (
-            <small className="text-xs text-destructive">
-              {errors.senderType.message}
-            </small>
+            <p className="text-xs text-destructive">{errors.senderType.message}</p>
           ) : null}
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Profile name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="sp-name">Profile name</Label>
+          <Input
+            id="sp-name"
             {...form.register("name")}
             aria-invalid={errors.name ? true : undefined}
           />
           {errors.name ? (
-            <small className="text-xs text-destructive">
-              {errors.name.message}
-            </small>
+            <p className="text-xs text-destructive">{errors.name.message}</p>
           ) : null}
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Status</span>
-          <select {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
-        </label>
+        <div className="grid gap-2">
+          <Label>Status</Label>
+          <Controller
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
 
-        <label className="field checkboxField">
+        <label className="checkboxField flex items-center gap-2">
           <input type="checkbox" {...form.register("isDefault")} />
-          <span>Use as default sender profile for this workspace</span>
+          <span className="text-sm">Use as default sender profile for this workspace</span>
         </label>
       </div>
 
-      <label className="field">
-        <span>Company name</span>
-        <input {...form.register("companyName")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="sp-company">Company name</Label>
+        <Input id="sp-company" {...form.register("companyName")} />
+      </div>
 
-      <label className="field">
-        <span>Product or service description</span>
-        <textarea rows={4} {...form.register("productDescription")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="sp-product">Product or service description</Label>
+        <Textarea id="sp-product" rows={4} {...form.register("productDescription")} />
+      </div>
 
-      <label className="field">
-        <span>Target customer</span>
-        <textarea rows={3} {...form.register("targetCustomer")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="sp-target">Target customer</Label>
+        <Textarea id="sp-target" rows={3} {...form.register("targetCustomer")} />
+      </div>
 
-      <label className="field">
-        <span>Value proposition</span>
-        <textarea rows={4} {...form.register("valueProposition")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="sp-value">Value proposition</Label>
+        <Textarea id="sp-value" rows={4} {...form.register("valueProposition")} />
+      </div>
 
-      <label className="field">
-        <span>Differentiation</span>
-        <textarea rows={4} {...form.register("differentiation")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="sp-diff">Differentiation</Label>
+        <Textarea id="sp-diff" rows={4} {...form.register("differentiation")} />
+      </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Proof points</span>
-          <textarea rows={5} {...form.register("proofPoints")} />
-          <small>One proof point per line.</small>
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-proof">Proof points</Label>
+          <Textarea id="sp-proof" rows={5} {...form.register("proofPoints")} />
+          <p className="text-xs text-muted-foreground">One proof point per line.</p>
+        </div>
 
-        <label className="field">
-          <span>Goals</span>
-          <textarea rows={5} {...form.register("goals")} />
-          <small>One goal per line.</small>
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-goals">Goals</Label>
+          <Textarea id="sp-goals" rows={5} {...form.register("goals")} />
+          <p className="text-xs text-muted-foreground">One goal per line.</p>
+        </div>
       </div>
 
       <div className="formGrid toneGrid">
-        <label className="field">
-          <span>Tone style</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="sp-tone-style">Tone style</Label>
+          <Input
+            id="sp-tone-style"
             {...form.register("toneStyle")}
             placeholder="Direct, consultative, measured"
           />
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Tone preferences: do</span>
-          <textarea rows={4} {...form.register("toneDo")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-tone-do">Tone preferences: do</Label>
+          <Textarea id="sp-tone-do" rows={4} {...form.register("toneDo")} />
+        </div>
 
-        <label className="field">
-          <span>Tone preferences: avoid</span>
-          <textarea rows={4} {...form.register("toneAvoid")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-tone-avoid">Tone preferences: avoid</Label>
+          <Textarea id="sp-tone-avoid" rows={4} {...form.register("toneAvoid")} />
+        </div>
 
-        <label className="field">
-          <span>Tone notes</span>
-          <textarea rows={4} {...form.register("toneNotes")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-tone-notes">Tone notes</Label>
+          <Textarea id="sp-tone-notes" rows={4} {...form.register("toneNotes")} />
+        </div>
       </div>
 
       <div className="inlineActions">

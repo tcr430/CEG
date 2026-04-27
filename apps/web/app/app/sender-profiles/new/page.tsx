@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+
 import {
   getWorkspaceBillingState,
   requireActiveWorkspaceAppContext,
@@ -37,12 +39,11 @@ export default async function NewSenderProfilePage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link
-          href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}
-          className="buttonSecondary"
-        >
-          Back to profiles
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/sender-profiles?workspace=${context.workspace.workspaceId}`}>
+            Back to profiles
+          </Link>
+        </Button>
       </div>
 
       <SenderProfileForm

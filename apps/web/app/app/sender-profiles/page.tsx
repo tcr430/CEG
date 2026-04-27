@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import {
   getWorkspaceBillingState,
@@ -52,22 +56,23 @@ export default async function SenderProfilesPage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link href="/app" className="buttonSecondary">
-          Back to dashboard
-        </Link>
-        <Link
-          href={`/app/sender-profiles/new?workspace=${workspace.workspaceId}`}
-          className="buttonPrimary"
-        >
-          New sender profile
-        </Link>
-        <span className="pill">{billing.planLabel} plan</span>
-        <Link href={`/app/settings?workspace=${workspace.workspaceId}`} className="buttonSecondary">
-          View plan settings
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href="/app">Back to dashboard</Link>
+        </Button>
+        <Button asChild>
+          <Link href={`/app/sender-profiles/new?workspace=${workspace.workspaceId}`}>
+            New sender profile
+          </Link>
+        </Button>
+        <Badge variant="secondary">{billing.planLabel} plan</Badge>
+        <Button asChild variant="secondary">
+          <Link href={`/app/settings?workspace=${workspace.workspaceId}`}>
+            View plan settings
+          </Link>
+        </Button>
       </div>
 
-      <section className="panel" aria-labelledby="sender-profiles-title">
+      <Card className="p-6" aria-labelledby="sender-profiles-title">
         <div>
           <h2 id="sender-profiles-title">Reusable sender profiles</h2>
           <p>
@@ -75,13 +80,15 @@ export default async function SenderProfilesPage({
           </p>
           {!billing.features.senderAwareProfiles.allowed ? (
             <div className="stack compactStack">
-              <p className="statusMessage">
+              <p className="text-sm text-muted-foreground">
                 Sender-aware SDR, founder, and agency profiles are gated on this plan. Basic mode remains available until the workspace is ready for richer reusable context.
               </p>
               <div className="inlineActions">
-                <Link href={`/app/settings?workspace=${workspace.workspaceId}`} className="buttonSecondary">
-                  Review upgrade options
-                </Link>
+                <Button asChild variant="secondary">
+                  <Link href={`/app/settings?workspace=${workspace.workspaceId}`}>
+                    Review upgrade options
+                  </Link>
+                </Button>
               </div>
             </div>
           ) : null}
@@ -93,22 +100,26 @@ export default async function SenderProfilesPage({
               <Link
                 key={profile.id}
                 href={`/app/sender-profiles/${profile.id}?workspace=${workspace.workspaceId}`}
-                className="profileCard"
+                className="block"
               >
-                <div className="profileCardHeader">
-                  <div>
-                    <p className="cardLabel">{profile.senderType.replaceAll("_", " ")}</p>
-                    <h2>{profile.name}</h2>
+                <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                  <div className="profileCardHeader">
+                    <div>
+                      <p className="cardLabel">{profile.senderType.replaceAll("_", " ")}</p>
+                      <h2>{profile.name}</h2>
+                    </div>
+                    {profile.isDefault ? (
+                      <Badge variant="secondary">Default</Badge>
+                    ) : null}
                   </div>
-                  {profile.isDefault ? <span className="pill">Default</span> : null}
-                </div>
 
-                <p>{profile.companyName ?? "No company name yet"}</p>
-                <p>
-                  {profile.valueProposition ??
-                    "Add a value proposition to improve future sender-aware outputs."}
-                </p>
-                <p>Stored here: sender voice, proof points, positioning, and workflow goals that later campaigns can reuse.</p>
+                  <p>{profile.companyName ?? "No company name yet"}</p>
+                  <p>
+                    {profile.valueProposition ??
+                      "Add a value proposition to improve future sender-aware outputs."}
+                  </p>
+                  <p>Stored here: sender voice, proof points, positioning, and workflow goals that later campaigns can reuse.</p>
+                </Card>
               </Link>
             ))
           ) : (
@@ -119,32 +130,22 @@ export default async function SenderProfilesPage({
               nextAction={emptyState.nextAction}
               actions={
                 <>
-                  <Link
-                    href={`/app/sender-profiles/new?workspace=${workspace.workspaceId}`}
-                    className="buttonPrimary"
-                  >
-                    Create sender profile
-                  </Link>
-                  <Link
-                    href={`/app/campaigns?workspace=${workspace.workspaceId}`}
-                    className="buttonSecondary"
-                  >
-                    Continue in basic mode
-                  </Link>
+                  <Button asChild>
+                    <Link href={`/app/sender-profiles/new?workspace=${workspace.workspaceId}`}>
+                      Create sender profile
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <Link href={`/app/campaigns?workspace=${workspace.workspaceId}`}>
+                      Continue in basic mode
+                    </Link>
+                  </Button>
                 </>
               }
             />
           )}
         </div>
-      </section>
+      </Card>
     </main>
   );
 }
-
-
-
-
-
-
-
-
