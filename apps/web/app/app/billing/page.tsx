@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";
 import {
@@ -64,28 +67,28 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       <section id="billing-plans" className="pricingSettingsStack billingDecisionPlans">
         {pricingPlans.map((plan) => {
           const active = billing.hasActiveSubscription && billing.planCode === plan.code;
-          const checkoutButtonClass =
+          const checkoutVariant: ButtonProps["variant"] =
             plan.code === "pro"
-              ? "buttonPrimary"
+              ? "default"
               : plan.code === "free"
-                ? "buttonGhost"
-                : "buttonSecondary";
+                ? "ghost"
+                : "secondary";
           const actions = active ? (
             hasPortalAccess ? (
               <form action="/api/billing/portal" method="post">
                 <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <SubmitButton className="buttonSecondary" pendingLabel="Opening billing...">
+                <SubmitButton variant="secondary" pendingLabel="Opening billing...">
                   Manage plan
                 </SubmitButton>
               </form>
             ) : (
-              <p className="statusMessage">Plan confirmed. Billing management will appear shortly.</p>
+              <p className="text-sm text-muted-foreground">Plan confirmed. Billing management will appear shortly.</p>
             )
           ) : (
             <form action="/api/billing/checkout" method="post">
               <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
               <input type="hidden" name="planCode" value={plan.code} />
-              <SubmitButton className={checkoutButtonClass} pendingLabel="Starting checkout...">
+              <SubmitButton variant={checkoutVariant} pendingLabel="Starting checkout...">
                 {plan.code === "free"
                   ? "Start on Starter"
                   : plan.code === "pro"
@@ -128,7 +131,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         })}
       </section>
 
-      <section className="dashboardCard billingComparisonCard">
+      <Card className="p-5 billingComparisonCard">
         <p className="cardLabel">Plan comparison</p>
         <h2>Compare the differences that actually change your plan decision</h2>
         <p>
@@ -148,18 +151,18 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
             <span>{row.agency}</span>
           </div>
         ))}
-      </section>
+      </Card>
 
-      <section className="dashboardCard billingSupportStrip">
+      <Card className="p-5 billingSupportStrip">
         <div className="billingSupportMeta">
           <p className="cardLabel">Account + billing</p>
           <p>
             <strong>{workspaceName}</strong>
-            {" \u00B7 "}
+            {" · "}
             {billing.hasActiveSubscription ? "Plan active" : "Plan not active yet"}
-            {currentSubscriptionStatus ? ` \u00B7 ${currentSubscriptionStatus}` : ""}
+            {currentSubscriptionStatus ? ` · ${currentSubscriptionStatus}` : ""}
             {billing.currentSubscription
-              ? ` \u00B7 Period end ${formatPeriodEnd(billing.currentSubscription.currentPeriodEnd)}`
+              ? ` · Period end ${formatPeriodEnd(billing.currentSubscription.currentPeriodEnd)}`
               : ""}
           </p>
         </div>
@@ -167,21 +170,21 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           {hasPortalAccess ? (
             <form action="/api/billing/portal" method="post">
               <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-              <SubmitButton className="buttonSecondary" pendingLabel="Opening billing...">
+              <SubmitButton variant="secondary" pendingLabel="Opening billing...">
                 Manage billing
               </SubmitButton>
             </form>
           ) : null}
-          <Link href="/pricing" className="buttonGhost">
-            View full plan details
-          </Link>
+          <Button asChild variant="ghost">
+            <Link href="/pricing">View full plan details</Link>
+          </Button>
           {!hasPortalAccess ? (
-            <Link href="/contact" className="buttonGhost">
-              Contact sales
-            </Link>
+            <Button asChild variant="ghost">
+              <Link href="/contact">Contact sales</Link>
+            </Button>
           ) : null}
           <form action="/auth/sign-out" method="post">
-            <SubmitButton className="buttonGhost" pendingLabel="Signing out...">
+            <SubmitButton variant="ghost" pendingLabel="Signing out...">
               Sign out
             </SubmitButton>
           </form>
@@ -198,7 +201,10 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
             sales before purchase.
           </p>
         ) : null}
-      </section>
+      </Card>
     </main>
   );
 }
+
+// Local type alias so the variant computation is type-safe without importing ButtonProps.
+type ButtonProps = { variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" };

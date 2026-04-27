@@ -1,9 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useFormStatus } from "react-dom";
+import type { ComponentProps } from "react";
+
+import { Button } from "@/components/ui/button";
+
+type ButtonProps = ComponentProps<typeof Button>;
 
 type SubmitButtonProps = {
   children: React.ReactNode;
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
   className?: string;
   pendingLabel?: string;
   disabled?: boolean;
@@ -11,7 +18,9 @@ type SubmitButtonProps = {
 
 export function SubmitButton({
   children,
-  className = "buttonPrimary",
+  variant = "default",
+  size,
+  className,
   pendingLabel = "Working...",
   disabled = false,
 }: SubmitButtonProps) {
@@ -19,8 +28,14 @@ export function SubmitButton({
   const isDisabled = pending || disabled;
 
   return (
-    <button type="submit" className={className} disabled={isDisabled} aria-disabled={isDisabled}>
+    <Button
+      type="submit"
+      variant={variant}
+      size={size}
+      className={className}
+      disabled={isDisabled}
+    >
       {pending ? pendingLabel : children}
-    </button>
+    </Button>
   );
 }
