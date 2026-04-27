@@ -1,10 +1,15 @@
-﻿"use server";
+"use server";
 
 import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import type { ActionResult } from "../../../lib/action-result";
+import {
+  actionError,
+  actionOk,
+} from "../../../lib/server/action-result";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import {
   assertWorkspaceSubscriptionActive,
@@ -23,7 +28,6 @@ import {
   createSenderProfileForWorkspace,
   listSenderProfilesForWorkspace,
 } from "../../../lib/server/sender-profiles";
-import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 
 function readOptionalText(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
@@ -62,33 +66,23 @@ async function requireOnboardingWorkspace(workspaceId: string) {
   };
 }
 
-function redirectToOnboarding(
-  workspaceId: string,
-  success?: string,
-) {
+function revalidateOnboarding(workspaceId: string) {
   revalidatePath("/app");
   revalidatePath(`/app/onboarding?workspace=${workspaceId}`);
   revalidatePath(`/app/campaigns?workspace=${workspaceId}`);
   revalidatePath(`/app/sender-profiles?workspace=${workspaceId}`);
-  const suffix = success ? `&success=${encodeURIComponent(success)}` : "";
-  redirect(`/app/onboarding?workspace=${workspaceId}${suffix}`);
 }
 
-function redirectWithError(
-  workspaceId: string,
-  error: unknown,
-  fallbackMessage: string,
-) {
-  redirect(
-    `/app/onboarding?workspace=${workspaceId}&error=${encodeUserFacingError(error, fallbackMessage)}`,
-  );
-}
-
-export async function confirmWorkspaceOnboardingAction(formData: FormData) {
+export async function confirmWorkspaceOnboardingAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
 
   if (typeof workspaceId !== "string") {
-    throw new Error("Workspace id is required.");
+    return actionError(
+      new Error("Workspace id is required."),
+      "We could not confirm the workspace right now.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -102,23 +96,25 @@ export async function confirmWorkspaceOnboardingAction(formData: FormData) {
         skippedAt: null,
       },
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not confirm the workspace right now.",
-    );
-  }
 
-  redirectToOnboarding(workspaceId, "Workspace confirmed.");
+    revalidateOnboarding(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not confirm the workspace right now.");
+  }
 }
 
-export async function selectOnboardingUserTypeAction(formData: FormData) {
+export async function selectOnboardingUserTypeAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const userType = formData.get("userType");
 
   if (typeof workspaceId !== "string" || typeof userType !== "string") {
-    throw new Error("Workspace id and user type are required.");
+    return actionError(
+      new Error("Workspace id and user type are required."),
+      "We could not save that onboarding choice.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -147,22 +143,24 @@ export async function selectOnboardingUserTypeAction(formData: FormData) {
         skippedAt: null,
       },
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not save that onboarding choice.",
-    );
-  }
 
-  redirectToOnboarding(workspaceId, "User type saved.");
+    revalidateOnboarding(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not save that onboarding choice.");
+  }
 }
 
-export async function skipOnboardingAction(formData: FormData) {
+export async function skipOnboardingAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
 
   if (typeof workspaceId !== "string") {
-    throw new Error("Workspace id is required.");
+    return actionError(
+      new Error("Workspace id is required."),
+      "We could not pause onboarding right now.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -176,24 +174,25 @@ export async function skipOnboardingAction(formData: FormData) {
         skippedAt: new Date(),
       },
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not pause onboarding right now.",
-    );
-  }
 
-  revalidatePath("/app");
-  redirect(`/app?workspace=${workspaceId}&notice=Onboarding%20paused.`);
+    revalidatePath("/app");
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not pause onboarding right now.");
+  }
 }
 
-export async function createOnboardingSenderProfileAction(formData: FormData) {
+export async function createOnboardingSenderProfileAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const senderType = formData.get("senderType");
 
   if (typeof workspaceId !== "string" || typeof senderType !== "string") {
-    throw new Error("Workspace id and sender type are required.");
+    return actionError(
+      new Error("Workspace id and sender type are required."),
+      "We could not create the sender profile yet.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -231,22 +230,24 @@ export async function createOnboardingSenderProfileAction(formData: FormData) {
       membership: context.workspace,
       userId: context.user.userId,
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not create the sender profile yet.",
-    );
-  }
 
-  redirectToOnboarding(workspaceId, "Sender profile created.");
+    revalidateOnboarding(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not create the sender profile yet.");
+  }
 }
 
-export async function createOnboardingCampaignAction(formData: FormData) {
+export async function createOnboardingCampaignAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
 
   if (typeof workspaceId !== "string") {
-    throw new Error("Workspace id is required.");
+    return actionError(
+      new Error("Workspace id is required."),
+      "We could not create the first campaign yet.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -255,7 +256,9 @@ export async function createOnboardingCampaignAction(formData: FormData) {
     await assertWorkspaceSubscriptionActive({ workspaceId });
     const senderProfiles = await listSenderProfilesForWorkspace(workspaceId);
     const defaultSenderProfile =
-      senderProfiles.find((profile) => profile.isDefault) ?? senderProfiles[0] ?? null;
+      senderProfiles.find((profile) => profile.isDefault) ??
+      senderProfiles[0] ??
+      null;
 
     await createCampaignForWorkspace({
       workspaceId,
@@ -283,22 +286,24 @@ export async function createOnboardingCampaignAction(formData: FormData) {
       membership: context.workspace,
       userId: context.user.userId,
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not create the first campaign yet.",
-    );
-  }
 
-  redirectToOnboarding(workspaceId, "First campaign created.");
+    revalidateOnboarding(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not create the first campaign yet.");
+  }
 }
 
-export async function createOnboardingProspectAction(formData: FormData) {
+export async function createOnboardingProspectAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
 
   if (typeof workspaceId !== "string") {
-    throw new Error("Workspace id is required.");
+    return actionError(
+      new Error("Workspace id is required."),
+      "We could not add the first prospect yet.",
+    );
   }
 
   const context = await requireOnboardingWorkspace(workspaceId);
@@ -331,14 +336,10 @@ export async function createOnboardingProspectAction(formData: FormData) {
       membership: context.workspace,
       userId: context.user.userId,
     });
-  } catch (error) {
-    redirectWithError(
-      workspaceId,
-      error,
-      "We could not add the first prospect yet.",
-    );
-  }
 
-  revalidatePath("/app");
-  redirect(`/app?workspace=${workspaceId}&notice=Onboarding%20complete.`);
+    revalidatePath("/app");
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not add the first prospect yet.");
+  }
 }

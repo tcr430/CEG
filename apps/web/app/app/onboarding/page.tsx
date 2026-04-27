@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { FeedbackBanner } from "../../../components/feedback-banner";
-import { SubmitButton } from "../../../components/submit-button";
 import {
   getOnboardingNextStepGuidance,
   getOnboardingPersonaGuidance,
@@ -11,14 +9,12 @@ import { requireActiveWorkspaceAppContext } from "../../../lib/server/billing";
 import { getWorkspaceOnboardingSummary } from "../../../lib/server/onboarding";
 import { getUserTypeLabel } from "../../../lib/server/onboarding-state";
 
-import {
-  confirmWorkspaceOnboardingAction,
-  createOnboardingCampaignAction,
-  createOnboardingProspectAction,
-  createOnboardingSenderProfileAction,
-  selectOnboardingUserTypeAction,
-  skipOnboardingAction,
-} from "./actions";
+import { ConfirmWorkspaceButton } from "./forms/confirm-workspace-button";
+import { OnboardingCampaignForm } from "./forms/onboarding-campaign-form";
+import { OnboardingProspectForm } from "./forms/onboarding-prospect-form";
+import { OnboardingSenderProfileForm } from "./forms/onboarding-sender-profile-form";
+import { SelectUserTypeButtons } from "./forms/select-user-type-buttons";
+import { SkipOnboardingButton } from "./forms/skip-onboarding-button";
 
 export const metadata: Metadata = {
   title: "Onboarding",
@@ -28,8 +24,6 @@ export const metadata: Metadata = {
 type OnboardingPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
-    success?: string;
   }>;
 };
 
@@ -90,23 +84,18 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
         </p>
       </section>
 
-      <FeedbackBanner
-        error={params.error}
-        success={params.success}
-        notice={summary.isSkipped ? "Onboarding is paused. You can resume anytime from here or the dashboard." : undefined}
-      />
+      {summary.isSkipped ? (
+        <p className="statusMessage">
+          Onboarding is paused. You can resume anytime from here or the dashboard.
+        </p>
+      ) : null}
 
       <div className="inlineActions profileHeaderActions">
         <Link href={`/app?workspace=${summary.workspaceId}`} className="buttonSecondary">
           Back to dashboard
         </Link>
         {!summary.isComplete ? (
-          <form action={skipOnboardingAction}>
-            <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-            <SubmitButton className="buttonGhost" pendingLabel="Pausing onboarding...">
-              Return later
-            </SubmitButton>
-          </form>
+          <SkipOnboardingButton workspaceId={summary.workspaceId} />
         ) : null}
       </div>
 
@@ -213,12 +202,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
               guidance and examples.
             </p>
           ) : (
-            <form action={confirmWorkspaceOnboardingAction} className="inlineActions">
-              <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-              <SubmitButton className="buttonPrimary" pendingLabel="Confirming workspace...">
-                Use this workspace for onboarding
-              </SubmitButton>
-            </form>
+            <ConfirmWorkspaceButton workspaceId={summary.workspaceId} />
           )}
         </StepCard>
 
@@ -245,31 +229,11 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
             Recommendation: choose the shape that best matches how the team actually delivers work
             today. The rest of onboarding will adapt its examples and setup cues.
           </p>
-          <div className="onboardingChoiceGrid">
-            {[
-              ["agency", "Outbound agency", "Recommended for most teams in this product"],
-              ["sdr", "SDR team", "Best for one internal outbound motion with team review"],
-              ["saas_founder", "SaaS founder", "Best for founder-led setup with tighter context"],
-              ["basic", "Basic mode", "Fastest path when you want to skip sender setup first"],
-            ].map(([value, label, helper]) => {
-              const blocked = value !== "basic" && !senderProfilesAllowed;
-              const isCurrent = summary.selectedUserType === value;
-              return (
-                <form key={value} action={selectOnboardingUserTypeAction}>
-                  <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-                  <input type="hidden" name="userType" value={value} />
-                  <SubmitButton
-                    className="buttonSecondary onboardingChoiceButton"
-                    pendingLabel="Saving..."
-                    disabled={blocked}
-                  >
-                    {label}
-                    {!blocked ? <small>{isCurrent ? "Current selection" : helper}</small> : <small>Unavailable on this plan</small>}
-                  </SubmitButton>
-                </form>
-              );
-            })}
-          </div>
+          <SelectUserTypeButtons
+            workspaceId={summary.workspaceId}
+            currentSelection={summary.selectedUserType}
+            senderProfilesAllowed={senderProfilesAllowed}
+          />
           {summary.selectedUserType != null ? (
             <p className="statusMessage">
               {personaGuidance.recommendation}
@@ -301,66 +265,20 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           ) : summary.selectedUserType == null ? (
             <p>Select a workflow shape first to unlock the right sender-context setup path.</p>
           ) : (
-            <form action={createOnboardingSenderProfileAction} className="panel compactPanel senderProfileForm">
-              <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-              <input type="hidden" name="senderType" value={summary.selectedUserType} />
-
-              <p className="statusMessage">
-                Keep this concise. A good first profile gives the system enough context to draft and
-                classify inside the right workflow, and the team can refine it later.
-              </p>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Profile name</span>
-                  <input name="name" defaultValue={personaGuidance.senderProfileDefaults.name} required />
-                </label>
-                <label className="field">
-                  <span>Company name</span>
-                  <input name="companyName" placeholder={personaGuidance.senderProfileDefaults.companyName} />
-                </label>
-              </div>
-
-              <label className="field">
-                <span>Offer or service</span>
-                <textarea name="productDescription" rows={3} placeholder={personaGuidance.senderProfileDefaults.offer} />
-              </label>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Target buyer</span>
-                  <textarea name="targetCustomer" rows={3} placeholder={personaGuidance.senderProfileDefaults.targetBuyer} />
-                </label>
-                <label className="field">
-                  <span>Value proposition</span>
-                  <textarea name="valueProposition" rows={3} placeholder={personaGuidance.senderProfileDefaults.valueProposition} />
-                </label>
-              </div>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Proof points</span>
-                  <textarea name="proofPoints" rows={4} placeholder={personaGuidance.senderProfileDefaults.proofPoints} />
-                  <small>Use one line per proof point the team can safely reuse in later drafts.</small>
-                </label>
-                <label className="field">
-                  <span>Workflow goals</span>
-                  <textarea name="goals" rows={4} placeholder={personaGuidance.senderProfileDefaults.goals} />
-                  <small>Use one line per goal, such as booked calls, qualified replies, or smoother client delivery.</small>
-                </label>
-              </div>
-
-              <label className="field">
-                <span>Tone style</span>
-                <input name="toneStyle" placeholder={personaGuidance.senderProfileDefaults.toneStyle} />
-              </label>
-
-              <div className="inlineActions">
-                <SubmitButton className="buttonPrimary" pendingLabel="Creating sender profile...">
-                  Create sender workflow profile
-                </SubmitButton>
-              </div>
-            </form>
+            <OnboardingSenderProfileForm
+              workspaceId={summary.workspaceId}
+              senderType={summary.selectedUserType}
+              defaults={{
+                name: personaGuidance.senderProfileDefaults.name,
+                companyName: personaGuidance.senderProfileDefaults.companyName,
+                offer: personaGuidance.senderProfileDefaults.offer,
+                targetBuyer: personaGuidance.senderProfileDefaults.targetBuyer,
+                valueProposition: personaGuidance.senderProfileDefaults.valueProposition,
+                proofPoints: personaGuidance.senderProfileDefaults.proofPoints,
+                goals: personaGuidance.senderProfileDefaults.goals,
+                toneStyle: personaGuidance.senderProfileDefaults.toneStyle,
+              }}
+            />
           )}
         </StepCard>
 
@@ -383,54 +301,17 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           ) : summary.nextStep !== "campaign" && summary.steps.find((step) => step.id === "campaign")?.status !== "current" ? (
             <p>Complete the earlier setup steps first, then the first client-workflow brief will unlock here.</p>
           ) : (
-            <form action={createOnboardingCampaignAction} className="panel compactPanel senderProfileForm">
-              <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-
-              <p className="statusMessage">
-                Treat this as a concise operating brief, not a long form. You can refine targeting,
-                tone, and workflow rules as the campaign evolves.
-              </p>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Campaign name</span>
-                  <input name="name" placeholder={personaGuidance.campaignDefaults.name} required />
-                </label>
-                <label className="field">
-                  <span>Target ICP</span>
-                  <input name="targetIcp" placeholder={personaGuidance.campaignDefaults.targetIcp} />
-                </label>
-              </div>
-
-              <label className="field">
-                <span>Client offer summary</span>
-                <textarea name="offerSummary" rows={3} placeholder={personaGuidance.campaignDefaults.offerSummary} />
-              </label>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Target industries</span>
-                  <textarea name="targetIndustries" rows={4} placeholder={personaGuidance.campaignDefaults.targetIndustries} />
-                  <small>Use one line per industry the team should prioritize in this workflow.</small>
-                </label>
-                <label className="field">
-                  <span>Workflow preferences</span>
-                  <textarea name="frameworkPreferences" rows={4} placeholder={personaGuidance.campaignDefaults.frameworkPreferences} />
-                  <small>Use one line per messaging rule, structure, or review preference you want carried into drafts.</small>
-                </label>
-              </div>
-
-              <label className="field">
-                <span>Tone style</span>
-                <input name="toneStyle" placeholder={personaGuidance.campaignDefaults.toneStyle} />
-              </label>
-
-              <div className="inlineActions">
-                <SubmitButton className="buttonPrimary" pendingLabel="Creating campaign...">
-                  Create first client workflow
-                </SubmitButton>
-              </div>
-            </form>
+            <OnboardingCampaignForm
+              workspaceId={summary.workspaceId}
+              defaults={{
+                name: personaGuidance.campaignDefaults.name,
+                targetIcp: personaGuidance.campaignDefaults.targetIcp,
+                offerSummary: personaGuidance.campaignDefaults.offerSummary,
+                targetIndustries: personaGuidance.campaignDefaults.targetIndustries,
+                frameworkPreferences: personaGuidance.campaignDefaults.frameworkPreferences,
+                toneStyle: personaGuidance.campaignDefaults.toneStyle,
+              }}
+            />
           )}
         </StepCard>
 
@@ -453,46 +334,18 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           ) : summary.nextStep !== "prospect" && summary.steps.find((step) => step.id === "prospect")?.status !== "current" ? (
             <p>Create the first client workflow first, then add a target account here.</p>
           ) : (
-            <form action={createOnboardingProspectAction} className="panel compactPanel prospectForm">
-              <input type="hidden" name="workspaceId" value={summary.workspaceId} />
-
-              <p className="statusMessage">
-                Start with a real company the team would genuinely work. One account is enough to get
-                to value and prove the workflow quickly.
-              </p>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Company name</span>
-                  <input name="companyName" placeholder={personaGuidance.prospectDefaults.companyName} required />
-                </label>
-                <label className="field">
-                  <span>Website URL</span>
-                  <input name="companyWebsite" type="url" placeholder={personaGuidance.prospectDefaults.companyWebsite} />
-                </label>
-              </div>
-
-              <div className="formGrid">
-                <label className="field">
-                  <span>Primary contact</span>
-                  <input name="contactName" placeholder={personaGuidance.prospectDefaults.contactName} />
-                </label>
-                <label className="field">
-                  <span>Contact email</span>
-                  <input name="email" type="email" placeholder={personaGuidance.prospectDefaults.email} />
-                </label>
-              </div>
-
-              <div className="inlineActions">
-                <SubmitButton className="buttonPrimary" pendingLabel="Adding prospect...">
-                  Add first target account
-                </SubmitButton>
-              </div>
-            </form>
+            <OnboardingProspectForm
+              workspaceId={summary.workspaceId}
+              defaults={{
+                companyName: personaGuidance.prospectDefaults.companyName,
+                companyWebsite: personaGuidance.prospectDefaults.companyWebsite,
+                contactName: personaGuidance.prospectDefaults.contactName,
+                email: personaGuidance.prospectDefaults.email,
+              }}
+            />
           )}
         </StepCard>
       </div>
     </main>
   );
 }
-
