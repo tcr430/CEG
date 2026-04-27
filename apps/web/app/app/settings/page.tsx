@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";
 import {
@@ -97,14 +101,14 @@ function formatRetentionPreference(value: string) {
 
 function getIndicatorCardClass(status: "ready" | "partial" | "not_configured") {
   if (status === "ready") {
-    return "dashboardCard nestedCard successCard";
+    return "p-5 nestedCard successCard";
   }
 
   if (status === "partial") {
-    return "dashboardCard nestedCard warningCard";
+    return "p-5 nestedCard warningCard";
   }
 
-  return "dashboardCard nestedCard";
+  return "p-5 nestedCard";
 }
 
 function getIndicatorLabel(status: "ready" | "partial" | "not_configured") {
@@ -184,25 +188,25 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link href="/app" className="buttonSecondary">
-          Back to dashboard
-        </Link>
-        <Link href="/pricing" className="buttonSecondary">
-          Public pricing page
-        </Link>
-        <Link href={`/app/onboarding?workspace=${workspace.workspaceId}`} className="buttonSecondary">
-          Onboarding
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href="/app">Back to dashboard</Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href="/pricing">Public pricing page</Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href={`/app/onboarding?workspace=${workspace.workspaceId}`}>Onboarding</Link>
+        </Button>
         {showInternalAdminLink ? (
-          <Link href={`/app/settings/debug?workspace=${workspace.workspaceId}`} className="buttonSecondary">
-            Internal admin
-          </Link>
+          <Button asChild variant="secondary">
+            <Link href={`/app/settings/debug?workspace=${workspace.workspaceId}`}>Internal admin</Link>
+          </Button>
         ) : null}
       </div>
 
       <section className="profileDetailGrid settingsGrid">
         <div className="stack">
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Workspace</p>
             <h2>Workspace profile</h2>
             <p>
@@ -219,17 +223,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               }}
               canEdit={teamState.permissions.canEditWorkspace}
             />
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Operational controls</p>
             <h2>Institutional controls</h2>
             <p>
               This section makes the current operational posture visible. It is intentionally honest: useful controls and readiness summaries now, deeper policy automation later. It also makes the stored operational record around requests, access, provider posture, and usage evidence easier to understand.
             </p>
             <div className="pillRow">
-              <span className="pill">{formatRetentionPreference(controls.dataRetention.preference)}</span>
-              <span className="pill">{institutionalControlsState.permissions.canViewAuditSummary ? "Audit summary visible" : "Audit summary limited"}</span>
+              <Badge variant="secondary">{formatRetentionPreference(controls.dataRetention.preference)}</Badge>
+              <Badge variant="secondary">{institutionalControlsState.permissions.canViewAuditSummary ? "Audit summary visible" : "Audit summary limited"}</Badge>
             </div>
             <InstitutionalControlsForm
               workspaceId={workspace.workspaceId}
@@ -250,26 +254,26 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               canEdit={institutionalControlsState.permissions.canEdit}
             />
             <div className="stack">
-              <div className="dashboardCard nestedCard">
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Now</p>
                 <ul className="researchList compactResearchList">
                   {institutionalControlsState.summaries.implementedNow.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Roadmap</p>
                 <ul className="researchList compactResearchList">
                   {institutionalControlsState.summaries.roadmap.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             </div>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Operational readiness</p>
             <h2>Environment and provider posture</h2>
             <p>
@@ -277,52 +281,52 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             </p>
             <div className="stack">
               {institutionalControlsState.readinessIndicators.map((indicator) => (
-                <div key={indicator.key} className={getIndicatorCardClass(indicator.status)}>
+                <Card key={indicator.key} className={getIndicatorCardClass(indicator.status)}>
                   <div className="pillRow">
-                    <span className="pill">{indicator.label}</span>
-                    <span className="pill">{getIndicatorLabel(indicator.status)}</span>
+                    <Badge variant="secondary">{indicator.label}</Badge>
+                    <Badge variant="secondary">{getIndicatorLabel(indicator.status)}</Badge>
                   </div>
                   <p>{indicator.detail}</p>
-                </div>
+                </Card>
               ))}
             </div>
             <div className="stack">
-              <div className="dashboardCard nestedCard">
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Request visibility</p>
                 <p>{institutionalControlsState.summaries.exportDeleteVisibility}</p>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Audit visibility</p>
                 <p>{institutionalControlsState.summaries.auditAccessVisibility}</p>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Security posture</p>
                 <ul className="researchList compactResearchList">
                   {institutionalControlsState.summaries.securityPosture.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Operational summary</p>
                 <ul className="researchList compactResearchList">
                   {institutionalControlsState.summaries.operationalConfiguration.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             </div>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Team</p>
             <h2>Workspace members</h2>
             <p>
               Owners and admins can control who has access. Invitations stay scoped to this workspace so the right operators and reviewers can work inside the same client-facing system.
             </p>
             <div className="pillRow">
-              <span className="pill">Your role: {workspace.role}</span>
-              <span className="pill">{teamState.members.length} team members</span>
+              <Badge variant="secondary">Your role: {workspace.role}</Badge>
+              <Badge variant="secondary">{teamState.members.length} team members</Badge>
             </div>
             {teamState.permissions.canManageTeam ? (
               <InviteMemberForm
@@ -330,15 +334,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 allowedRoles={teamState.permissions.allowedInviteRoles}
               />
             ) : (
-              <p className="statusMessage">Members can view the workspace roster, but only admins and owners can invite or manage access.</p>
+              <p className="text-sm text-muted-foreground">Members can view the workspace roster, but only admins and owners can invite or manage access.</p>
             )}
             <div className="stack">
               {teamState.members.map((member) => (
-                <div key={member.membershipId} className="dashboardCard nestedCard">
+                <Card key={member.membershipId} className="p-5 nestedCard">
                   <div className="pillRow">
-                    <span className="pill">{member.role}</span>
-                    <span className="pill">{formatMemberStatus(member.status)}</span>
-                    {member.isCurrentUser ? <span className="pill">You</span> : null}
+                    <Badge variant="secondary">{member.role}</Badge>
+                    <Badge variant="secondary">{formatMemberStatus(member.status)}</Badge>
+                    {member.isCurrentUser ? <Badge variant="secondary">You</Badge> : null}
                   </div>
                   <h3>{member.fullName ?? member.email}</h3>
                   <p>{member.email}</p>
@@ -357,22 +361,22 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                       targetUserId={member.userId}
                     />
                   ) : null}
-                </div>
+                </Card>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Current plan</p>
             <h2>{billing.planLabel}</h2>
             <p>{currentPlan.summary}</p>
             <div className="pillRow">
-              <span className="pill">{billing.planLabel} plan</span>
+              <Badge variant="secondary">{billing.planLabel} plan</Badge>
               {billing.currentSubscription ? (
-                <span className="pill">{billing.currentSubscription.status}</span>
+                <Badge variant="secondary">{billing.currentSubscription.status}</Badge>
               ) : null}
               {billing.currentSubscription?.cancelAtPeriodEnd ? (
-                <span className="pill">Cancels at period end</span>
+                <Badge variant="secondary">Cancels at period end</Badge>
               ) : null}
             </div>
             <p>
@@ -381,12 +385,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 : "No active subscription is synced yet. The workspace account exists, but core workflow execution stays locked until checkout completes."}
             </p>
             {subscriptionLocked ? (
-              <p className="statusMessage">
+              <p className="text-sm text-muted-foreground">
                 Account access is active. Choose Growth or Enterprise below to unlock sender profiles, campaigns, prospects, research, generation, reply intelligence, and inbox imports.
               </p>
             ) : null}
             <p>Billing period end: {formatPeriodEnd(billing.currentSubscription?.currentPeriodEnd ?? null)}</p>
-          </div>
+          </Card>
 
           {billingUpgradePrompt ? (
             <UpgradePromptCard
@@ -395,26 +399,26 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             />
           ) : null}
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Inbox</p>
             <h2>Gmail connection</h2>
             <p>
               Connect one Gmail inbox to import recent threads into matched prospect timelines. Tokens stay server-side and encrypted, and generated emails only move into Gmail as reviewable drafts rather than auto-sent messages. Imported thread and message references become part of the stored workspace context.
             </p>
             {!inboxState.gmailConfigured ? (
-              <p className="statusMessage">
+              <p className="text-sm text-muted-foreground">
                 Gmail OAuth is not configured yet. Add the Google client id, secret, redirect URI, and inbox encryption key before connecting an inbox.
               </p>
             ) : (
               <form action="/api/inbox/gmail/connect" method="post" className="inlineActions profileHeaderActions">
                 <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <SubmitButton className="buttonPrimary" pendingLabel="Redirecting to Google...">
+                <SubmitButton pendingLabel="Redirecting to Google...">
                   Connect Gmail
                 </SubmitButton>
               </form>
             )}
             {inboxState.accounts.length === 0 ? (
-              <p className="statusMessage">
+              <p className="text-sm text-muted-foreground">
                 No inbox is connected yet. Connect Gmail to pull recent replies into the right prospect thread.
               </p>
             ) : (
@@ -423,11 +427,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                   const latestRun = recentSyncRuns[0] ?? null;
 
                   return (
-                    <div key={account.id} className="dashboardCard nestedCard">
+                    <Card key={account.id} className="p-5 nestedCard">
                       <div className="pillRow">
-                        <span className="pill">{account.provider}</span>
-                        <span className="pill">{account.status}</span>
-                        <span className="pill">{account.syncState.status}</span>
+                        <Badge variant="secondary">{account.provider}</Badge>
+                        <Badge variant="secondary">{account.status}</Badge>
+                        <Badge variant="secondary">{account.syncState.status}</Badge>
                       </div>
                       <h3>{account.displayName ?? account.emailAddress}</h3>
                       <p>{account.emailAddress}</p>
@@ -435,7 +439,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                         Last successful sync: {formatDateTime(account.syncState.lastSuccessAt ?? account.lastSyncedAt ?? null)}
                       </p>
                       {account.syncState.lastErrorMessage ? (
-                        <p className="statusMessage">
+                        <p className="text-sm text-muted-foreground">
                           Latest sync issue: {account.syncState.lastErrorMessage}
                         </p>
                       ) : null}
@@ -450,14 +454,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                       ) : (
                         <p>No sync run has been recorded yet.</p>
                       )}
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
             )}
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Current workflow allowances</p>
             <h2>What this plan supports right now</h2>
             <ul className="researchList compactResearchList">
@@ -485,16 +489,16 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 <p>{formatAllowance(billing.limits.regenerations.remaining, "regenerations")}</p>
               </li>
             </ul>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Data handling</p>
             <h2>Export and deletion requests</h2>
             <p>
               Export produces a structured workspace snapshot for responsible handoff and review, including the operational history the product stores around sender context, campaign briefs, research, drafts, edits, and approvals. Deletion stays explicit and auditable: owners can request it here, but nothing is silently removed.
             </p>
             <div className="stack">
-              <div className="dashboardCard nestedCard">
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Workspace export</p>
                 <p>
                   Last export: {formatDateTime(dataHandling.lastExportAt ?? null)}
@@ -502,15 +506,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 <form action="/api/workspace/export" method="post">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   {teamState.permissions.canEditWorkspace ? (
-                    <SubmitButton className="buttonSecondary" pendingLabel="Preparing export...">
+                    <SubmitButton variant="secondary" pendingLabel="Preparing export...">
                       Export workspace data
                     </SubmitButton>
                   ) : (
-                    <p className="statusMessage">Only owners and admins can export workspace data.</p>
+                    <p className="text-sm text-muted-foreground">Only owners and admins can export workspace data.</p>
                   )}
                 </form>
-              </div>
-              <div className="dashboardCard nestedCard">
+              </Card>
+              <Card className="p-5 nestedCard">
                 <p className="cardLabel">Deletion request</p>
                 <p>
                   {dataHandling.deletionRequest.status === "requested"
@@ -523,13 +527,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     workspaceNamePlaceholder={teamState.workspace.name}
                   />
                 ) : (
-                  <p className="statusMessage">Only workspace owners can request deletion, and the request must be confirmed explicitly.</p>
+                  <p className="text-sm text-muted-foreground">Only workspace owners can request deletion, and the request must be confirmed explicitly.</p>
                 )}
-              </div>
+              </Card>
             </div>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Feedback</p>
             <h2>Report an issue or early-user friction</h2>
             <p>
@@ -539,9 +543,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               workspaceId={workspace.workspaceId}
               pagePath="/app/settings"
             />
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Manage billing</p>
             <h2>Stripe customer settings</h2>
             <p>
@@ -550,14 +554,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             {billing.currentSubscription?.providerCustomerId ? (
               <form action="/api/billing/portal" method="post">
                 <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <SubmitButton className="buttonSecondary" pendingLabel="Opening portal...">Manage billing</SubmitButton>
+                <SubmitButton variant="secondary" pendingLabel="Opening portal...">Manage billing</SubmitButton>
               </form>
             ) : (
-              <p className="statusMessage">
+              <p className="text-sm text-muted-foreground">
                 Billing portal becomes available after the first Stripe checkout completes and syncs.
               </p>
             )}
-          </div>
+          </Card>
         </div>
 
         <div id="billing-plans" className="stack pricingSettingsStack">
@@ -569,10 +573,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               actions = billing.currentSubscription?.providerCustomerId ? (
                 <form action="/api/billing/portal" method="post">
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                  <SubmitButton className="buttonSecondary" pendingLabel="Opening portal...">Manage current plan</SubmitButton>
+                  <SubmitButton variant="secondary" pendingLabel="Opening portal...">Manage current plan</SubmitButton>
                 </form>
               ) : (
-                <p className="statusMessage">Stripe sync is still catching up. Billing management will appear here once the subscription record is available.</p>
+                <p className="text-sm text-muted-foreground">Stripe sync is still catching up. Billing management will appear here once the subscription record is available.</p>
               );
             } else {
               actions = (
@@ -580,7 +584,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                   <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
                   <input type="hidden" name="planCode" value={plan.code} />
                   <SubmitButton
-                    className={plan.featured ? "buttonPrimary" : "buttonSecondary"}
+                    variant={plan.featured ? "default" : "secondary"}
                     pendingLabel="Starting checkout..."
                   >
                     {plan.code === "free"
@@ -614,7 +618,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </div>
       </section>
 
-      <section className="panel pricingComparisonPanel" aria-labelledby="settings-plan-comparison-title">
+      <Card className="p-6 pricingComparisonPanel" aria-labelledby="settings-plan-comparison-title">
         <div>
           <p className="eyebrow">Comparison</p>
           <h2 id="settings-plan-comparison-title">Plan differences at a glance</h2>
@@ -636,7 +640,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <span>{row.agency}</span>
           </div>
         ))}
-      </section>
+      </Card>
     </main>
   );
 }
