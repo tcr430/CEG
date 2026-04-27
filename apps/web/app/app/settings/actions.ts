@@ -5,13 +5,17 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import type { ActionResult } from "../../../lib/action-result";
+import {
+  actionError,
+  actionOk,
+} from "../../../lib/server/action-result";
 import { getWorkspaceAppContext } from "../../../lib/server/auth";
 import { assertWorkspaceSubscriptionActive } from "../../../lib/server/billing";
 import { requestWorkspaceDeletion } from "../../../lib/server/data-handling";
 import { submitWorkspaceFeedback } from "../../../lib/server/feedback";
 import { importRecentThreadsFromGmail } from "../../../lib/server/inbox/service";
 import { updateInstitutionalControls } from "../../../lib/server/institutional-controls";
-import { encodeUserFacingError } from "../../../lib/server/user-facing-errors";
 import {
   inviteWorkspaceMember,
   removeWorkspaceMember,
@@ -19,13 +23,13 @@ import {
   updateWorkspaceProfileSettings,
 } from "../../../lib/server/workspace-team";
 
-function redirectSettingsError(workspaceId: string, error: unknown, fallbackMessage: string) {
-  redirect(
-    `/app/settings?workspace=${workspaceId}&error=${encodeUserFacingError(error, fallbackMessage)}`,
-  );
+function revalidateSettings(workspaceId: string) {
+  revalidatePath(`/app/settings?workspace=${workspaceId}`);
 }
 
-export async function submitWorkspaceFeedbackAction(formData: FormData) {
+export async function submitWorkspaceFeedbackAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const pagePath = formData.get("pagePath");
   const category = formData.get("category");
@@ -37,11 +41,13 @@ export async function submitWorkspaceFeedbackAction(formData: FormData) {
     typeof category !== "string" ||
     typeof message !== "string"
   ) {
-    throw new Error("Workspace, page path, category, and feedback message are required.");
+    return actionError(
+      new Error("Workspace, page path, category, and feedback message are required."),
+      "We could not submit that feedback right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
-
   if (context.workspace === null || context.needsWorkspaceSelection) {
     redirect("/app/workspaces");
   }
@@ -50,22 +56,35 @@ export async function submitWorkspaceFeedbackAction(formData: FormData) {
     await submitWorkspaceFeedback({
       workspaceId,
       pagePath,
-      category: category as "bug" | "workflow" | "output_quality" | "billing" | "other",
+      category: category as
+        | "bug"
+        | "workflow"
+        | "output_quality"
+        | "billing"
+        | "other",
       message,
       userId: context.user.userId,
       userEmail: context.user.email ?? "",
       userName: null,
       requestId: randomUUID(),
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not submit that feedback right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Feedback%20received.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(error, "We could not submit that feedback right now.");
+  }
 }
 
-export async function importRecentGmailThreadsAction(formData: FormData) {
+export type ImportRecentGmailThreadsData = {
+  importedThreadCount: number;
+  importedMessageCount: number;
+  analyzedReplyCount: number;
+};
+
+export async function importRecentGmailThreadsAction(
+  formData: FormData,
+): Promise<ActionResult<ImportRecentGmailThreadsData>> {
   const workspaceId = formData.get("workspaceId");
   const inboxAccountId = formData.get("inboxAccountId");
   const maxResultsValue = formData.get("maxResults");
@@ -74,11 +93,13 @@ export async function importRecentGmailThreadsAction(formData: FormData) {
     typeof workspaceId !== "string" ||
     typeof inboxAccountId !== "string"
   ) {
-    throw new Error("Workspace and inbox account are required.");
+    return actionError(
+      new Error("Workspace and inbox account are required."),
+      "We could not import recent Gmail threads right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
-
   if (context.workspace === null || context.needsWorkspaceSelection) {
     redirect("/app/workspaces");
   }
@@ -102,16 +123,23 @@ export async function importRecentGmailThreadsAction(formData: FormData) {
       maxResults,
     });
 
-    revalidatePath(`/app/settings?workspace=${workspaceId}`);
-    redirect(
-      `/app/settings?workspace=${workspaceId}&success=${encodeURIComponent(`Imported ${result.importedThreadCount} Gmail threads, stored ${result.importedMessageCount} new messages, and auto-analyzed ${result.analyzedReplyCount} reply threads.`)}`,
-    );
+    revalidateSettings(workspaceId);
+    return actionOk({
+      importedThreadCount: result.importedThreadCount,
+      importedMessageCount: result.importedMessageCount,
+      analyzedReplyCount: result.analyzedReplyCount,
+    });
   } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not import recent Gmail threads right now.");
+    return actionError(
+      error,
+      "We could not import recent Gmail threads right now.",
+    );
   }
 }
 
-export async function updateWorkspaceProfileAction(formData: FormData) {
+export async function updateWorkspaceProfileAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const name = formData.get("name");
   const description = formData.get("description");
@@ -120,7 +148,10 @@ export async function updateWorkspaceProfileAction(formData: FormData) {
   const supportEmail = formData.get("supportEmail");
 
   if (typeof workspaceId !== "string" || typeof name !== "string") {
-    throw new Error("Workspace and name are required.");
+    return actionError(
+      new Error("Workspace and name are required."),
+      "We could not update workspace settings right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -135,30 +166,49 @@ export async function updateWorkspaceProfileAction(formData: FormData) {
       actorMembership: context.workspace,
       name,
       profile: {
-        description: typeof description === "string" && description.trim().length > 0 ? description : null,
-        websiteUrl: typeof websiteUrl === "string" && websiteUrl.trim().length > 0 ? websiteUrl : null,
-        companyName: typeof companyName === "string" && companyName.trim().length > 0 ? companyName : null,
-        supportEmail: typeof supportEmail === "string" && supportEmail.trim().length > 0 ? supportEmail : null,
+        description:
+          typeof description === "string" && description.trim().length > 0
+            ? description
+            : null,
+        websiteUrl:
+          typeof websiteUrl === "string" && websiteUrl.trim().length > 0
+            ? websiteUrl
+            : null,
+        companyName:
+          typeof companyName === "string" && companyName.trim().length > 0
+            ? companyName
+            : null,
+        supportEmail:
+          typeof supportEmail === "string" && supportEmail.trim().length > 0
+            ? supportEmail
+            : null,
       },
       requestId: randomUUID(),
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not update workspace settings right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Workspace%20settings%20updated.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(
+      error,
+      "We could not update workspace settings right now.",
+    );
+  }
 }
 
-export async function updateInstitutionalControlsAction(formData: FormData) {
+export async function updateInstitutionalControlsAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const dataRetentionPreference = formData.get("dataRetentionPreference");
   const dataRetentionNotes = formData.get("dataRetentionNotes");
   const requestContactChannel = formData.get("requestContactChannel");
   const exportRequestsVisible = formData.get("exportRequestsVisible") === "on";
   const deleteRequestsVisible = formData.get("deleteRequestsVisible") === "on";
-  const auditVisibleToWorkspaceAdmins = formData.get("auditVisibleToWorkspaceAdmins") === "on";
-  const configurationSummaryVisible = formData.get("configurationSummaryVisible") === "on";
+  const auditVisibleToWorkspaceAdmins =
+    formData.get("auditVisibleToWorkspaceAdmins") === "on";
+  const configurationSummaryVisible =
+    formData.get("configurationSummaryVisible") === "on";
 
   if (
     typeof workspaceId !== "string" ||
@@ -166,7 +216,10 @@ export async function updateInstitutionalControlsAction(formData: FormData) {
       dataRetentionPreference !== "minimized" &&
       dataRetentionPreference !== "extended")
   ) {
-    throw new Error("Workspace and data retention preference are required.");
+    return actionError(
+      new Error("Workspace and data retention preference are required."),
+      "We could not update institutional controls right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -185,7 +238,8 @@ export async function updateInstitutionalControlsAction(formData: FormData) {
         dataRetention: {
           preference: dataRetentionPreference,
           notes:
-            typeof dataRetentionNotes === "string" && dataRetentionNotes.trim().length > 0
+            typeof dataRetentionNotes === "string" &&
+            dataRetentionNotes.trim().length > 0
               ? dataRetentionNotes
               : null,
           updatedAt: new Date(),
@@ -194,7 +248,8 @@ export async function updateInstitutionalControlsAction(formData: FormData) {
           exportRequestsVisible,
           deleteRequestsVisible,
           contactChannel:
-            typeof requestContactChannel === "string" && requestContactChannel.trim().length > 0
+            typeof requestContactChannel === "string" &&
+            requestContactChannel.trim().length > 0
               ? requestContactChannel
               : null,
         },
@@ -208,21 +263,32 @@ export async function updateInstitutionalControlsAction(formData: FormData) {
         },
       },
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not update institutional controls right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Institutional%20controls%20updated.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(
+      error,
+      "We could not update institutional controls right now.",
+    );
+  }
 }
 
-export async function requestWorkspaceDeletionAction(formData: FormData) {
+export async function requestWorkspaceDeletionAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const confirmationLabel = formData.get("confirmationLabel");
   const reason = formData.get("reason");
 
-  if (typeof workspaceId !== "string" || typeof confirmationLabel !== "string") {
-    throw new Error("Workspace and confirmation label are required.");
+  if (
+    typeof workspaceId !== "string" ||
+    typeof confirmationLabel !== "string"
+  ) {
+    return actionError(
+      new Error("Workspace and confirmation label are required."),
+      "We could not record that deletion request right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -240,15 +306,20 @@ export async function requestWorkspaceDeletionAction(formData: FormData) {
       reason: typeof reason === "string" ? reason : null,
       requestId: randomUUID(),
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not record that deletion request right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Workspace%20deletion%20request%20recorded.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(
+      error,
+      "We could not record that deletion request right now.",
+    );
+  }
 }
 
-export async function inviteWorkspaceMemberAction(formData: FormData) {
+export async function inviteWorkspaceMemberAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const email = formData.get("email");
   const role = formData.get("role");
@@ -258,7 +329,10 @@ export async function inviteWorkspaceMemberAction(formData: FormData) {
     typeof email !== "string" ||
     (role !== "admin" && role !== "member")
   ) {
-    throw new Error("Workspace, email, and role are required.");
+    return actionError(
+      new Error("Workspace, email, and role are required."),
+      "We could not send that workspace invite right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -276,15 +350,20 @@ export async function inviteWorkspaceMemberAction(formData: FormData) {
       role,
       requestId: randomUUID(),
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not send that workspace invite right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Workspace%20invite%20saved.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(
+      error,
+      "We could not send that workspace invite right now.",
+    );
+  }
 }
 
-export async function updateWorkspaceMemberRoleAction(formData: FormData) {
+export async function updateWorkspaceMemberRoleAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const targetUserId = formData.get("targetUserId");
   const role = formData.get("role");
@@ -294,7 +373,10 @@ export async function updateWorkspaceMemberRoleAction(formData: FormData) {
     typeof targetUserId !== "string" ||
     (role !== "admin" && role !== "member")
   ) {
-    throw new Error("Workspace, member, and role are required.");
+    return actionError(
+      new Error("Workspace, member, and role are required."),
+      "We could not update that workspace role right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -311,20 +393,28 @@ export async function updateWorkspaceMemberRoleAction(formData: FormData) {
       role,
       requestId: randomUUID(),
     });
-  } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not update that workspace role right now.");
-  }
 
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Workspace%20role%20updated.`);
+    revalidateSettings(workspaceId);
+    return actionOk();
+  } catch (error) {
+    return actionError(
+      error,
+      "We could not update that workspace role right now.",
+    );
+  }
 }
 
-export async function removeWorkspaceMemberAction(formData: FormData) {
+export async function removeWorkspaceMemberAction(
+  formData: FormData,
+): Promise<ActionResult<undefined>> {
   const workspaceId = formData.get("workspaceId");
   const targetUserId = formData.get("targetUserId");
 
   if (typeof workspaceId !== "string" || typeof targetUserId !== "string") {
-    throw new Error("Workspace and member are required.");
+    return actionError(
+      new Error("Workspace and member are required."),
+      "We could not remove that workspace member right now.",
+    );
   }
 
   const context = await getWorkspaceAppContext(workspaceId);
@@ -340,11 +430,13 @@ export async function removeWorkspaceMemberAction(formData: FormData) {
       targetUserId,
       requestId: randomUUID(),
     });
+
+    revalidateSettings(workspaceId);
+    return actionOk();
   } catch (error) {
-    redirectSettingsError(workspaceId, error, "We could not remove that workspace member right now.");
+    return actionError(
+      error,
+      "We could not remove that workspace member right now.",
+    );
   }
-
-  revalidatePath(`/app/settings?workspace=${workspaceId}`);
-  redirect(`/app/settings?workspace=${workspaceId}&success=Workspace%20member%20removed.`);
 }
-

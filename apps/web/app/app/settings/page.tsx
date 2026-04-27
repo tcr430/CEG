@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { FeedbackBanner } from "../../../components/feedback-banner";
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";
-import {
-  importRecentGmailThreadsAction,
-  inviteWorkspaceMemberAction,
-  removeWorkspaceMemberAction,
-  requestWorkspaceDeletionAction,
-  submitWorkspaceFeedbackAction,
-  updateInstitutionalControlsAction,
-  updateWorkspaceMemberRoleAction,
-  updateWorkspaceProfileAction,
-} from "./actions";
 import {
   canAccessInternalAdminView,
   getInternalAdminAllowedEmails,
@@ -35,6 +24,17 @@ import {
 import { getUpgradePrompt } from "../../../lib/upgrade-prompts";
 import { UpgradePromptCard } from "../../../components/upgrade-prompt-card";
 
+import { DeletionRequestForm } from "./forms/deletion-request-form";
+import { FeedbackForm } from "./forms/feedback-form";
+import { GmailImportForm } from "./forms/gmail-import-form";
+import { InstitutionalControlsForm } from "./forms/institutional-controls-form";
+import { InviteMemberForm } from "./forms/invite-member-form";
+import {
+  RemoveMemberForm,
+  UpdateMemberRoleForm,
+} from "./forms/member-row-actions";
+import { WorkspaceProfileForm } from "./forms/workspace-profile-form";
+
 export const metadata: Metadata = {
   title: "Settings",
   description: "Review workspace settings, team access, billing, inbox connections, and upgrades.",
@@ -43,11 +43,6 @@ export const metadata: Metadata = {
 type SettingsPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    billing?: string;
-    billingError?: string;
-    success?: string;
-    error?: string;
-    notice?: string;
     upgrade?: string;
   }>;
 };
@@ -188,12 +183,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </p>
       </section>
 
-      <FeedbackBanner
-        success={params.success ?? (params.billing === "success" ? encodeURIComponent("Stripe checkout completed. Subscription state will sync automatically through the webhook.") : undefined)}
-        notice={params.notice}
-        error={params.error ?? params.billingError}
-      />
-
       <div className="inlineActions profileHeaderActions">
         <Link href="/app" className="buttonSecondary">
           Back to dashboard
@@ -219,62 +208,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p>
               Keep the operating context clear for your team. Owners and admins can update the workspace name and the practical details that keep client work organized. This becomes shared workspace context for the rest of the product and helps preserve how the team runs client work over time.
             </p>
-            <form action={updateWorkspaceProfileAction} className="stack">
-              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-              <label>
-                <span>Workspace name</span>
-                <input
-                  name="name"
-                  defaultValue={teamState.workspace.name}
-                  disabled={!teamState.permissions.canEditWorkspace}
-                  required
-                />
-              </label>
-              <label>
-                <span>Company name</span>
-                <input
-                  name="companyName"
-                  defaultValue={teamState.profile.companyName ?? ""}
-                  disabled={!teamState.permissions.canEditWorkspace}
-                />
-              </label>
-              <label>
-                <span>Website</span>
-                <input
-                  name="websiteUrl"
-                  type="url"
-                  defaultValue={teamState.profile.websiteUrl ?? ""}
-                  placeholder="https://example.com"
-                  disabled={!teamState.permissions.canEditWorkspace}
-                />
-              </label>
-              <label>
-                <span>Support email</span>
-                <input
-                  name="supportEmail"
-                  type="email"
-                  defaultValue={teamState.profile.supportEmail ?? ""}
-                  disabled={!teamState.permissions.canEditWorkspace}
-                />
-              </label>
-              <label>
-                <span>Description</span>
-                <textarea
-                  name="description"
-                  rows={4}
-                  defaultValue={teamState.profile.description ?? ""}
-                  placeholder="Short operating context for this workspace."
-                  disabled={!teamState.permissions.canEditWorkspace}
-                />
-              </label>
-              {teamState.permissions.canEditWorkspace ? (
-                <SubmitButton className="buttonSecondary" pendingLabel="Saving workspace...">
-                  Save workspace settings
-                </SubmitButton>
-              ) : (
-                <p className="statusMessage">Only owners and admins can change workspace settings.</p>
-              )}
-            </form>
+            <WorkspaceProfileForm
+              workspaceId={workspace.workspaceId}
+              defaults={{
+                name: teamState.workspace.name,
+                companyName: teamState.profile.companyName ?? null,
+                websiteUrl: teamState.profile.websiteUrl ?? null,
+                supportEmail: teamState.profile.supportEmail ?? null,
+                description: teamState.profile.description ?? null,
+              }}
+              canEdit={teamState.permissions.canEditWorkspace}
+            />
           </div>
 
           <div className="dashboardCard">
@@ -287,83 +231,24 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <span className="pill">{formatRetentionPreference(controls.dataRetention.preference)}</span>
               <span className="pill">{institutionalControlsState.permissions.canViewAuditSummary ? "Audit summary visible" : "Audit summary limited"}</span>
             </div>
-            <form action={updateInstitutionalControlsAction} className="stack">
-              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-              <label>
-                <span>Data retention preference</span>
-                <select
-                  name="dataRetentionPreference"
-                  defaultValue={controls.dataRetention.preference}
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                >
-                  <option value="standard">Standard retention</option>
-                  <option value="minimized">Minimized retention</option>
-                  <option value="extended">Extended retention</option>
-                </select>
-              </label>
-              <label>
-                <span>Operational note</span>
-                <textarea
-                  name="dataRetentionNotes"
-                  rows={3}
-                  defaultValue={controls.dataRetention.notes ?? ""}
-                  placeholder="Example: Retain only active evaluation data beyond standard windows."
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-              </label>
-              <label>
-                <span>Export/delete request contact</span>
-                <input
-                  name="requestContactChannel"
-                  defaultValue={controls.requestVisibility.contactChannel ?? teamState.profile.supportEmail ?? ""}
-                  placeholder="support@company.com"
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="exportRequestsVisible"
-                  defaultChecked={controls.requestVisibility.exportRequestsVisible}
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-                <span>Show export request visibility</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="deleteRequestsVisible"
-                  defaultChecked={controls.requestVisibility.deleteRequestsVisible}
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-                <span>Show delete request visibility</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="auditVisibleToWorkspaceAdmins"
-                  defaultChecked={controls.auditAccess.visibleToWorkspaceAdmins}
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-                <span>Show audit access visibility to owners and admins</span>
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="configurationSummaryVisible"
-                  defaultChecked={controls.providerVisibility.configurationSummaryVisible}
-                  disabled={!institutionalControlsState.permissions.canEdit}
-                />
-                <span>Show provider readiness summaries</span>
-              </label>
-              {institutionalControlsState.permissions.canEdit ? (
-                <SubmitButton className="buttonSecondary" pendingLabel="Saving controls...">
-                  Save institutional controls
-                </SubmitButton>
-              ) : (
-                <p className="statusMessage">Members can review these controls, but only owners and admins can update them.</p>
-              )}
-            </form>
+            <InstitutionalControlsForm
+              workspaceId={workspace.workspaceId}
+              defaults={{
+                dataRetentionPreference: controls.dataRetention.preference,
+                dataRetentionNotes: controls.dataRetention.notes ?? null,
+                requestContactChannel:
+                  controls.requestVisibility.contactChannel ??
+                  teamState.profile.supportEmail ??
+                  null,
+                exportRequestsVisible: controls.requestVisibility.exportRequestsVisible,
+                deleteRequestsVisible: controls.requestVisibility.deleteRequestsVisible,
+                auditVisibleToWorkspaceAdmins:
+                  controls.auditAccess.visibleToWorkspaceAdmins,
+                configurationSummaryVisible:
+                  controls.providerVisibility.configurationSummaryVisible,
+              }}
+              canEdit={institutionalControlsState.permissions.canEdit}
+            />
             <div className="stack">
               <div className="dashboardCard nestedCard">
                 <p className="cardLabel">Now</p>
@@ -440,26 +325,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <span className="pill">{teamState.members.length} team members</span>
             </div>
             {teamState.permissions.canManageTeam ? (
-              <form action={inviteWorkspaceMemberAction} className="stack">
-                <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                <label>
-                  <span>Invite email</span>
-                  <input name="email" type="email" placeholder="teammate@company.com" required />
-                </label>
-                <label>
-                  <span>Role</span>
-                  <select name="role" defaultValue={teamState.permissions.allowedInviteRoles[0] ?? "member"}>
-                    {teamState.permissions.allowedInviteRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role === "admin" ? "Admin" : "Member"}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <SubmitButton className="buttonSecondary" pendingLabel="Saving invite...">
-                  Invite member
-                </SubmitButton>
-              </form>
+              <InviteMemberForm
+                workspaceId={workspace.workspaceId}
+                allowedRoles={teamState.permissions.allowedInviteRoles}
+              />
             ) : (
               <p className="statusMessage">Members can view the workspace roster, but only admins and owners can invite or manage access.</p>
             )}
@@ -474,30 +343,19 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                   <h3>{member.fullName ?? member.email}</h3>
                   <p>{member.email}</p>
                   <p>Joined: {formatDateTime(member.joinedAt)}</p>
-                  {member.canEditRole ? (
-                    <form action={updateWorkspaceMemberRoleAction} className="inlineActions profileHeaderActions">
-                      <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                      <input type="hidden" name="targetUserId" value={member.userId} />
-                      <select name="role" defaultValue={member.role}>
-                        {roleOptions.map((role) => (
-                          <option key={role} value={role}>
-                            {role === "admin" ? "Admin" : "Member"}
-                          </option>
-                        ))}
-                      </select>
-                      <SubmitButton className="buttonSecondary" pendingLabel="Updating role...">
-                        Update role
-                      </SubmitButton>
-                    </form>
+                  {member.canEditRole && member.role !== "owner" ? (
+                    <UpdateMemberRoleForm
+                      workspaceId={workspace.workspaceId}
+                      targetUserId={member.userId}
+                      currentRole={member.role}
+                      roleOptions={roleOptions}
+                    />
                   ) : null}
                   {member.canRemove ? (
-                    <form action={removeWorkspaceMemberAction} className="inlineActions profileHeaderActions">
-                      <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                      <input type="hidden" name="targetUserId" value={member.userId} />
-                      <SubmitButton className="buttonSecondary" pendingLabel="Removing member...">
-                        Remove member
-                      </SubmitButton>
-                    </form>
+                    <RemoveMemberForm
+                      workspaceId={workspace.workspaceId}
+                      targetUserId={member.userId}
+                    />
                   ) : null}
                 </div>
               ))}
@@ -581,14 +439,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                           Latest sync issue: {account.syncState.lastErrorMessage}
                         </p>
                       ) : null}
-                      <form action={importRecentGmailThreadsAction} className="inlineActions profileHeaderActions">
-                        <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                        <input type="hidden" name="inboxAccountId" value={account.id} />
-                        <input type="hidden" name="maxResults" value="10" />
-                        <SubmitButton className="buttonSecondary" pendingLabel="Importing threads...">
-                          Import recent threads
-                        </SubmitButton>
-                      </form>
+                      <GmailImportForm
+                        workspaceId={workspace.workspaceId}
+                        inboxAccountId={account.id}
+                      />
                       {latestRun ? (
                         <p>
                           Latest run: {formatSyncRunStatus(latestRun.status)} on {formatDateTime(latestRun.finishedAt ?? latestRun.startedAt)}. Imported {latestRun.importedThreadCount} threads and {latestRun.importedMessageCount} messages.
@@ -664,25 +518,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     : "No deletion request is currently recorded for this workspace."}
                 </p>
                 {workspace.role === "owner" ? (
-                  <form action={requestWorkspaceDeletionAction} className="stack">
-                    <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-                    <label>
-                      <span>Confirm workspace name</span>
-                      <input name="confirmationLabel" placeholder={teamState.workspace.name} required />
-                    </label>
-                    <label>
-                      <span>Reason</span>
-                      <textarea
-                        name="reason"
-                        rows={3}
-                        maxLength={500}
-                        placeholder="Example: Closing a test workspace after export review."
-                      />
-                    </label>
-                    <SubmitButton className="buttonSecondary" pendingLabel="Recording request...">
-                      Request workspace deletion
-                    </SubmitButton>
-                  </form>
+                  <DeletionRequestForm
+                    workspaceId={workspace.workspaceId}
+                    workspaceNamePlaceholder={teamState.workspace.name}
+                  />
                 ) : (
                   <p className="statusMessage">Only workspace owners can request deletion, and the request must be confirmed explicitly.</p>
                 )}
@@ -696,33 +535,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p>
               Keep it concise. We log the workspace, page, and category automatically so early launch feedback stays easy to review and later recommendation work can stay grounded in real usage signals rather than guesswork.
             </p>
-            <form action={submitWorkspaceFeedbackAction} className="stack">
-              <input type="hidden" name="workspaceId" value={workspace.workspaceId} />
-              <input type="hidden" name="pagePath" value="/app/settings" />
-              <label>
-                <span>Category</span>
-                <select name="category" defaultValue="workflow">
-                  <option value="bug">Bug</option>
-                  <option value="workflow">Workflow friction</option>
-                  <option value="output_quality">Output quality</option>
-                  <option value="billing">Billing</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-              <label>
-                <span>What should we know?</span>
-                <textarea
-                  name="message"
-                  rows={5}
-                  maxLength={1200}
-                  placeholder="Example: The research result was useful, but I was not sure whether to generate the sequence next or add it to the thread."
-                  required
-                />
-              </label>
-              <SubmitButton className="buttonSecondary" pendingLabel="Sending feedback...">
-                Send feedback
-              </SubmitButton>
-            </form>
+            <FeedbackForm
+              workspaceId={workspace.workspaceId}
+              pagePath="/app/settings"
+            />
           </div>
 
           <div className="dashboardCard">
@@ -824,13 +640,3 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-
