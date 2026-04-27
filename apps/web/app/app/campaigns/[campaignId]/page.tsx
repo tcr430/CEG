@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
 import { ActionEmptyState } from "../../../../components/action-empty-state";
 import { PerformanceSummaryCard } from "../../../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../../../components/upgrade-prompt-card";
@@ -110,12 +114,11 @@ export default async function CampaignDetailPage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link
-          href={`/app/campaigns?workspace=${workspace.workspaceId}`}
-          className="buttonSecondary"
-        >
-          Back to campaigns
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/campaigns?workspace=${workspace.workspaceId}`}>
+            Back to campaigns
+          </Link>
+        </Button>
       </div>
 
       <section className="profileDetailGrid">
@@ -130,7 +133,7 @@ export default async function CampaignDetailPage({
             nextActionNote={workflowNextAction?.note}
           />
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Workflow brief</p>
             <h2>{campaign.status}</h2>
             <p>{campaign.offerSummary ?? "No offer summary yet."}</p>
@@ -139,43 +142,43 @@ export default async function CampaignDetailPage({
                 "Add ICP detail so future research, personalization, and review stay focused."}
             </p>
             <div className="pillRow">
-              <span className="pill">
+              <Badge variant="secondary">
                 {campaign.senderProfileId ? "Sender-aware" : "Basic mode"}
-              </span>
+              </Badge>
               {campaign.targetIndustries.map((industry) => (
-                <span key={industry} className="pill">
+                <Badge key={industry} variant="secondary">
                   {industry}
-                </span>
+                </Badge>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Workflow queue</p>
             <h2>{prospects.length} target account(s)</h2>
             <p>
               Add target accounts directly inside the campaign so workspace scoping,
               campaign membership, and client context remain explicit from the start.
             </p>
-            <p className="statusMessage">
+            <p className="text-sm text-muted-foreground">
               Next best action: {prospects.length > 0
                 ? "Open a live target account and move into research, drafts, review, and reply handling."
                 : "Add the first target account so this campaign can move beyond briefing and into live execution."}
             </p>
-          </div>
+          </Card>
 
-          <div className="dashboardCard">
+          <Card className="p-5">
             <p className="cardLabel">Performance signals</p>
             <h2>{performance?.outboundMessages ?? 0} outbound message(s)</h2>
             <p>Replies: {performance?.replies ?? 0}. Positive replies: {performance?.positiveReplies ?? 0}.</p>
             <div className="pillRow">
-              <span className="pill">Reply rate: {performance?.replyRate === null || performance?.replyRate === undefined ? "n/a" : `${Math.round(performance.replyRate * 100)}%`}</span>
-              <span className="pill">Positive reply rate: {performance?.positiveReplyRate === null || performance?.positiveReplyRate === undefined ? "n/a" : `${Math.round(performance.positiveReplyRate * 100)}%`}</span>
+              <Badge variant="secondary">Reply rate: {performance?.replyRate === null || performance?.replyRate === undefined ? "n/a" : `${Math.round(performance.replyRate * 100)}%`}</Badge>
+              <Badge variant="secondary">Positive reply rate: {performance?.positiveReplyRate === null || performance?.positiveReplyRate === undefined ? "n/a" : `${Math.round(performance.positiveReplyRate * 100)}%`}</Badge>
             </div>
             <p>
               These metrics are intentionally lightweight today, but they give the campaign real performance history that can inform comparisons, prompts, and next-step recommendations over time.
             </p>
-          </div>
+          </Card>
 
           <PerformanceSummaryCard summary={shareablePerformanceSummary} />
 
@@ -199,27 +202,29 @@ export default async function CampaignDetailPage({
                 <Link
                   key={prospect.id}
                   href={`/app/campaigns/${campaign.id}/prospects/${prospect.id}?workspace=${workspace.workspaceId}`}
-                  className="profileCard"
+                  className="block"
                 >
-                  <div className="profileCardHeader">
-                    <div>
-                      <p className="cardLabel">{prospect.status}</p>
-                      <h2>{prospect.companyName ?? "Unnamed company"}</h2>
+                  <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                    <div className="profileCardHeader">
+                      <div>
+                        <p className="cardLabel">{prospect.status}</p>
+                        <h2>{prospect.companyName ?? "Unnamed company"}</h2>
+                      </div>
+                      <div className="pillRow compactPillRow">
+                        {prospect.contactName ? (
+                          <Badge variant="secondary">{prospect.contactName}</Badge>
+                        ) : null}
+                        {prospect.status === "researched" ? (
+                          <Badge variant="secondary">Research ready</Badge>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="pillRow compactPillRow">
-                      {prospect.contactName ? (
-                        <span className="pill">{prospect.contactName}</span>
-                      ) : null}
-                      {prospect.status === "researched" ? (
-                        <span className="pill">Research ready</span>
-                      ) : null}
-                    </div>
-                  </div>
-                  <p>{prospect.companyWebsite ?? "No website yet"}</p>
-                  <p>{prospect.email ?? "No contact email yet"}</p>
-                  <p>
-                    Open this target account to run the rest of the workflow in order: research, draft, review, reply handling, and outcome-aware iteration informed by the campaign history around it.
-                  </p>
+                    <p>{prospect.companyWebsite ?? "No website yet"}</p>
+                    <p>{prospect.email ?? "No contact email yet"}</p>
+                    <p>
+                      Open this target account to run the rest of the workflow in order: research, draft, review, reply handling, and outcome-aware iteration informed by the campaign history around it.
+                    </p>
+                  </Card>
                 </Link>
               ))
             ) : (
@@ -229,9 +234,9 @@ export default async function CampaignDetailPage({
                 description={emptyState.description}
                 nextAction={emptyState.nextAction}
                 actions={
-                  <a href="#prospect-form" className="buttonPrimary">
-                    Add target account to workflow
-                  </a>
+                  <Button asChild>
+                    <a href="#prospect-form">Add target account to workflow</a>
+                  </Button>
                 }
               />
             )}
@@ -249,6 +254,3 @@ export default async function CampaignDetailPage({
     </main>
   );
 }
-
-
-
