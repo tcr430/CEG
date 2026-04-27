@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 export default function AppError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <main className="shell">
@@ -11,19 +14,21 @@ export default function AppError({ reset }: { error: Error & { digest?: string }
         </p>
       </section>
 
-      <section className="panel">
-        <p className="statusMessage">
-          Try again, switch workspaces, or return to the dashboard and retry the action from there.
-        </p>
-        <div className="inlineActions">
-          <button type="button" className="buttonPrimary" onClick={() => reset()}>
-            Retry view
-          </button>
-          <a href="/app" className="buttonSecondary">
-            Back to dashboard
-          </a>
-        </div>
-      </section>
+      <Card>
+        <CardContent className="p-6 flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            Try again, switch workspaces, or return to the dashboard and retry the action from there.
+          </p>
+          <div className="inlineActions">
+            <Button type="button" onClick={() => reset()}>
+              Retry view
+            </Button>
+            <Button asChild variant="secondary">
+              <a href="/app">Back to dashboard</a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }

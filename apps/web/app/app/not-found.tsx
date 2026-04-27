@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 export default function AppNotFound() {
   return (
     <main className="shell">
@@ -6,9 +9,13 @@ export default function AppNotFound() {
         <h1>That workspace record could not be found</h1>
         <p className="lede">It may have been removed, or it may not belong to the current workspace.</p>
       </section>
-      <section className="panel">
-        <a href="/app" className="buttonSecondary">Back to dashboard</a>
-      </section>
+      <Card>
+        <CardContent className="p-6">
+          <Button asChild variant="secondary">
+            <a href="/app">Back to dashboard</a>
+          </Button>
+        </CardContent>
+      </Card>
     </main>
   );
 }
