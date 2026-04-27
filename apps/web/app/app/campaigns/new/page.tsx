@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+
 import { requireActiveWorkspaceAppContext } from "../../../../lib/server/billing";
 import { listSenderProfilesForWorkspace } from "../../../../lib/server/sender-profiles";
 import { createCampaignAction } from "../actions";
@@ -34,12 +36,11 @@ export default async function NewCampaignPage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link
-          href={`/app/campaigns?workspace=${context.workspace.workspaceId}`}
-          className="buttonSecondary"
-        >
-          Back to campaigns
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/campaigns?workspace=${context.workspace.workspaceId}`}>
+            Back to campaigns
+          </Link>
+        </Button>
       </div>
 
       <CampaignForm

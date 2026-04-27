@@ -1,10 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useActionSubmit } from "../../../lib/use-action-form";
 
@@ -73,59 +82,70 @@ export function ProspectForm({ workspaceId, campaignId }: ProspectFormProps) {
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="panel prospectForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5 prospectForm" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("campaignId")} />
 
       <div className="formGrid">
-        <label className="field">
-          <span>Company name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="prospect-company">Company name</Label>
+          <Input
+            id="prospect-company"
             {...form.register("companyName")}
             aria-invalid={errors.companyName ? true : undefined}
             required
           />
           {errors.companyName ? (
-            <small className="text-xs text-destructive">
-              {errors.companyName.message}
-            </small>
+            <p className="text-xs text-destructive">{errors.companyName.message}</p>
           ) : null}
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Website URL</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="prospect-website">Website URL</Label>
+          <Input
+            id="prospect-website"
             {...form.register("companyWebsite")}
             type="url"
             placeholder="https://example.com"
           />
-        </label>
+        </div>
       </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Contact name</span>
-          <input {...form.register("contactName")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="prospect-contact">Contact name</Label>
+          <Input id="prospect-contact" {...form.register("contactName")} />
+        </div>
 
-        <label className="field">
-          <span>Contact email</span>
-          <input {...form.register("email")} type="email" />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="prospect-email">Contact email</Label>
+          <Input id="prospect-email" {...form.register("email")} type="email" />
+        </div>
       </div>
 
-      <label className="field">
-        <span>Status</span>
-        <select {...form.register("status")}>
-          <option value="new">New</option>
-          <option value="researched">Researched</option>
-          <option value="sequenced">Sequenced</option>
-          <option value="contacted">Contacted</option>
-          <option value="replied">Replied</option>
-          <option value="closed">Closed</option>
-          <option value="archived">Archived</option>
-        </select>
-      </label>
+      <div className="grid gap-2">
+        <Label>Status</Label>
+        <Controller
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="researched">Researched</SelectItem>
+                <SelectItem value="sequenced">Sequenced</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="replied">Replied</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
 
       <div className="inlineActions">
         <Button type="submit" disabled={isPending}>

@@ -3,10 +3,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Campaign, SenderProfile } from "@ceg/validation";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../lib/use-action-form";
 
@@ -114,101 +124,126 @@ export function CampaignForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="panel senderProfileForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5 senderProfileForm" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       {campaign !== undefined ? (
         <input type="hidden" {...form.register("campaignId")} />
       ) : null}
 
       <div className="formGrid">
-        <label className="field">
-          <span>Campaign name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-name">Campaign name</Label>
+          <Input
+            id="campaign-name"
             {...form.register("name")}
             aria-invalid={errors.name ? true : undefined}
             required
           />
           {errors.name ? (
-            <small className="text-xs text-destructive">
-              {errors.name.message}
-            </small>
+            <p className="text-xs text-destructive">{errors.name.message}</p>
           ) : null}
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Status</span>
-          <select {...form.register("status")}>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
-          </select>
-        </label>
+        <div className="grid gap-2">
+          <Label>Status</Label>
+          <Controller
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
       </div>
 
-      <label className="field">
-        <span>Optional sender profile</span>
-        <select {...form.register("senderProfileId")}>
-          <option value="">Basic mode fallback</option>
-          {senderProfiles.map((profile) => (
-            <option key={profile.id} value={profile.id}>
-              {profile.name}
-            </option>
-          ))}
-        </select>
-        <small>
+      <div className="grid gap-2">
+        <Label>Optional sender profile</Label>
+        <Controller
+          control={form.control}
+          name="senderProfileId"
+          render={({ field }) => (
+            <Select
+              onValueChange={field.onChange}
+              value={field.value ?? ""}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Basic mode fallback" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Basic mode fallback</SelectItem>
+                {senderProfiles.map((profile) => (
+                  <SelectItem key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <p className="text-xs text-muted-foreground">
           Leave this unset to keep the campaign compatible with basic mode.
-        </small>
-      </label>
+        </p>
+      </div>
 
-      <label className="field">
-        <span>Offer summary</span>
-        <textarea rows={4} {...form.register("offerSummary")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="campaign-offer">Offer summary</Label>
+        <Textarea id="campaign-offer" rows={4} {...form.register("offerSummary")} />
+      </div>
 
-      <label className="field">
-        <span>Target ICP</span>
-        <textarea rows={3} {...form.register("targetIcp")} />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="campaign-icp">Target ICP</Label>
+        <Textarea id="campaign-icp" rows={3} {...form.register("targetIcp")} />
+      </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Target industries</span>
-          <textarea rows={5} {...form.register("targetIndustries")} />
-          <small>One industry per line.</small>
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-industries">Target industries</Label>
+          <Textarea id="campaign-industries" rows={5} {...form.register("targetIndustries")} />
+          <p className="text-xs text-muted-foreground">One industry per line.</p>
+        </div>
 
-        <label className="field">
-          <span>Framework preferences</span>
-          <textarea rows={5} {...form.register("frameworkPreferences")} />
-          <small>One framework or prompting preference per line.</small>
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-framework">Framework preferences</Label>
+          <Textarea id="campaign-framework" rows={5} {...form.register("frameworkPreferences")} />
+          <p className="text-xs text-muted-foreground">One framework or prompting preference per line.</p>
+        </div>
       </div>
 
       <div className="formGrid toneGrid">
-        <label className="field">
-          <span>Tone style</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-tone-style">Tone style</Label>
+          <Input
+            id="campaign-tone-style"
             {...form.register("toneStyle")}
             placeholder="Sharp, consultative, executive"
           />
-        </label>
+        </div>
 
-        <label className="field">
-          <span>Tone preferences: do</span>
-          <textarea rows={4} {...form.register("toneDo")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-tone-do">Tone preferences: do</Label>
+          <Textarea id="campaign-tone-do" rows={4} {...form.register("toneDo")} />
+        </div>
 
-        <label className="field">
-          <span>Tone preferences: avoid</span>
-          <textarea rows={4} {...form.register("toneAvoid")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-tone-avoid">Tone preferences: avoid</Label>
+          <Textarea id="campaign-tone-avoid" rows={4} {...form.register("toneAvoid")} />
+        </div>
 
-        <label className="field">
-          <span>Tone notes</span>
-          <textarea rows={4} {...form.register("toneNotes")} />
-        </label>
+        <div className="grid gap-2">
+          <Label htmlFor="campaign-tone-notes">Tone notes</Label>
+          <Textarea id="campaign-tone-notes" rows={4} {...form.register("toneNotes")} />
+        </div>
       </div>
 
       <div className="inlineActions">
