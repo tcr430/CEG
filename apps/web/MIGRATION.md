@@ -63,7 +63,7 @@ When migrating a page (Phase 6) replace these patterns:
 | `<select>` inside `.field`               | `<Select>` with `SelectTrigger` / `SelectContent` / `SelectItem`                                                                                               |
 | `.statusMessage` (success/info banner)   | `toast.success(...)` / `toast.info(...)` from `sonner`                                                                                                         |
 | `.statusMessage` (error banner)          | `toast.error(...)`                                                                                                                                             |
-| `<FeedbackBanner>` (Phase 3 retires it)  | `toast` calls inside the form's submit handler                                                                                                                 |
+| `<FeedbackBanner>` (retired in Phase 3e) | `toast` calls inside the form's submit handler; `UrlFeedbackToaster` for redirect-driven `?error=` / `?success=` / `?notice=` query params                     |
 | `confirm()` browser prompt               | `<AlertDialog>` (`AlertDialogTrigger` / `AlertDialogContent` / `AlertDialogAction`)                                                                            |
 | Inline regenerate / edit forms           | `<Sheet>` (`SheetTrigger` / `SheetContent` opening from the right)                                                                                             |
 

@@ -72,7 +72,7 @@ export function createWorkspaceBillingPath(input?: {
   workspaceId?: string | null;
   notice?: string | null;
   error?: string | null;
-  billing?: string | null;
+  success?: string | null;
 }): string {
   const searchParams = new URLSearchParams();
 
@@ -88,8 +88,8 @@ export function createWorkspaceBillingPath(input?: {
     searchParams.set("error", input.error);
   }
 
-  if (input?.billing) {
-    searchParams.set("billing", input.billing);
+  if (input?.success) {
+    searchParams.set("success", input.success);
   }
 
   const query = searchParams.toString();
@@ -311,11 +311,13 @@ export async function createCheckoutSessionForWorkspace(input: {
     planCode: input.planCode,
     successUrl: `${appUrl}${createWorkspaceBillingPath({
       workspaceId: input.workspaceId,
-      billing: "success",
+      success: encodeURIComponent(
+        "Checkout completed. Billing confirmation is processing now; access updates automatically.",
+      ),
     })}`,
     cancelUrl: `${appUrl}${createWorkspaceBillingPath({
       workspaceId: input.workspaceId,
-      billing: "canceled",
+      notice: encodeURIComponent("Checkout canceled. You can pick a plan whenever you are ready."),
     })}`,
   });
 

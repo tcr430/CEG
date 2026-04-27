@@ -170,5 +170,11 @@ export async function POST(request: Request) {
     emailDomain: normalizedEmail.split("@")[1] ?? null,
     emailRedirectHost: new URL(emailRedirectTo).host,
   });
-  return NextResponse.redirect(new URL("/sign-in?check-email=1", request.url), 303);
+  return NextResponse.redirect(
+    new URL(
+      `/sign-in?notice=${encodeURIComponent("Magic link sent. Check your inbox to continue.")}`,
+      request.url,
+    ),
+    303,
+  );
 }

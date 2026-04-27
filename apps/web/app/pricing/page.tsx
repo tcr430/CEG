@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { getDefaultWorkspaceMembership } from "@ceg/auth";
 
-import { FeedbackBanner } from "../../components/feedback-banner";
 import { MarketingFooter } from "../../components/marketing-footer";
 import { MarketingSectionHeader } from "../../components/marketing-section-header";
 import { PricingPlanCard } from "../../components/pricing-plan-card";
@@ -20,18 +19,8 @@ export const metadata: Metadata = {
     "Compare Starter, Growth, and Enterprise plans for outbound agencies serving B2B clients.",
 };
 
-type PricingPageProps = {
-  searchParams?: Promise<{
-    notice?: string;
-    error?: string;
-  }>;
-};
-
-export default async function PricingPage({ searchParams }: PricingPageProps) {
-  const [params, auth] = await Promise.all([
-    searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
-    getServerAuthContext(),
-  ]);
+export default async function PricingPage() {
+  const auth = await getServerAuthContext();
 
   const defaultWorkspace = auth.user
     ? getDefaultWorkspaceMembership(auth.user.memberships)
@@ -46,8 +35,6 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
   return (
     <main className="publicSiteShell publicPricingShell">
       <PublicLandingNav isAuthenticated={auth.user !== null} />
-
-      <FeedbackBanner error={params.error} notice={params.notice} />
 
       <section className="publicSection publicPricingPlansSection">
         <div className="publicPanel">

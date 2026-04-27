@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { UrlFeedbackToaster } from "../components/url-feedback-toaster";
 import { VercelAnalytics } from "../components/vercel-analytics";
 
 import "./globals.css";
@@ -21,6 +22,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en">
       <body>
         {children}
+        <Suspense fallback={null}>
+          <UrlFeedbackToaster />
+        </Suspense>
         <Toaster />
         <VercelAnalytics />
       </body>

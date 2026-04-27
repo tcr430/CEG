@@ -107,7 +107,10 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.redirect(
-    new URL(`/create-account?check-email=1`, request.url),
+    new URL(
+      `/create-account?notice=${encodeURIComponent("Confirmation email sent. Check your inbox to finish creating the account.")}`,
+      request.url,
+    ),
     303,
   );
 }

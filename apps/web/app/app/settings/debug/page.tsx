@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { FeedbackBanner } from "../../../../components/feedback-banner";
 import { SubmitButton } from "../../../../components/submit-button";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import { getWorkspaceDemoSeedStatus } from "../../../../lib/server/demo-seed";
@@ -16,9 +15,6 @@ import { seedDemoWorkspaceAction } from "./actions";
 type InternalAdminPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    success?: string;
-    notice?: string;
-    error?: string;
   }>;
 };
 
@@ -85,8 +81,6 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
           Review recent workspace activity, inspect key record streams, and load safe demo data for development without exposing secrets or raw provider payloads.
         </p>
       </section>
-
-      <FeedbackBanner error={params.error} notice={params.notice} success={params.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link href={`/app/settings?workspace=${context.workspace.workspaceId}`} className="buttonSecondary">

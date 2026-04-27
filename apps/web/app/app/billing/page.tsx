@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { FeedbackBanner } from "../../../components/feedback-banner";
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";
 import {
@@ -19,9 +18,6 @@ export const metadata: Metadata = {
 type BillingPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    billing?: string;
-    error?: string;
-    notice?: string;
   }>;
 };
 
@@ -64,18 +60,6 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           Growth is the default for agencies running active weekly delivery across client accounts.
         </p>
       </section>
-
-      <FeedbackBanner
-        error={params.error}
-        notice={params.notice}
-        success={
-          params.billing === "success"
-            ? encodeURIComponent(
-                "Checkout completed. Billing confirmation is processing now; access updates automatically.",
-              )
-            : undefined
-        }
-      />
 
       <section id="billing-plans" className="pricingSettingsStack billingDecisionPlans">
         {pricingPlans.map((plan) => {

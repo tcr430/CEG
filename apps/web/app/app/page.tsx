@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { FeedbackBanner } from "../../components/feedback-banner";
 import { PerformanceSummaryCard } from "../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../components/upgrade-prompt-card";
 import { WorkflowStageStrip } from "../../components/workflow-stage-strip";
@@ -29,8 +28,6 @@ export const metadata: Metadata = {
 type DashboardPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    notice?: string;
-    error?: string;
   }>;
 };
 
@@ -122,8 +119,6 @@ export default async function DashboardPage({
       </aside>
 
       <section className="dashboardPanel">
-        <FeedbackBanner error={params.error} notice={params.notice} />
-
         <WorkflowStageStrip
           label="Workflow moat"
           title="One visible path from setup to iteration"

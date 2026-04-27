@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
-import { FeedbackBanner } from "../../../components/feedback-banner";
 import {
   getWorkspaceBillingState,
   requireActiveWorkspaceAppContext,
@@ -19,8 +18,6 @@ export const metadata: Metadata = {
 type SenderProfilesPageProps = {
   searchParams?: Promise<{
     workspace?: string;
-    error?: string;
-    success?: string;
   }>;
 };
 
@@ -53,8 +50,6 @@ export default async function SenderProfilesPage({
           Create and refine reusable sender-aware context for SDRs, founders, agencies, or a basic fallback mode. This is one of the clearest forms of stored operational context in the product today, and later campaign workflows can select from these profiles directly.
         </p>
       </section>
-
-      <FeedbackBanner error={params.error} success={params.success} />
 
       <div className="inlineActions profileHeaderActions">
         <Link href="/app" className="buttonSecondary">

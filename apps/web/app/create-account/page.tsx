@@ -4,7 +4,6 @@ import Link from "next/link";
 import { PublicLandingNav } from "../../components/public-landing-nav";
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
-import { decodeUserFacingMessage } from "../../lib/server/user-facing-errors";
 
 export const metadata: Metadata = {
   title: "Create account",
@@ -12,39 +11,8 @@ export const metadata: Metadata = {
     "Create your OutFlow account with email and password, then choose a plan for your agency workspace.",
 };
 
-type CreateAccountPageProps = {
-  searchParams?: Promise<{
-    error?: string;
-    notice?: string;
-    success?: string;
-    "check-email"?: string;
-  }>;
-};
-
-function getMessage(params: {
-  error?: string;
-  notice?: string;
-  success?: string;
-  "check-email"?: string;
-}) {
-  if (params["check-email"] === "1") {
-    return "Confirmation email sent. Check your inbox to finish creating the account.";
-  }
-
-  return (
-    decodeUserFacingMessage(params.success) ??
-    decodeUserFacingMessage(params.notice) ??
-    decodeUserFacingMessage(params.error)
-  );
-}
-
-export default async function CreateAccountPage({
-  searchParams,
-}: CreateAccountPageProps) {
-  const [context, params] = await Promise.all([
-    getServerAuthContext(),
-    searchParams ?? Promise.resolve({}),
-  ]);
+export default async function CreateAccountPage() {
+  const context = await getServerAuthContext();
 
   return (
     <main className="shell">
@@ -103,10 +71,6 @@ export default async function CreateAccountPage({
             Create account
           </SubmitButton>
         </form>
-
-        {getMessage(params) !== null ? (
-          <p className="statusMessage">{getMessage(params)}</p>
-        ) : null}
 
         {context.user !== null ? (
           <div className="inlineActions">

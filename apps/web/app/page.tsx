@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { FeedbackBanner } from "../components/feedback-banner";
 import { HomeAuthFragmentBridge } from "../components/home-auth-fragment-bridge";
 import {
   MarketingIcon,
@@ -80,18 +79,8 @@ const trustSignals: MarketingCardWithIcon[] = [
   },
 ];
 
-type HomePageProps = {
-  searchParams?: Promise<{
-    notice?: string;
-    error?: string;
-  }>;
-};
-
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const [context, params] = await Promise.all([
-    getServerAuthContext(),
-    searchParams ?? Promise.resolve({} as { notice?: string; error?: string }),
-  ]);
+export default async function HomePage() {
+  const context = await getServerAuthContext();
   const primaryHref = context.user === null ? "/create-account" : "/app/billing";
   const primaryLabel =
     context.user === null ? "Start your agency workspace" : "Open billing";
@@ -198,7 +187,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </section>
 
-      <FeedbackBanner error={params.error} notice={params.notice} />
       <HomeAuthFragmentBridge />
 
       <section className="publicSection publicProblemSection" id="product">
