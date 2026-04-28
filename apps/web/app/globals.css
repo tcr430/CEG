@@ -69,6 +69,7 @@
   --accent: #375cff;
   --accent-soft: rgba(55, 92, 255, 0.1);
   --panel: rgba(255, 255, 255, 0.86);
+  --surface-soft: rgba(255, 255, 255, 0.56);
   --border: rgba(17, 24, 39, 0.1);
   --shadow: 0 22px 60px rgba(30, 41, 59, 0.11);
 
@@ -106,6 +107,7 @@
   --accent: #375cff;
   --accent-soft: rgba(55, 92, 255, 0.15);
   --panel: rgba(22, 27, 38, 0.92);
+  --surface-soft: rgba(30, 37, 54, 0.70);
   --border: rgba(255, 255, 255, 0.08);
   --shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
 
@@ -159,6 +161,17 @@ textarea {
 
 textarea {
   resize: vertical;
+}
+
+.defaultSelect {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--foreground);
+  cursor: pointer;
 }
 
 a {
@@ -328,7 +341,7 @@ h2 {
   margin: 24px 0;
   padding: 14px 16px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--surface-soft);
 }
 
 .workspaceBadge strong,
@@ -343,7 +356,7 @@ h2 {
   justify-content: space-between;
   padding: 18px 20px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--surface-soft);
 }
 
 .profileCardHeader,
@@ -477,7 +490,7 @@ h2 {
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--surface-soft);
 }
 
 .threadTimelineHeader {
@@ -523,7 +536,7 @@ h2 {
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--surface-soft);
 }
 
 @media (max-width: 900px) {
@@ -552,7 +565,7 @@ h2 {
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.58);
+  background: var(--surface-soft);
 }
 
 .featuredPricingCard {
@@ -678,7 +691,7 @@ h2 {
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.52);
+  background: var(--surface-soft);
 }
 
 .onboardingProgressItem strong {
@@ -1086,8 +1099,8 @@ h2 {
 .billingComparisonCard {
   margin-top: 8px;
   padding: 18px 22px;
-  border-color: rgba(17, 24, 39, 0.08);
-  background: rgba(255, 255, 255, 0.58);
+  border-color: var(--border);
+  background: var(--surface-soft);
   box-shadow: 0 10px 24px rgba(30, 41, 59, 0.04);
 }
 
@@ -1121,8 +1134,8 @@ h2 {
   gap: 10px;
   margin-top: 0;
   padding: 16px 20px;
-  border-color: rgba(17, 24, 39, 0.08);
-  background: rgba(255, 255, 255, 0.52);
+  border-color: var(--border);
+  background: var(--surface-soft);
   box-shadow: 0 8px 18px rgba(30, 41, 59, 0.03);
 }
 
@@ -1214,9 +1227,9 @@ h2 {
   width: min(1160px, calc(100% - 40px));
   margin: 24px auto 0;
   padding: 16px 18px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid var(--border);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--panel);
   backdrop-filter: blur(12px);
   display: flex;
   justify-content: space-between;
@@ -1349,9 +1362,9 @@ h2 {
   display: grid;
   gap: 4px;
   padding: 12px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--surface-soft);
 }
 
 .performanceSummaryStats strong {
