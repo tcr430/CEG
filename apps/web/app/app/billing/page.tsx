@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 import { PricingPlanCard } from "../../../components/pricing-plan-card";
 import { SubmitButton } from "../../../components/submit-button";

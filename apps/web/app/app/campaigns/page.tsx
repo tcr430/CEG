@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 import { ActionEmptyState } from "../../../components/action-empty-state";
 import { WorkflowStageStrip } from "../../../components/workflow-stage-strip";
