@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { createOnboardingCampaignAction } from "../actions";
@@ -64,75 +67,81 @@ export function OnboardingCampaignForm({ workspaceId, defaults }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="panel compactPanel senderProfileForm"
+      className="grid gap-4 senderProfileForm"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
 
-      <p className="statusMessage">
+      <p className="text-sm text-muted-foreground">
         Treat this as a concise operating brief, not a long form. You can
         refine targeting, tone, and workflow rules as the campaign evolves.
       </p>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Campaign name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="ob-campaign-name">Campaign name</Label>
+          <Input
+            id="ob-campaign-name"
             {...form.register("name")}
             placeholder={defaults.name}
             aria-invalid={errors.name ? true : undefined}
             required
           />
           {errors.name ? (
-            <small className="text-xs text-destructive">{errors.name.message}</small>
+            <p className="text-xs text-destructive">{errors.name.message}</p>
           ) : null}
-        </label>
-        <label className="field">
-          <span>Target ICP</span>
-          <input
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="ob-icp">Target ICP</Label>
+          <Input
+            id="ob-icp"
             {...form.register("targetIcp")}
             placeholder={defaults.targetIcp}
           />
-        </label>
+        </div>
       </div>
 
-      <label className="field">
-        <span>Client offer summary</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label htmlFor="ob-offer">Client offer summary</Label>
+        <Textarea
+          id="ob-offer"
           {...form.register("offerSummary")}
           rows={3}
           placeholder={defaults.offerSummary}
         />
-      </label>
+      </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Target industries</span>
-          <textarea
+        <div className="grid gap-2">
+          <Label htmlFor="ob-industries">Target industries</Label>
+          <Textarea
+            id="ob-industries"
             {...form.register("targetIndustries")}
             rows={4}
             placeholder={defaults.targetIndustries}
           />
-          <small>Use one line per industry the team should prioritize in this workflow.</small>
-        </label>
-        <label className="field">
-          <span>Workflow preferences</span>
-          <textarea
+          <p className="text-xs text-muted-foreground">Use one line per industry the team should prioritize in this workflow.</p>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="ob-framework">Workflow preferences</Label>
+          <Textarea
+            id="ob-framework"
             {...form.register("frameworkPreferences")}
             rows={4}
             placeholder={defaults.frameworkPreferences}
           />
-          <small>Use one line per messaging rule, structure, or review preference you want carried into drafts.</small>
-        </label>
+          <p className="text-xs text-muted-foreground">Use one line per messaging rule, structure, or review preference you want carried into drafts.</p>
+        </div>
       </div>
 
-      <label className="field">
-        <span>Tone style</span>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="ob-tone">Tone style</Label>
+        <Input
+          id="ob-tone"
           {...form.register("toneStyle")}
           placeholder={defaults.toneStyle}
         />
-      </label>
+      </div>
 
       <div className="inlineActions">
         <Button type="submit" disabled={isPending}>

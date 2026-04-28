@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { createOnboardingSenderProfileAction } from "../actions";
@@ -77,95 +80,103 @@ export function OnboardingSenderProfileForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="panel compactPanel senderProfileForm"
+      className="grid gap-4 senderProfileForm"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("senderType")} />
 
-      <p className="statusMessage">
+      <p className="text-sm text-muted-foreground">
         Keep this concise. A good first profile gives the system enough context
         to draft and classify inside the right workflow, and the team can
         refine it later.
       </p>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Profile name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="sp-name">Profile name</Label>
+          <Input
+            id="sp-name"
             {...form.register("name")}
             aria-invalid={errors.name ? true : undefined}
             required
           />
           {errors.name ? (
-            <small className="text-xs text-destructive">{errors.name.message}</small>
+            <p className="text-xs text-destructive">{errors.name.message}</p>
           ) : null}
-        </label>
-        <label className="field">
-          <span>Company name</span>
-          <input
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-company">Company name</Label>
+          <Input
+            id="sp-company"
             {...form.register("companyName")}
             placeholder={defaults.companyName}
           />
-        </label>
+        </div>
       </div>
 
-      <label className="field">
-        <span>Offer or service</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label htmlFor="sp-offer">Offer or service</Label>
+        <Textarea
+          id="sp-offer"
           {...form.register("productDescription")}
           rows={3}
           placeholder={defaults.offer}
         />
-      </label>
+      </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Target buyer</span>
-          <textarea
+        <div className="grid gap-2">
+          <Label htmlFor="sp-buyer">Target buyer</Label>
+          <Textarea
+            id="sp-buyer"
             {...form.register("targetCustomer")}
             rows={3}
             placeholder={defaults.targetBuyer}
           />
-        </label>
-        <label className="field">
-          <span>Value proposition</span>
-          <textarea
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-value">Value proposition</Label>
+          <Textarea
+            id="sp-value"
             {...form.register("valueProposition")}
             rows={3}
             placeholder={defaults.valueProposition}
           />
-        </label>
+        </div>
       </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Proof points</span>
-          <textarea
+        <div className="grid gap-2">
+          <Label htmlFor="sp-proof">Proof points</Label>
+          <Textarea
+            id="sp-proof"
             {...form.register("proofPoints")}
             rows={4}
             placeholder={defaults.proofPoints}
           />
-          <small>Use one line per proof point the team can safely reuse in later drafts.</small>
-        </label>
-        <label className="field">
-          <span>Workflow goals</span>
-          <textarea
+          <p className="text-xs text-muted-foreground">Use one line per proof point the team can safely reuse in later drafts.</p>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="sp-goals">Workflow goals</Label>
+          <Textarea
+            id="sp-goals"
             {...form.register("goals")}
             rows={4}
             placeholder={defaults.goals}
           />
-          <small>Use one line per goal, such as booked calls, qualified replies, or smoother client delivery.</small>
-        </label>
+          <p className="text-xs text-muted-foreground">Use one line per goal, such as booked calls, qualified replies, or smoother client delivery.</p>
+        </div>
       </div>
 
-      <label className="field">
-        <span>Tone style</span>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="sp-tone">Tone style</Label>
+        <Input
+          id="sp-tone"
           {...form.register("toneStyle")}
           placeholder={defaults.toneStyle}
         />
-      </label>
+      </div>
 
       <div className="inlineActions">
         <Button type="submit" disabled={isPending}>

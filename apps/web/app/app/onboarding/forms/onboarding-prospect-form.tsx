@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import { useActionSubmit } from "../../../../lib/use-action-form";
 import { createOnboardingProspectAction } from "../actions";
@@ -65,55 +67,59 @@ export function OnboardingProspectForm({ workspaceId, defaults }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="panel compactPanel prospectForm"
+      className="grid gap-4 prospectForm"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
 
-      <p className="statusMessage">
+      <p className="text-sm text-muted-foreground">
         Start with a real company the team would genuinely work. One account
         is enough to get to value and prove the workflow quickly.
       </p>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Company name</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="ob-company">Company name</Label>
+          <Input
+            id="ob-company"
             {...form.register("companyName")}
             placeholder={defaults.companyName}
             aria-invalid={errors.companyName ? true : undefined}
             required
           />
           {errors.companyName ? (
-            <small className="text-xs text-destructive">{errors.companyName.message}</small>
+            <p className="text-xs text-destructive">{errors.companyName.message}</p>
           ) : null}
-        </label>
-        <label className="field">
-          <span>Website URL</span>
-          <input
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="ob-website">Website URL</Label>
+          <Input
+            id="ob-website"
             {...form.register("companyWebsite")}
             type="url"
             placeholder={defaults.companyWebsite}
           />
-        </label>
+        </div>
       </div>
 
       <div className="formGrid">
-        <label className="field">
-          <span>Primary contact</span>
-          <input
+        <div className="grid gap-2">
+          <Label htmlFor="ob-contact">Primary contact</Label>
+          <Input
+            id="ob-contact"
             {...form.register("contactName")}
             placeholder={defaults.contactName}
           />
-        </label>
-        <label className="field">
-          <span>Contact email</span>
-          <input
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="ob-email">Contact email</Label>
+          <Input
+            id="ob-email"
             {...form.register("email")}
             type="email"
             placeholder={defaults.email}
           />
-        </label>
+        </div>
       </div>
 
       <div className="inlineActions">
