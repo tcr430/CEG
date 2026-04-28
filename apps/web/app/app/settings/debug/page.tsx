@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { SubmitButton } from "../../../../components/submit-button";
 import { getWorkspaceAppContext } from "../../../../lib/server/auth";
 import { getWorkspaceDemoSeedStatus } from "../../../../lib/server/demo-seed";
@@ -83,16 +88,16 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link href={`/app/settings?workspace=${context.workspace.workspaceId}`} className="buttonSecondary">
-          Back to settings
-        </Link>
-        <Link href={`/app?workspace=${context.workspace.workspaceId}`} className="buttonSecondary">
-          Dashboard
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/settings?workspace=${context.workspace.workspaceId}`}>Back to settings</Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href={`/app?workspace=${context.workspace.workspaceId}`}>Dashboard</Link>
+        </Button>
       </div>
 
       <section className="profileDetailGrid settingsGrid">
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Demo data</p>
           <h2>
             {demoSeedStatus.version
@@ -119,7 +124,7 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
             <form action={seedDemoWorkspaceAction}>
               <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
               <SubmitButton
-                className="buttonSecondary"
+                variant="secondary"
                 pendingLabel="Loading demo data..."
                 disabled={demoSeedStatus.version !== null}
               >
@@ -127,46 +132,54 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
               </SubmitButton>
             </form>
           ) : (
-            <p className="statusMessage">
+            <p className="text-sm text-muted-foreground">
               Demo seeding stays disabled in production and remains opt-in during local development.
             </p>
           )}
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Dataset export</p>
           <h2>Internal training and eval bundle</h2>
           <p>
             Export a structured JSON bundle for supervised tuning, preference learning, and regression evaluation work. This stays restricted to trusted internal admins.
           </p>
-          <form method="post" action="/api/internal/dataset-export" className="settingsForm">
+          <form method="post" action="/api/internal/dataset-export" className="grid gap-4">
             <input type="hidden" name="workspaceId" value={context.workspace.workspaceId} />
-            <label className="fieldLabel" htmlFor="dataset-date-from">From date</label>
-            <input id="dataset-date-from" name="dateFrom" type="date" className="textInput" />
-            <label className="fieldLabel" htmlFor="dataset-date-to">To date</label>
-            <input id="dataset-date-to" name="dateTo" type="date" className="textInput" />
-            <label className="fieldLabel" htmlFor="dataset-artifact-type">Artifact focus</label>
-            <select id="dataset-artifact-type" name="artifactType" className="textInput defaultSelect">
-              <option value="">All supported artifacts</option>
-              <option value="research_snapshot">Research snapshots</option>
-              <option value="reply_analysis">Reply analyses</option>
-              <option value="sequence_bundle">Sequence bundles</option>
-              <option value="sequence_initial_email">Initial emails</option>
-              <option value="sequence_follow_up_step">Follow-up steps</option>
-              <option value="draft_reply_bundle">Reply draft bundles</option>
-              <option value="draft_reply_option">Reply draft options</option>
-            </select>
-            <label className="fieldLabel" htmlFor="dataset-signal-mode">Signal focus</label>
-            <select id="dataset-signal-mode" name="signalMode" className="textInput defaultSelect" defaultValue="all">
-              <option value="all">All matching records</option>
-              <option value="accepted_or_edited">Accepted or edited only</option>
-              <option value="edited_only">Edited only</option>
-            </select>
-            <button type="submit" className="buttonSecondary">Export dataset JSON</button>
+            <div className="grid gap-2">
+              <Label htmlFor="dataset-date-from">From date</Label>
+              <Input id="dataset-date-from" name="dateFrom" type="date" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dataset-date-to">To date</Label>
+              <Input id="dataset-date-to" name="dateTo" type="date" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dataset-artifact-type">Artifact focus</Label>
+              <select id="dataset-artifact-type" name="artifactType" className="defaultSelect">
+                <option value="">All supported artifacts</option>
+                <option value="research_snapshot">Research snapshots</option>
+                <option value="reply_analysis">Reply analyses</option>
+                <option value="sequence_bundle">Sequence bundles</option>
+                <option value="sequence_initial_email">Initial emails</option>
+                <option value="sequence_follow_up_step">Follow-up steps</option>
+                <option value="draft_reply_bundle">Reply draft bundles</option>
+                <option value="draft_reply_option">Reply draft options</option>
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dataset-signal-mode">Signal focus</Label>
+              <select id="dataset-signal-mode" name="signalMode" className="defaultSelect" defaultValue="all">
+                <option value="all">All matching records</option>
+                <option value="accepted_or_edited">Accepted or edited only</option>
+                <option value="edited_only">Edited only</option>
+              </select>
+            </div>
+            <Button type="submit" variant="secondary">Export dataset JSON</Button>
           </form>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Accessible workspaces</p>
           <h2>{overview.workspaces.length} recent workspaces</h2>
           <div className="statusList">
@@ -176,11 +189,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(workspace.updatedAt)}</span>
                 <p>{workspace.slug} | {workspace.role} | {workspace.status}</p>
               </div>
-            )) : <p className="statusMessage">No managed workspaces are available yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No managed workspaces are available yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Campaigns</p>
           <h2>{overview.campaigns.length} recent campaigns</h2>
           <div className="statusList">
@@ -190,11 +203,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(campaign.updatedAt)}</span>
                 <p>{campaign.status} | {campaign.prospectCount} prospect(s) | {campaign.senderProfileAttached ? "sender-aware" : "basic mode"}</p>
               </div>
-            )) : <p className="statusMessage">No campaigns recorded for this workspace yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No campaigns recorded for this workspace yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Prospects</p>
           <h2>{overview.prospects.length} recent prospects</h2>
           <div className="statusList">
@@ -204,11 +217,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(prospect.updatedAt)}</span>
                 <p>{prospect.campaignName} | {prospect.status}{prospect.contactName ? ` | ${prospect.contactName}` : ""}</p>
               </div>
-            )) : <p className="statusMessage">No prospects are available for this workspace yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No prospects are available for this workspace yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Research runs</p>
           <h2>{overview.researchRuns.length} recent snapshots</h2>
           <div className="statusList">
@@ -218,11 +231,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(snapshot.capturedAt)}</span>
                 <p>{snapshot.sourceHost} | {snapshot.fetchStatus} | {snapshot.confidenceLabel}</p>
               </div>
-            )) : <p className="statusMessage">No research runs have been captured yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No research runs have been captured yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Sequence generations</p>
           <h2>{overview.sequenceGenerations.length} recent sequences</h2>
           <div className="statusList">
@@ -232,11 +245,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(sequence.createdAt)}</span>
                 <p>{sequence.campaignName} | {sequence.generationMode} | {sequence.status}</p>
               </div>
-            )) : <p className="statusMessage">No sequence generations are available yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No sequence generations are available yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Reply analyses</p>
           <h2>{overview.replyAnalyses.length} recent analyses</h2>
           <div className="statusList">
@@ -246,11 +259,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(analysis.analyzedAt)}</span>
                 <p>{analysis.intent ?? "unknown"} | {analysis.recommendedAction ?? "n/a"} | confidence {formatPercent(analysis.confidence)}</p>
               </div>
-            )) : <p className="statusMessage">No reply analyses are stored yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No reply analyses are stored yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Audit events</p>
           <h2>{overview.auditEvents.length} recent events</h2>
           <div className="statusList">
@@ -260,11 +273,11 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(event.createdAt)}</span>
                 <p>{event.entityType} {event.entityId ?? "n/a"}</p>
               </div>
-            )) : <p className="statusMessage">No audit events recorded yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No audit events recorded yet.</p>}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Usage events</p>
           <h2>{overview.usageEvents.length} recent usage events</h2>
           <div className="statusList">
@@ -274,12 +287,12 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
                 <span>{formatDate(event.occurredAt)}</span>
                 <p>{event.entityType ?? "event"} | qty {event.quantity}{event.billable ? " | billable" : ""}</p>
               </div>
-            )) : <p className="statusMessage">No usage events recorded yet.</p>}
+            )) : <p className="text-sm text-muted-foreground">No usage events recorded yet.</p>}
           </div>
-        </div>
+        </Card>
       </section>
 
-      <section className="dashboardCard">
+      <Card className="p-5">
         <p className="cardLabel">Operation logs</p>
         <h2>{overview.operationLogs.length} buffered log entries</h2>
         <div className="statusList">
@@ -289,9 +302,9 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
               <span>{formatDate(entry.timestamp)}</span>
               <p>{String(entry.context.operation ?? "operation")} | {entry.level}</p>
             </div>
-          )) : <p className="statusMessage">No structured operation logs are buffered yet.</p>}
+          )) : <p className="text-sm text-muted-foreground">No structured operation logs are buffered yet.</p>}
         </div>
-      </section>
+      </Card>
     </main>
   );
 }
