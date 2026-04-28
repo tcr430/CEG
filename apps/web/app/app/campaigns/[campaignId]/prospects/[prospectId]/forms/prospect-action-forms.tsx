@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
@@ -15,6 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 
 import { ConfirmActionButton } from "../../../../../../../components/confirm-action-button";
 import type { ActionResult } from "../../../../../../../lib/action-result";
@@ -51,7 +54,7 @@ type CommonProps = {
 type ActionButtonProps = {
   action: (formData: FormData) => Promise<ActionResult<unknown>>;
   payload: Record<string, string | undefined>;
-  className?: string;
+  variant?: "default" | "secondary" | "ghost" | "destructive" | "outline" | "link";
   pendingLabel?: string;
   successMessage?: string;
   children: ReactNode;
@@ -60,7 +63,7 @@ type ActionButtonProps = {
 function ActionButton({
   action,
   payload,
-  className = "buttonSecondary",
+  variant = "secondary",
   pendingLabel,
   successMessage = "Done.",
   children,
@@ -95,14 +98,14 @@ function ActionButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
-      className={className}
+      variant={variant}
       onClick={onClick}
       disabled={isPending}
     >
       {isPending ? (pendingLabel ?? "Working...") : children}
-    </button>
+    </Button>
   );
 }
 
@@ -143,7 +146,7 @@ export function ResearchForm({
     <form
       id="research-form"
       onSubmit={onSubmit}
-      className="panel prospectResearchForm"
+      className="grid gap-4 prospectResearchForm"
       noValidate
     >
       <p className="cardLabel">Stage 1</p>
@@ -157,9 +160,10 @@ export function ResearchForm({
       <input type="hidden" {...form.register("campaignId")} />
       <input type="hidden" {...form.register("prospectId")} />
 
-      <label className="field">
-        <span>Public website URL</span>
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="research-url">Public website URL</Label>
+        <Input
+          id="research-url"
           {...form.register("websiteUrl")}
           type="url"
           required
@@ -167,13 +171,11 @@ export function ResearchForm({
           aria-invalid={errors.websiteUrl ? true : undefined}
         />
         {errors.websiteUrl ? (
-          <small className="text-xs text-destructive">
-            {errors.websiteUrl.message}
-          </small>
+          <p className="text-xs text-destructive">{errors.websiteUrl.message}</p>
         ) : null}
-      </label>
+      </div>
 
-      <p className="statusMessage">
+      <p className="text-sm text-muted-foreground">
         The workflow fetches one public page safely, extracts structured text,
         builds a confidence-aware company profile, and stores a research
         snapshot for review before generation.
@@ -197,7 +199,7 @@ export function GenerateSequenceForm(props: CommonProps) {
     <form
       id="sequence-form"
       onSubmit={(event) => event.preventDefault()}
-      className="panel prospectResearchForm"
+      className="grid gap-4 prospectResearchForm"
     >
       <p className="cardLabel">Stage 2</p>
       <h2>Create a draft sequence for review</h2>
@@ -205,7 +207,7 @@ export function GenerateSequenceForm(props: CommonProps) {
         Draft only after the brief and research are ready, then treat the output
         as something to review, not something to send blindly.
       </p>
-      <p className="statusMessage">
+      <p className="text-sm text-muted-foreground">
         Sequence generation uses the campaign brief, sender profile when
         available, and the latest research snapshot. If research confidence is
         low, the copy is instructed to stay softer and avoid unsupported
@@ -216,7 +218,7 @@ export function GenerateSequenceForm(props: CommonProps) {
         <ActionButton
           action={generateProspectSequenceAction}
           payload={props}
-          className="buttonPrimary"
+          variant="default"
           pendingLabel="Generating sequence..."
           successMessage="Sequence generated."
         >
@@ -258,21 +260,27 @@ export function InboundReplyForm(props: CommonProps) {
     <form
       id="inbound-reply-form"
       onSubmit={onSubmit}
-      className="panel threadComposerCard"
+      className="grid gap-4 threadComposerCard"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("campaignId")} />
       <input type="hidden" {...form.register("prospectId")} />
 
-      <label className="field">
-        <span>Inbound subject</span>
-        <input {...form.register("subject")} type="text" placeholder="Re: outbound" />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="inbound-subject">Inbound subject</Label>
+        <Input
+          id="inbound-subject"
+          {...form.register("subject")}
+          type="text"
+          placeholder="Re: outbound"
+        />
+      </div>
 
-      <label className="field">
-        <span>Inbound reply</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label htmlFor="inbound-body">Inbound reply</Label>
+        <Textarea
+          id="inbound-body"
           {...form.register("bodyText")}
           required
           rows={5}
@@ -280,11 +288,9 @@ export function InboundReplyForm(props: CommonProps) {
           aria-invalid={errors.bodyText ? true : undefined}
         />
         {errors.bodyText ? (
-          <small className="text-xs text-destructive">
-            {errors.bodyText.message}
-          </small>
+          <p className="text-xs text-destructive">{errors.bodyText.message}</p>
         ) : null}
-      </label>
+      </div>
 
       <div className="inlineActions">
         <Button type="submit" disabled={isPending}>
@@ -325,21 +331,27 @@ export function ManualOutboundForm(props: CommonProps) {
   return (
     <form
       onSubmit={onSubmit}
-      className="panel threadComposerCard"
+      className="grid gap-4 threadComposerCard"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("campaignId")} />
       <input type="hidden" {...form.register("prospectId")} />
 
-      <label className="field">
-        <span>Outbound subject</span>
-        <input {...form.register("subject")} type="text" placeholder="Draft follow-up subject" />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="outbound-subject">Outbound subject</Label>
+        <Input
+          id="outbound-subject"
+          {...form.register("subject")}
+          type="text"
+          placeholder="Draft follow-up subject"
+        />
+      </div>
 
-      <label className="field">
-        <span>Manual outbound message</span>
-        <textarea
+      <div className="grid gap-2">
+        <Label htmlFor="outbound-body">Manual outbound message</Label>
+        <Textarea
+          id="outbound-body"
           {...form.register("bodyText")}
           required
           rows={5}
@@ -347,11 +359,9 @@ export function ManualOutboundForm(props: CommonProps) {
           aria-invalid={errors.bodyText ? true : undefined}
         />
         {errors.bodyText ? (
-          <small className="text-xs text-destructive">
-            {errors.bodyText.message}
-          </small>
+          <p className="text-xs text-destructive">{errors.bodyText.message}</p>
         ) : null}
-      </label>
+      </div>
 
       <div className="inlineActions">
         <Button type="submit" variant="secondary" disabled={isPending}>
@@ -367,14 +377,14 @@ export function ManualOutboundForm(props: CommonProps) {
 /* -------------------------------------------------------------------------- */
 
 export function AnalyzeReplyButton({
-  className = "buttonPrimary",
+  variant = "default",
   ...props
-}: CommonProps & { className?: string }) {
+}: CommonProps & { variant?: ActionButtonProps["variant"] }) {
   return (
     <ActionButton
       action={analyzeReplyAction}
       payload={props}
-      className={className}
+      variant={variant}
       pendingLabel="Analyzing reply..."
       successMessage="Reply analyzed."
     >
@@ -384,15 +394,15 @@ export function AnalyzeReplyButton({
 }
 
 export function GenerateReplyDraftsButton({
-  className = "buttonSecondary",
+  variant = "secondary",
   label = "Generate reply draft options",
   ...props
-}: CommonProps & { className?: string; label?: string }) {
+}: CommonProps & { variant?: ActionButtonProps["variant"]; label?: string }) {
   return (
     <ActionButton
       action={generateReplyDraftsAction}
       payload={props}
-      className={className}
+      variant={variant}
       pendingLabel="Generating drafts..."
       successMessage="Reply drafts ready."
     >
@@ -402,14 +412,14 @@ export function GenerateReplyDraftsButton({
 }
 
 export function AppendSequenceButton({
-  className = "buttonSecondary",
+  variant = "secondary",
   ...props
-}: CommonProps & { className?: string }) {
+}: CommonProps & { variant?: ActionButtonProps["variant"] }) {
   return (
     <ActionButton
       action={appendGeneratedSequenceMessagesAction}
       payload={props}
-      className={className}
+      variant={variant}
       pendingLabel="Adding to thread..."
       successMessage="Sequence draft added to thread."
     >
@@ -475,7 +485,7 @@ export function CreateSequenceInboxDraftButton({
         targetStepNumber:
           targetStepNumber !== undefined ? String(targetStepNumber) : undefined,
       }}
-      className="buttonSecondary"
+      variant="secondary"
       pendingLabel="Creating draft..."
       successMessage="Gmail draft ready."
     >
@@ -492,7 +502,7 @@ export function CreateReplyInboxDraftButton({
     <ActionButton
       action={createReplyInboxDraftAction}
       payload={{ ...props, targetSlotId }}
-      className="buttonSecondary"
+      variant="secondary"
       pendingLabel="Creating draft..."
       successMessage="Gmail draft ready."
     >
@@ -569,7 +579,7 @@ export function RegenerateSequencePartForm({
             the same campaign brief.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+        <form onSubmit={onSubmit} className="grid gap-4 mt-4" noValidate>
           <input type="hidden" {...form.register("workspaceId")} />
           <input type="hidden" {...form.register("campaignId")} />
           <input type="hidden" {...form.register("prospectId")} />
@@ -578,10 +588,10 @@ export function RegenerateSequencePartForm({
             <input type="hidden" {...form.register("targetStepNumber")} />
           ) : null}
 
-          <label className="field">
-            <span>{fieldLabel}</span>
-            <textarea {...form.register("feedback")} rows={5} />
-          </label>
+          <div className="grid gap-2">
+            <Label htmlFor="regen-feedback">{fieldLabel}</Label>
+            <Textarea id="regen-feedback" {...form.register("feedback")} rows={5} />
+          </div>
           <div className="inlineActions">
             <Button type="submit" variant="secondary" disabled={isPending}>
               {isPending ? "Regenerating..." : buttonLabel}
@@ -659,7 +669,7 @@ export function EditSequenceStepForm({
             The previous version stays in sequence history.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+        <form onSubmit={onSubmit} className="grid gap-4 mt-4" noValidate>
           <input type="hidden" {...form.register("workspaceId")} />
           <input type="hidden" {...form.register("campaignId")} />
           <input type="hidden" {...form.register("prospectId")} />
@@ -668,29 +678,30 @@ export function EditSequenceStepForm({
             <input type="hidden" {...form.register("targetStepNumber")} />
           ) : null}
 
-          <label className="field">
-            <span>Subject</span>
-            <input {...form.register("subject")} />
-          </label>
-          <label className="field">
-            <span>Opener</span>
-            <textarea {...form.register("opener")} rows={3} />
-          </label>
-          <label className="field">
-            <span>Body</span>
-            <textarea
+          <div className="grid gap-2">
+            <Label htmlFor="edit-subject">Subject</Label>
+            <Input id="edit-subject" {...form.register("subject")} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-opener">Opener</Label>
+            <Textarea id="edit-opener" {...form.register("opener")} rows={3} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-body">Body</Label>
+            <Textarea
+              id="edit-body"
               {...form.register("body")}
               rows={targetPart === "initial_email" ? 6 : 5}
             />
-          </label>
-          <label className="field">
-            <span>CTA</span>
-            <input {...form.register("cta")} />
-          </label>
-          <label className="field">
-            <span>Rationale</span>
-            <textarea {...form.register("rationale")} rows={3} />
-          </label>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-cta">CTA</Label>
+            <Input id="edit-cta" {...form.register("cta")} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-rationale">Rationale</Label>
+            <Textarea id="edit-rationale" {...form.register("rationale")} rows={3} />
+          </div>
           <div className="inlineActions">
             <Button type="submit" variant="secondary" disabled={isPending}>
               {isPending ? "Saving edit..." : buttonLabel}
@@ -751,16 +762,16 @@ export function RegenerateReplyDraftForm({
             draft. Use the feedback to steer tone, length, or strategy.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+        <form onSubmit={onSubmit} className="grid gap-4 mt-4" noValidate>
           <input type="hidden" {...form.register("workspaceId")} />
           <input type="hidden" {...form.register("campaignId")} />
           <input type="hidden" {...form.register("prospectId")} />
           <input type="hidden" {...form.register("targetSlotId")} />
 
-          <label className="field">
-            <span>Regeneration feedback</span>
-            <textarea {...form.register("feedback")} rows={5} />
-          </label>
+          <div className="grid gap-2">
+            <Label htmlFor="reply-regen-feedback">Regeneration feedback</Label>
+            <Textarea id="reply-regen-feedback" {...form.register("feedback")} rows={5} />
+          </div>
           <div className="inlineActions">
             <Button type="submit" variant="secondary" disabled={isPending}>
               {isPending ? "Regenerating..." : "Regenerate this option"}
@@ -819,24 +830,24 @@ export function EditReplyDraftForm({
             The previous AI version is preserved in draft history.
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="stack mt-4" noValidate>
+        <form onSubmit={onSubmit} className="grid gap-4 mt-4" noValidate>
           <input type="hidden" {...form.register("workspaceId")} />
           <input type="hidden" {...form.register("campaignId")} />
           <input type="hidden" {...form.register("prospectId")} />
           <input type="hidden" {...form.register("targetSlotId")} />
 
-          <label className="field">
-            <span>Subject</span>
-            <input {...form.register("subject")} />
-          </label>
-          <label className="field">
-            <span>Body</span>
-            <textarea {...form.register("bodyText")} rows={6} />
-          </label>
-          <label className="field">
-            <span>Strategy note</span>
-            <textarea {...form.register("strategyNote")} rows={3} />
-          </label>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-reply-subject">Subject</Label>
+            <Input id="edit-reply-subject" {...form.register("subject")} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-reply-body">Body</Label>
+            <Textarea id="edit-reply-body" {...form.register("bodyText")} rows={6} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-reply-strategy">Strategy note</Label>
+            <Textarea id="edit-reply-strategy" {...form.register("strategyNote")} rows={3} />
+          </div>
           <div className="inlineActions">
             <Button type="submit" variant="secondary" disabled={isPending}>
               {isPending ? "Saving..." : "Save reviewed draft"}

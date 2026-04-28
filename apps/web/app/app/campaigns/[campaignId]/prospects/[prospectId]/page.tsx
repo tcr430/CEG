@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 import type {
   AsyncOperationRunState,
   DraftReplyQualityReport,
@@ -282,7 +286,7 @@ export default async function ProspectDetailPage({
       />
 
       {latestSnapshot ? (
-        <div className="dashboardCard researchSnapshotCard">
+        <Card className="p-5 researchSnapshotCard">
           <p className="cardLabel">Stage 1 | Research snapshot</p>
           <h2>{companyProfile?.companyName ?? prospect.companyName ?? "Company profile"}</h2>
           <p>
@@ -347,7 +351,7 @@ export default async function ProspectDetailPage({
               )}
             </ul>
           </div>
-        </div>
+        </Card>
       ) : (
         <ActionEmptyState
           label="No research snapshot yet"
@@ -355,9 +359,9 @@ export default async function ProspectDetailPage({
           description={researchEmptyState.description}
           nextAction={researchEmptyState.nextAction}
           actions={
-            <a href="#research-form" className="buttonPrimary">
-              Start research stage
-            </a>
+            <Button asChild>
+              <a href="#research-form">Start research stage</a>
+            </Button>
           }
         />
       )}
@@ -369,13 +373,13 @@ export default async function ProspectDetailPage({
       <GenerateSequenceForm {...commonIds} />
 
       {latestSequence ? (
-        <div className="dashboardCard researchSnapshotCard">
+        <Card className="p-5 researchSnapshotCard">
           <p className="cardLabel">Stage 3 | Review sequence draft</p>
           <h2>Sequence version {latestSequence.sequenceVersion}</h2>
           <p>
             Generated for {latestSequence.generatedForMode.replaceAll("_", " ")} mode. This draft now joins the stored prospect workflow history.
           </p>
-          <p className="statusMessage compactStatusMessage">
+          <p className="text-sm text-muted-foreground">
             This is the review stage: refine the draft, move the right parts into the thread, and only then create inbox drafts or mark messages as sent.
           </p>
           <div className="researchSection">
@@ -468,7 +472,7 @@ export default async function ProspectDetailPage({
 
               if (inboxDraft) {
                 return (
-                  <p className="statusMessage compactStatusMessage">
+                  <p className="text-sm text-muted-foreground">
                     {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
                   </p>
                 );
@@ -476,7 +480,7 @@ export default async function ProspectDetailPage({
 
               if (!activeInboxAccount) {
                 return (
-                  <p className="statusMessage compactStatusMessage">
+                  <p className="text-sm text-muted-foreground">
                     Connect Gmail in Settings to push this email into Gmail as a review draft.
                   </p>
                 );
@@ -484,7 +488,7 @@ export default async function ProspectDetailPage({
 
               if (!prospect.email) {
                 return (
-                  <p className="statusMessage compactStatusMessage">
+                  <p className="text-sm text-muted-foreground">
                     Add a prospect email before creating a Gmail draft.
                   </p>
                 );
@@ -561,7 +565,7 @@ export default async function ProspectDetailPage({
 
                     if (inboxDraft) {
                       return (
-                        <p className="statusMessage compactStatusMessage">
+                        <p className="text-sm text-muted-foreground">
                           {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
                         </p>
                       );
@@ -608,12 +612,12 @@ export default async function ProspectDetailPage({
             <div className="researchSection">
               <h3>Quality review</h3>
               <div className="pillRow">
-                <span className="pill">
+                <Badge variant="secondary">
                   Overall {formatQualityScore(sequenceQualityReport.summary.score)}
-                </span>
-                <span className="pill">{sequenceQualityReport.summary.label}</span>
+                </Badge>
+                <Badge variant="secondary">{sequenceQualityReport.summary.label}</Badge>
                 {sequenceQualityReport.summary.blocked ? (
-                  <span className="pill">Review before use</span>
+                  <Badge variant="secondary">Review before use</Badge>
                 ) : null}
               </div>
               <ul className="researchList compactResearchList">
@@ -636,13 +640,13 @@ export default async function ProspectDetailPage({
                   ))}
                 </ul>
               ) : (
-                <p className="statusMessage compactStatusMessage">
+                <p className="text-sm text-muted-foreground">
                   Deterministic quality checks passed for the current stored sequence.
                 </p>
               )}
             </div>
           ) : null}
-        </div>
+        </Card>
       ) : (
         <ActionEmptyState
           label="Stage 2 not started"
@@ -650,9 +654,9 @@ export default async function ProspectDetailPage({
           description={sequenceEmptyState.description}
           nextAction={sequenceEmptyState.nextAction}
           actions={
-            <a href="#sequence-form" className="buttonPrimary">
-              Create draft for review
-            </a>
+            <Button asChild>
+              <a href="#sequence-form">Create draft for review</a>
+            </Button>
           }
         />
       )}
@@ -660,7 +664,7 @@ export default async function ProspectDetailPage({
   );
 
   const repliesTabContent = (
-    <div className="dashboardCard researchSnapshotCard">
+    <Card className="p-5 researchSnapshotCard">
       <p className="cardLabel">Stage 4</p>
       <h2>Handle replies and follow-through</h2>
       <p>
@@ -687,7 +691,7 @@ export default async function ProspectDetailPage({
         ) : null}
       </div>
 
-      <p className="statusMessage compactStatusMessage">
+      <p className="text-sm text-muted-foreground">
         AI proposes reply analysis and draft responses here. Your team still decides what to send, edit, save, or move into Gmail.
       </p>
 
@@ -699,13 +703,13 @@ export default async function ProspectDetailPage({
           nextAction={replyDraftEmptyState.nextAction}
           actions={
             replyDraftState === "needs_inbound" ? (
-              <a href="#inbound-reply-form" className="buttonPrimary">
-                Save inbound reply
-              </a>
+              <Button asChild>
+                <a href="#inbound-reply-form">Save inbound reply</a>
+              </Button>
             ) : replyDraftState === "needs_analysis" ? (
               <AnalyzeReplyButton {...commonIds} />
             ) : (
-              <GenerateReplyDraftsButton {...commonIds} className="buttonPrimary" />
+              <GenerateReplyDraftsButton {...commonIds} variant="default" />
             )
           }
         />
@@ -756,17 +760,17 @@ export default async function ProspectDetailPage({
                       </h3>
                     </div>
                     <div className="pillRow compactPillRow">
-                      <span className="pill">
+                      <Badge variant="secondary">
                         {formatMessageBadge(entry.message.direction, messageSource)}
-                      </span>
-                      <span className="pill">
+                      </Badge>
+                      <Badge variant="secondary">
                         {formatMessageStatus(entry.message.status)}
-                      </span>
-                      <span className="pill">
+                      </Badge>
+                      <Badge variant="secondary">
                         Message v{String(entry.message.metadata.messageVersion ?? 1)}
-                      </span>
+                      </Badge>
                       {sequenceVersion ? (
-                        <span className="pill">Sequence v{sequenceVersion}</span>
+                        <Badge variant="secondary">Sequence v{sequenceVersion}</Badge>
                       ) : null}
                     </div>
                   </div>
@@ -778,17 +782,17 @@ export default async function ProspectDetailPage({
                   {entry.message.direction === "outbound" ? (
                     <div className="inlineActions compactInlineActions">
                       {inboxDraft ? (
-                        <p className="statusMessage compactStatusMessage">
+                        <p className="text-sm text-muted-foreground">
                           {formatInboxDraftStatus(inboxDraft.status)} | {inboxDraft.providerDraftId}
                           {sentTimestamp ? ` | ${sentTimestamp}` : ""}
                         </p>
                       ) : sentTimestamp ? (
-                        <p className="statusMessage compactStatusMessage">
+                        <p className="text-sm text-muted-foreground">
                           Sent {sentTimestamp}
                         </p>
                       ) : null}
                       {entry.message.providerMessageId ? (
-                        <p className="statusMessage compactStatusMessage">
+                        <p className="text-sm text-muted-foreground">
                           Provider message id: {entry.message.providerMessageId}
                         </p>
                       ) : null}
@@ -808,19 +812,19 @@ export default async function ProspectDetailPage({
                   {entry.analysis ? (
                     <div className="threadInsightCard">
                       <div className="pillRow">
-                        <span className="pill">
+                        <Badge variant="secondary">
                           Intent: {formatIntent(entry.analysis.analysisOutput.analysis.intent)}
-                        </span>
-                        <span className="pill">
+                        </Badge>
+                        <Badge variant="secondary">
                           Action: {formatIntent(entry.analysis.strategyOutput.strategy.recommendedAction)}
-                        </span>
-                        <span className="pill">
+                        </Badge>
+                        <Badge variant="secondary">
                           {renderConfidenceLabel(
                             entry.analysis.analysisOutput.analysis.confidence.score,
                             entry.analysis.analysisOutput.analysis.confidence.label,
                           )}
-                        </span>
-                        <span className="pill">Analysis v{entry.analysis.analysisVersion}</span>
+                        </Badge>
+                        <Badge variant="secondary">Analysis v{entry.analysis.analysisVersion}</Badge>
                       </div>
                       {entry.analysis.analysisOutput.analysis.objectionType ? (
                         <p>
@@ -836,7 +840,7 @@ export default async function ProspectDetailPage({
                         {entry.analysis.strategyOutput.strategy.draftingStrategy}
                       </p>
                       {analysisGuidance ? (
-                        <p className="statusMessage">{analysisGuidance}</p>
+                        <p className="text-sm text-muted-foreground">{analysisGuidance}</p>
                       ) : null}
                     </div>
                   ) : null}
@@ -844,23 +848,23 @@ export default async function ProspectDetailPage({
                   {entry.draftBundles.length > 0 ? (
                     <div className="threadInsightCard">
                       <h4>Draft reply versions</h4>
-                      <p className="statusMessage compactStatusMessage">
+                      <p className="text-sm text-muted-foreground">
                         Each version is a proposed response set. Review and edit before using it in a live client thread.
                       </p>
                       <div className="stack">
                         {entry.draftBundles.map((bundle, bundleIndex) => (
                           <section key={`${bundle.version}-${bundle.bundleId}`} className="threadDraftBundle">
                             <div className="pillRow">
-                              <span className="pill">Drafts v{bundle.version}</span>
-                              <span className="pill">
+                              <Badge variant="secondary">Drafts v{bundle.version}</Badge>
+                              <Badge variant="secondary">
                                 Action: {formatIntent(bundle.output.recommendedAction)}
-                              </span>
-                              <span className="pill">
+                              </Badge>
+                              <Badge variant="secondary">
                                 {renderConfidenceLabel(
                                   bundle.output.confidence.score,
                                   bundle.output.confidence.label,
                                 )}
-                              </span>
+                              </Badge>
                             </div>
                             <p>
                               <strong>Strategy:</strong> {bundle.output.draftingStrategy}
@@ -908,7 +912,7 @@ export default async function ProspectDetailPage({
 
                                           if (replyInboxDraft) {
                                             return (
-                                              <p className="statusMessage compactStatusMessage">
+                                              <p className="text-sm text-muted-foreground">
                                                 {formatInboxDraftStatus(replyInboxDraft.status)} | {replyInboxDraft.providerDraftId}
                                               </p>
                                             );
@@ -916,7 +920,7 @@ export default async function ProspectDetailPage({
 
                                           if (!activeInboxAccount) {
                                             return (
-                                              <p className="statusMessage compactStatusMessage">
+                                              <p className="text-sm text-muted-foreground">
                                                 Connect Gmail in Settings to turn this into a review draft.
                                               </p>
                                             );
@@ -924,7 +928,7 @@ export default async function ProspectDetailPage({
 
                                           if (!prospect.email) {
                                             return (
-                                              <p className="statusMessage compactStatusMessage">
+                                              <p className="text-sm text-muted-foreground">
                                                 Add a prospect email before creating a Gmail draft.
                                               </p>
                                             );
@@ -942,14 +946,14 @@ export default async function ProspectDetailPage({
                                     {draftQuality ? (
                                       <div className="researchSection compactSection">
                                         <div className="pillRow">
-                                          <span className="pill">
+                                          <Badge variant="secondary">
                                             Quality {formatQualityScore(draftQuality.summary.score)}
-                                          </span>
-                                          <span className="pill">
+                                          </Badge>
+                                          <Badge variant="secondary">
                                             {draftQuality.summary.label}
-                                          </span>
+                                          </Badge>
                                           {draftQuality.summary.blocked ? (
-                                            <span className="pill">Review before sending</span>
+                                            <Badge variant="secondary">Review before sending</Badge>
                                           ) : null}
                                         </div>
                                         <ul className="researchList compactResearchList">
@@ -972,7 +976,7 @@ export default async function ProspectDetailPage({
                                             ))}
                                           </ul>
                                         ) : (
-                                          <p className="statusMessage compactStatusMessage">
+                                          <p className="text-sm text-muted-foreground">
                                             Deterministic checks passed for this stored draft version.
                                           </p>
                                         )}
@@ -1018,9 +1022,9 @@ export default async function ProspectDetailPage({
           nextAction="Save the first message, then use analysis and drafting from the stored thread history."
           actions={
             <>
-              <a href="#inbound-reply-form" className="buttonPrimary">
-                Save inbound reply
-              </a>
+              <Button asChild>
+                <a href="#inbound-reply-form">Save inbound reply</a>
+              </Button>
               {latestSequence ? (
                 <AppendSequenceButton {...commonIds} />
               ) : null}
@@ -1028,12 +1032,12 @@ export default async function ProspectDetailPage({
           }
         />
       )}
-    </div>
+    </Card>
   );
 
   const settingsTabContent = (
     <>
-      <div className="dashboardCard">
+      <Card className="p-5">
         <p className="cardLabel">Target account</p>
         <h2>{prospect.contactName ?? prospect.companyName ?? "Prospect"}</h2>
         <p>{prospect.companyWebsite ?? "Add a public website URL to run research."}</p>
@@ -1041,21 +1045,21 @@ export default async function ProspectDetailPage({
           This prospect record is the anchor for stored company context, research snapshots, draft history, and reply handling over time.
         </p>
         <div className="pillRow">
-          <span className="pill">{prospect.status}</span>
+          <Badge variant="secondary">{prospect.status}</Badge>
           {latestSnapshot ? (
-            <span className="pill">
+            <Badge variant="secondary">
               {renderConfidenceLabel(quality?.overall.score ?? 0, confidenceLabel)}
-            </span>
+            </Badge>
           ) : null}
           {latestSequence ? (
-            <span className="pill">Sequence v{latestSequence.sequenceVersion}</span>
+            <Badge variant="secondary">Sequence v{latestSequence.sequenceVersion}</Badge>
           ) : null}
-          {replyState.thread ? <span className="pill">Thread active</span> : null}
-          <span className="pill">{billing.planLabel} plan</span>
+          {replyState.thread ? <Badge variant="secondary">Thread active</Badge> : null}
+          <Badge variant="secondary">{billing.planLabel} plan</Badge>
         </div>
-      </div>
+      </Card>
 
-      <div className="dashboardCard">
+      <Card className="p-5">
         <p className="cardLabel">Workflow headroom</p>
         <h2>Current workspace limits</h2>
         <ul className="researchList compactResearchList">
@@ -1087,7 +1091,7 @@ export default async function ProspectDetailPage({
             <p>{formatAllowance(billing.limits.regenerations.remaining, "regenerations")}</p>
           </li>
         </ul>
-      </div>
+      </Card>
 
       {workflowUpgradePrompt ? (
         <UpgradePromptCard
@@ -1096,7 +1100,7 @@ export default async function ProspectDetailPage({
         />
       ) : null}
 
-      <div className="dashboardCard">
+      <Card className="p-5">
         <p className="cardLabel">Workflow memory</p>
         <h2>What this workflow preserves over time</h2>
         <p>
@@ -1104,7 +1108,7 @@ export default async function ProspectDetailPage({
           drafts, inbound prospect replies, reply analyses, and draft reply versions so
           future inbox sync can attach to a clean server-side timeline. That includes what the system proposed and what a human later edited or approved when the workflow captures it. In practical terms, this is where prospect-level operational memory is already real in the product today.
         </p>
-      </div>
+      </Card>
     </>
   );
 
@@ -1121,12 +1125,11 @@ export default async function ProspectDetailPage({
       </section>
 
       <div className="inlineActions profileHeaderActions">
-        <Link
-          href={`/app/campaigns/${resolvedParams.campaignId}?workspace=${workspace.workspaceId}`}
-          className="buttonSecondary"
-        >
-          Back to campaign
-        </Link>
+        <Button asChild variant="secondary">
+          <Link href={`/app/campaigns/${resolvedParams.campaignId}?workspace=${workspace.workspaceId}`}>
+            Back to campaign
+          </Link>
+        </Button>
       </div>
 
       <WorkflowStageStrip
@@ -1139,7 +1142,7 @@ export default async function ProspectDetailPage({
         nextActionNote={workflowNextAction?.note}
       />
 
-      <div className="dashboardCard">
+      <Card className="p-5">
         <p className="cardLabel">Run status</p>
         <h2>Current stage activity</h2>
         <p>
@@ -1167,7 +1170,7 @@ export default async function ProspectDetailPage({
             );
           })}
         </ul>
-      </div>
+      </Card>
 
       <ProspectDetailTabs
         defaultTab={defaultTab}
