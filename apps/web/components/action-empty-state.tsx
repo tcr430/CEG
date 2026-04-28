@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Card } from "@/components/ui/card";
+
 type ActionEmptyStateProps = {
   label: string;
   title: string;
@@ -16,14 +18,14 @@ export function ActionEmptyState({
   actions,
 }: ActionEmptyStateProps) {
   return (
-    <div className="dashboardCard emptyStateCard">
+    <Card className="p-5 emptyStateCard">
       <p className="cardLabel">{label}</p>
       <h2>{title}</h2>
       <p>{description}</p>
       {nextAction ? (
-        <p className="statusMessage emptyStateHint">Next best action: {nextAction}</p>
+        <p className="text-sm text-muted-foreground emptyStateHint">Next best action: {nextAction}</p>
       ) : null}
       {actions ? <div className="inlineActions emptyStateActions">{actions}</div> : null}
-    </div>
+    </Card>
   );
 }

@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
 
 type ArtifactActionButtonsProps = {
   workspaceId: string;
@@ -111,37 +113,37 @@ export function ArtifactActionButtons(props: ArtifactActionButtonsProps) {
     <div className="artifactActionGroup">
       <div className="inlineActions artifactActionRow">
         {props.allowSelect ? (
-          <button
+          <Button
             type="button"
-            className="buttonGhost"
+            variant="ghost"
             onClick={() => runAction("selected")}
             disabled={isPending}
           >
             Mark preferred
-          </button>
+          </Button>
         ) : null}
         {props.allowCopy ? (
-          <button
+          <Button
             type="button"
-            className="buttonGhost"
+            variant="ghost"
             onClick={() => runAction("copied")}
             disabled={isPending}
           >
             Copy
-          </button>
+          </Button>
         ) : null}
         {props.allowExport ? (
-          <button
+          <Button
             type="button"
-            className="buttonGhost"
+            variant="ghost"
             onClick={() => runAction("exported")}
             disabled={isPending}
           >
             Export .txt
-          </button>
+          </Button>
         ) : null}
       </div>
-      {message ? <p className="compactStatusMessage">{message}</p> : null}
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
     </div>
   );
 }

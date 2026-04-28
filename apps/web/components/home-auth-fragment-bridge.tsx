@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { Card } from "@/components/ui/card";
+
 type HomeAuthFragmentBridgeProps = {
   redirectPath?: string;
 };
@@ -69,10 +71,10 @@ export function HomeAuthFragmentBridge({
 
   return (
     <div className="feedbackStack" aria-live="polite">
-      <div className="dashboardCard statusCard infoCard">
+      <Card className="p-5 statusCard infoCard">
         <p className="cardLabel">Secure sign-in</p>
         <p>{status}</p>
-      </div>
+      </Card>
     </div>
   );
 }

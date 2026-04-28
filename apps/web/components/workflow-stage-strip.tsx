@@ -1,4 +1,7 @@
-﻿import type { VisibleWorkflowStage } from "../lib/workflow-visibility";
+import type { VisibleWorkflowStage } from "../lib/workflow-visibility";
+
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 type WorkflowStageStripProps = {
   label: string;
@@ -20,17 +23,17 @@ export function WorkflowStageStrip({
   nextActionNote,
 }: WorkflowStageStripProps) {
   return (
-    <section className="dashboardCard workflowStageCard">
+    <Card className="p-5 workflowStageCard">
       <div className="threadTimelineHeader">
         <div>
           <p className="cardLabel">{label}</p>
           <h2>{title}</h2>
         </div>
-        {nextActionTitle ? <span className="pill">{nextActionTitle}</span> : null}
+        {nextActionTitle ? <Badge variant="secondary">{nextActionTitle}</Badge> : null}
       </div>
       {description ? <p>{description}</p> : null}
       {nextActionLabel && nextActionNote ? (
-        <p className="statusMessage workflowStageHint">
+        <p className="text-sm text-muted-foreground workflowStageHint">
           {nextActionLabel}: {nextActionNote}
         </p>
       ) : null}
@@ -45,6 +48,6 @@ export function WorkflowStageStrip({
           </div>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }

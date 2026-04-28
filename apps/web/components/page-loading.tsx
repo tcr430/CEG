@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+
 type PageLoadingProps = {
   eyebrow: string;
   title: string;
@@ -30,7 +32,7 @@ export function PageLoading({
         className={`profileDetailGrid pageLoadingGrid${columns === 1 ? " pageLoadingGridSingle" : ""}`}
       >
         {cards.map((card) => (
-          <div key={card} className="dashboardCard loadingCard">
+          <Card key={card} className="p-5 loadingCard">
             <div className="loadingSkeleton loadingSkeletonTitle" />
             {contentLines.map((line) => (
               <div
@@ -38,7 +40,7 @@ export function PageLoading({
                 className={`loadingSkeleton${line === contentLines.length - 1 ? " loadingSkeletonShort" : ""}`}
               />
             ))}
-          </div>
+          </Card>
         ))}
       </section>
     </main>

@@ -4,6 +4,9 @@ import { useState, useTransition } from "react";
 
 import type { ShareablePerformanceSummary } from "@ceg/validation";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 import { formatShareablePerformanceSummaryText } from "../lib/performance-summary";
 
 type PerformanceSummaryCardProps = {
@@ -34,24 +37,24 @@ export function PerformanceSummaryCard({
   }
 
   return (
-    <div className="dashboardCard performanceSummaryCard">
+    <Card className="p-5 performanceSummaryCard">
       <div className="performanceSummaryHeader">
         <div>
           <p className="cardLabel">Performance summary</p>
           <h3>{summary.title}</h3>
           {summary.subtitle ? <p>{summary.subtitle}</p> : null}
-          <p className="compactStatusMessage">
+          <p className="text-sm text-muted-foreground">
             Built from current sent-message and reply-classification history so teams can review performance with safe, structured signals.
           </p>
         </div>
-        <button
+        <Button
           type="button"
-          className="buttonGhost"
+          variant="ghost"
           onClick={handleCopy}
           disabled={isPending}
         >
           Copy summary
-        </button>
+        </Button>
       </div>
 
       <div className="performanceSummaryStats">
@@ -85,9 +88,7 @@ export function PerformanceSummaryCard({
         </ul>
       ) : null}
 
-      {message ? <p className="compactStatusMessage">{message}</p> : null}
-    </div>
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+    </Card>
   );
 }
-
-
