@@ -80,7 +80,7 @@ export function OnboardingSenderProfileForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="grid gap-4 senderProfileForm"
+      className="grid gap-4"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
@@ -92,7 +92,7 @@ export function OnboardingSenderProfileForm({
         refine it later.
       </p>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="sp-name">Profile name</Label>
           <Input
@@ -125,7 +125,7 @@ export function OnboardingSenderProfileForm({
         />
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="sp-buyer">Target buyer</Label>
           <Textarea
@@ -146,7 +146,7 @@ export function OnboardingSenderProfileForm({
         </div>
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="sp-proof">Proof points</Label>
           <Textarea

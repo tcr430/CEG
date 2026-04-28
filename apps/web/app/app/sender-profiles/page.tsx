@@ -94,7 +94,7 @@ export default async function SenderProfilesPage({
           ) : null}
         </div>
 
-        <div className="profileList">
+        <div className="grid gap-4">
           {profiles.length > 0 ? (
             profiles.map((profile) => (
               <Link

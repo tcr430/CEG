@@ -62,7 +62,7 @@ export default async function SenderProfileDetailPage({
         </Button>
       </div>
 
-      <section className="profileDetailGrid">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 w-full max-w-[1080px] items-start">
         <Card className="p-5">
           <p className="cardLabel">Profile summary</p>
           <h2>{profile.senderType.replaceAll("_", " ")}</h2>

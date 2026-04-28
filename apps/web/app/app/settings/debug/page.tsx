@@ -96,7 +96,7 @@ export default async function InternalAdminPage({ searchParams }: InternalAdminP
         </Button>
       </div>
 
-      <section className="profileDetailGrid settingsGrid">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 w-full max-w-[1080px] items-start">
         <Card className="p-5">
           <p className="cardLabel">Demo data</p>
           <h2>

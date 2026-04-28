@@ -164,7 +164,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
                     <Badge variant="secondary">{group.campaigns.length}</Badge>
                   </div>
 
-                  <div className="profileList">
+                  <div className="grid gap-4">
                     {group.campaigns.map((item) => (
                       <Link
                         key={item.campaign.id}
@@ -213,7 +213,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
             </div>
           </>
         ) : (
-          <div className="profileList">
+          <div className="grid gap-4">
             <ActionEmptyState
               label="No campaigns yet"
               title={emptyState.title}

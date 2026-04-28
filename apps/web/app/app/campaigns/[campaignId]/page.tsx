@@ -121,7 +121,7 @@ export default async function CampaignDetailPage({
         </Button>
       </div>
 
-      <section className="profileDetailGrid">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 w-full max-w-[1080px] items-start">
         <div className="stack">
           <WorkflowStageStrip
             label="Workflow progression"
@@ -196,7 +196,7 @@ export default async function CampaignDetailPage({
             />
           </div>
 
-          <div className="profileList">
+          <div className="grid gap-4">
             {prospects.length > 0 ? (
               prospects.map((prospect) => (
                 <Link

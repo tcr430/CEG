@@ -67,7 +67,7 @@ export function OnboardingProspectForm({ workspaceId, defaults }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="grid gap-4 prospectForm"
+      className="grid gap-4"
       noValidate
     >
       <input type="hidden" {...form.register("workspaceId")} />
@@ -77,7 +77,7 @@ export function OnboardingProspectForm({ workspaceId, defaults }: Props) {
         is enough to get to value and prove the workflow quickly.
       </p>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="ob-company">Company name</Label>
           <Input
@@ -102,7 +102,7 @@ export function OnboardingProspectForm({ workspaceId, defaults }: Props) {
         </div>
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="ob-contact">Primary contact</Label>
           <Input

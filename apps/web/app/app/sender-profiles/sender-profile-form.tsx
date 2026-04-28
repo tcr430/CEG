@@ -140,7 +140,7 @@ export function SenderProfileForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-5 senderProfileForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       {profile !== undefined ? (
         <input type="hidden" {...form.register("senderProfileId")} />
@@ -153,7 +153,7 @@ export function SenderProfileForm({
         </p>
       ) : null}
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label>Sender type</Label>
           <Controller
@@ -247,7 +247,7 @@ export function SenderProfileForm({
         <Textarea id="sp-diff" rows={4} {...form.register("differentiation")} />
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="sp-proof">Proof points</Label>
           <Textarea id="sp-proof" rows={5} {...form.register("proofPoints")} />
@@ -261,7 +261,7 @@ export function SenderProfileForm({
         </div>
       </div>
 
-      <div className="formGrid toneGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="sp-tone-style">Tone style</Label>
           <Input

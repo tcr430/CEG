@@ -38,7 +38,7 @@ export default async function WorkspaceSelectionPage() {
             </p>
           </div>
 
-          <div className="workspaceList">
+          <div className="grid gap-4">
             {user.memberships.length > 0 ? (
               user.memberships.map((membership) => (
                 <Link

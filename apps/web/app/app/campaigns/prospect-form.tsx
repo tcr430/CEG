@@ -82,11 +82,11 @@ export function ProspectForm({ workspaceId, campaignId }: ProspectFormProps) {
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-5 prospectForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       <input type="hidden" {...form.register("campaignId")} />
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="prospect-company">Company name</Label>
           <Input
@@ -111,7 +111,7 @@ export function ProspectForm({ workspaceId, campaignId }: ProspectFormProps) {
         </div>
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="prospect-contact">Contact name</Label>
           <Input id="prospect-contact" {...form.register("contactName")} />

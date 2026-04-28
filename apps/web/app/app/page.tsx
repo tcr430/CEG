@@ -80,18 +80,20 @@ export default async function DashboardPage({
   });
   const workflowNextAction = getVisibleWorkflowNextAction(workflowStages);
   return (
-    <main className="appShell">
-      <aside className="sidebar">
-        <p className="eyebrow">Workspace overview</p>
-        <h1 className="appTitle">Run client outbound from one controlled workflow</h1>
-        <p className="sidebarText">
-          Move from sender and client context to campaign setup, prospect research, sequences,
-          reply handling, and reusable workflow memory inside one workspace-scoped system.
-        </p>
+    <div className="grid gap-5 p-6 md:grid-cols-[minmax(260px,320px)_1fr]">
+      <aside className="rounded-lg border bg-card text-card-foreground shadow-card backdrop-blur-lg p-6 grid gap-4 self-start">
+        <div>
+          <p className="eyebrow">Workspace overview</p>
+          <h1 className="appTitle">Run client outbound from one controlled workflow</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            Move from sender and client context to campaign setup, prospect research, sequences,
+            reply handling, and reusable workflow memory inside one workspace-scoped system.
+          </p>
+        </div>
 
-        <div className="workspaceBadge">
+        <div className="flex items-center justify-between gap-4 rounded-[18px] bg-[var(--surface-soft)] px-4 py-3.5">
           <span>{workspace.workspaceName ?? "Unnamed workspace"}</span>
-          <strong>{workspace.role}</strong>
+          <strong className="text-[0.8rem] uppercase tracking-[0.08em] text-primary">{workspace.role}</strong>
         </div>
 
         <div className="inlineActions">
@@ -116,7 +118,7 @@ export default async function DashboardPage({
         </div>
       </aside>
 
-      <section className="dashboardPanel">
+      <section className="grid gap-4 p-6">
         <WorkflowStageStrip
           label="Workflow moat"
           title="One visible path from setup to iteration"
@@ -307,12 +309,6 @@ export default async function DashboardPage({
           </p>
         </Card>
       </section>
-    </main>
+    </div>
   );
 }
-
-
-
-
-
-

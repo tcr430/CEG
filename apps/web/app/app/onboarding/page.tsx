@@ -142,7 +142,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
             </div>
             <Badge variant="secondary">{personaGuidance.audienceLabel}</Badge>
           </div>
-          <div className="dashboardPanel dashboardPanelDense">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card className="p-5 compactPanel">
               <p>{personaGuidance.introBody}</p>
               <p className="text-sm text-muted-foreground">{personaGuidance.recommendation}</p>
@@ -187,7 +187,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
         </Card>
       ) : null}
 
-      <div className="dashboardPanel onboardingStepGrid">
+      <div className="grid gap-4 w-full max-w-[1080px]">
         <StepCard
           title="Workspace"
           description="Confirm the workspace that should hold this agency workflow."

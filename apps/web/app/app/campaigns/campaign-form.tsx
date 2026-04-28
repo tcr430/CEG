@@ -124,13 +124,13 @@ export function CampaignForm({
   const errors = form.formState.errors;
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-5 senderProfileForm" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <input type="hidden" {...form.register("workspaceId")} />
       {campaign !== undefined ? (
         <input type="hidden" {...form.register("campaignId")} />
       ) : null}
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="campaign-name">Campaign name</Label>
           <Input
@@ -206,7 +206,7 @@ export function CampaignForm({
         <Textarea id="campaign-icp" rows={3} {...form.register("targetIcp")} />
       </div>
 
-      <div className="formGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="campaign-industries">Target industries</Label>
           <Textarea id="campaign-industries" rows={5} {...form.register("targetIndustries")} />
@@ -220,7 +220,7 @@ export function CampaignForm({
         </div>
       </div>
 
-      <div className="formGrid toneGrid">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="campaign-tone-style">Tone style</Label>
           <Input

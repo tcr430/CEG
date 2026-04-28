@@ -204,7 +204,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         ) : null}
       </div>
 
-      <section className="profileDetailGrid settingsGrid">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 w-full max-w-[1080px] items-start">
         <div className="stack">
           <Card className="p-5">
             <p className="cardLabel">Workspace</p>

@@ -243,8 +243,7 @@ h2 {
   font-size: 1.35rem;
 }
 
-.lede,
-.sidebarText {
+.lede {
   line-height: 1.7;
   color: var(--muted);
 }
@@ -252,14 +251,6 @@ h2 {
 .lede {
   max-width: 46rem;
   font-size: 1.08rem;
-}
-
-.sidebar {
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  background: var(--panel);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(16px);
 }
 
 .milestoneList {
@@ -293,11 +284,7 @@ h2 {
   transform: translateY(-1px);
 }
 
-.stack,
-.senderProfileForm,
-.profileList,
-.workspaceList,
-.dashboardPanel {
+.stack {
   display: grid;
   gap: 16px;
 }
@@ -315,36 +302,11 @@ h2 {
   gap: 20px;
 }
 
-.appShell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: 20px;
-  padding: 24px;
-}
-
-.sidebar,
-.dashboardPanel {
-  padding: 24px;
-}
-
 .appTitle {
   font-size: clamp(2rem, 4vw, 3rem);
   margin-bottom: 14px;
 }
 
-.workspaceBadge {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  margin: 24px 0;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--surface-soft);
-}
-
-.workspaceBadge strong,
 .workspaceOption strong {
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -359,16 +321,9 @@ h2 {
   background: var(--surface-soft);
 }
 
-.profileCardHeader,
-.formGrid,
-.profileDetailGrid {
+.profileCardHeader {
   display: grid;
   gap: 16px;
-}
-
-.formGrid,
-.profileDetailGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .checkboxField {
@@ -381,36 +336,13 @@ h2 {
   margin-right: 10px;
 }
 
-.profileDetailGrid {
-  width: min(1080px, 100%);
-  align-items: start;
-}
-
-.senderProfileForm {
-  width: min(1080px, 100%);
-}
-
-
-@media (max-width: 900px) {
-  .appShell,
-  .formGrid,
-  .profileDetailGrid {
-    grid-template-columns: 1fr;
-  }
-}
 
 @media (max-width: 640px) {
   .shell {
     padding: 20px;
   }
 
-  .sidebar,
-  .dashboardPanel,
-  .senderProfileForm {
-    padding: 22px;
-  }
-
-  .inlineActions,
+.inlineActions,
   .profileHeaderActions {
     align-items: stretch;
   }
@@ -671,10 +603,6 @@ h2 {
   width: min(1080px, 100%);
 }
 
-.onboardingStepGrid {
-  width: min(1080px, 100%);
-}
-
 .onboardingProgressStrip,
 .onboardingChoiceGrid {
   display: grid;
@@ -755,15 +683,9 @@ h2 {
   letter-spacing: 0;
 }
 
-.dashboardPanelDense {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-
 @media (max-width: 900px) {
   .onboardingProgressStrip,
-  .onboardingChoiceGrid,
-  .dashboardPanelDense {
+  .onboardingChoiceGrid {
     grid-template-columns: 1fr;
   }
 }
