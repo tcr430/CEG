@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { PublicLandingNav } from "../../components/public-landing-nav";
 import { SubmitButton } from "../../components/submit-button";
 import { getServerAuthContext } from "../../lib/server/auth";
@@ -28,7 +33,7 @@ export default async function SignInPage() {
         </p>
       </section>
 
-      <section className="panel authPanel" aria-labelledby="sign-in-title">
+      <Card className="p-6 authPanel" aria-labelledby="sign-in-title">
         <div>
           <h2 id="sign-in-title">Continue with email</h2>
           <p>
@@ -37,55 +42,58 @@ export default async function SignInPage() {
           </p>
         </div>
 
-        <form action="/auth/sign-in" method="post" className="stack">
+        <form action="/auth/sign-in" method="post" className="grid gap-4">
           <input type="hidden" name="mode" value="password-sign-in" />
-          <label className="field">
-            <span>Work email</span>
-            <input
+          <div className="grid gap-2">
+            <Label htmlFor="sign-in-email">Work email</Label>
+            <Input
+              id="sign-in-email"
               type="email"
               name="email"
               placeholder="you@company.com"
               required
             />
-          </label>
-          <label className="field">
-            <span>Password</span>
-            <input
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="sign-in-password">Password</Label>
+            <Input
+              id="sign-in-password"
               type="password"
               name="password"
               autoComplete="current-password"
               required
             />
-          </label>
-          <SubmitButton className="buttonPrimary" pendingLabel="Signing in...">
+          </div>
+          <SubmitButton variant="default" pendingLabel="Signing in...">
             Sign in
           </SubmitButton>
         </form>
 
-        <form action="/auth/sign-in" method="post" className="stack">
+        <form action="/auth/sign-in" method="post" className="grid gap-4">
           <input type="hidden" name="mode" value="magic-link" />
-          <label className="field">
-            <span>Or send a magic link</span>
-            <input
+          <div className="grid gap-2">
+            <Label htmlFor="magic-link-email">Or send a magic link</Label>
+            <Input
+              id="magic-link-email"
               type="email"
               name="email"
               placeholder="you@company.com"
               autoComplete="email"
               required
             />
-          </label>
-          <SubmitButton className="buttonSecondary" pendingLabel="Sending magic link...">
+          </div>
+          <SubmitButton variant="secondary" pendingLabel="Sending magic link...">
             Send magic link
           </SubmitButton>
         </form>
 
         {context.user !== null ? (
           <div className="inlineActions">
-            <Link href="/app/billing" className="buttonSecondary">
-              Open billing
-            </Link>
+            <Button asChild variant="secondary">
+              <Link href="/app/billing">Open billing</Link>
+            </Button>
             <form action="/auth/sign-out" method="post">
-              <SubmitButton className="buttonGhost" pendingLabel="Signing out...">
+              <SubmitButton variant="ghost" pendingLabel="Signing out...">
                 Sign out
               </SubmitButton>
             </form>
@@ -93,14 +101,14 @@ export default async function SignInPage() {
         ) : null}
 
         <div className="inlineActions">
-          <Link href="/create-account" className="buttonSecondary">
-            Start your agency workspace
-          </Link>
-          <Link href="/pricing" className="buttonGhost">
-            Compare plans
-          </Link>
+          <Button asChild variant="secondary">
+            <Link href="/create-account">Start your agency workspace</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/pricing">Compare plans</Link>
+          </Button>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

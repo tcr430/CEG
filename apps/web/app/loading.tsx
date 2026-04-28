@@ -1,3 +1,5 @@
+import { Card } from "@/components/ui/card";
+
 export default function RootLoading() {
   return (
     <main className="shell">
@@ -6,11 +8,11 @@ export default function RootLoading() {
         <h1>Preparing the app</h1>
         <p className="lede">Loading the next screen and resolving the current request context.</p>
       </section>
-      <section className="panel loadingPanel">
+      <Card className="p-6 loadingPanel">
         <div className="loadingSkeleton loadingSkeletonWide" />
         <div className="loadingSkeleton" />
         <div className="loadingSkeleton" />
-      </section>
+      </Card>
     </main>
   );
 }

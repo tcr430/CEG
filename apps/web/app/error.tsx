@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 export default function RootError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <main className="shell">
@@ -12,19 +15,19 @@ export default function RootError({ reset }: { error: Error & { digest?: string 
         </p>
       </section>
 
-      <section className="panel">
-        <p className="statusMessage">
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">
           Try the action again. If it keeps failing, refresh the page or return to the previous screen.
         </p>
         <div className="inlineActions">
-          <button type="button" className="buttonPrimary" onClick={() => reset()}>
+          <Button type="button" onClick={() => reset()}>
             Try again
-          </button>
-          <a href="/" className="buttonSecondary">
-            Go home
-          </a>
+          </Button>
+          <Button asChild variant="secondary">
+            <a href="/">Go home</a>
+          </Button>
         </div>
-      </section>
+      </Card>
     </main>
   );
 }
