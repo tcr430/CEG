@@ -98,6 +98,39 @@
   --ui-radius: 1.5rem;
 }
 
+.dark {
+  color-scheme: dark;
+  --background: #0d1117;
+  --foreground: #e5e9f0;
+  --muted: #8a97b0;
+  --accent: #375cff;
+  --accent-soft: rgba(55, 92, 255, 0.15);
+  --panel: rgba(22, 27, 38, 0.92);
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+
+  --ui-background: var(--background);
+  --ui-foreground: var(--foreground);
+  --ui-card: var(--panel);
+  --ui-card-foreground: var(--foreground);
+  --ui-popover: #1a2130;
+  --ui-popover-foreground: var(--foreground);
+  --ui-primary: var(--accent);
+  --ui-primary-foreground: #ffffff;
+  --ui-secondary: rgba(255, 255, 255, 0.06);
+  --ui-secondary-foreground: var(--foreground);
+  --ui-muted: rgba(255, 255, 255, 0.04);
+  --ui-muted-foreground: var(--muted);
+  --ui-accent: rgba(55, 92, 255, 0.12);
+  --ui-accent-foreground: var(--foreground);
+  --ui-destructive: #f87171;
+  --ui-destructive-foreground: #ffffff;
+  --ui-border: var(--border);
+  --ui-input: var(--border);
+  --ui-ring: var(--accent);
+  --ui-shadow: var(--shadow);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -112,9 +145,9 @@ body {
   font-family: "Aptos", "Sohne", "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   color: var(--foreground);
   background:
-    radial-gradient(circle at 15% 0%, rgba(55, 92, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 85% 0%, rgba(28, 137, 103, 0.1), transparent 30%),
-    linear-gradient(180deg, #f8fafc 0%, var(--background) 100%);
+    radial-gradient(circle at 15% 0%, var(--accent-soft), transparent 34%),
+    radial-gradient(circle at 85% 0%, rgba(28, 137, 103, 0.08), transparent 30%),
+    linear-gradient(180deg, var(--ui-background) 0%, var(--background) 100%);
 }
 
 button,

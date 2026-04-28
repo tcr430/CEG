@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { ThemeToggle } from "../theme-toggle";
 import { CommandPalette } from "./command-palette";
 import { UserMenu } from "./user-menu";
 import { WorkspaceSwitcher } from "./workspace-switcher";
@@ -109,6 +110,7 @@ export function AppShellChrome({
           </div>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <CommandPalette
             campaigns={campaigns}
             navLinks={navLinks}

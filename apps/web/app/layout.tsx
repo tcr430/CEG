@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+
+import { ThemeProvider } from "../components/theme-provider";
 import { UrlFeedbackToaster } from "../components/url-feedback-toaster";
 import { VercelAnalytics } from "../components/vercel-analytics";
 
@@ -19,14 +21,21 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        {children}
-        <Suspense fallback={null}>
-          <UrlFeedbackToaster />
-        </Suspense>
-        <Toaster />
-        <VercelAnalytics />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Suspense fallback={null}>
+            <UrlFeedbackToaster />
+          </Suspense>
+          <Toaster />
+          <VercelAnalytics />
+        </ThemeProvider>
       </body>
     </html>
   );
