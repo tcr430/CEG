@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ceg-beryl.vercel.app)",
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm --filter web typecheck)",
+      "Bash(pnpm --filter web lint)",
+      "Bash(pnpm --filter web build)",
+      "Bash(pnpm test *)",
+      "Bash(npx tsc *)",
+      "Read(//mnt/**)",
+      "Read(//d//**)",
+      "Bash(cmd.exe /c \"cd D:\\\\Project\\\\CEG\\\\apps\\\\web && npx tsc --noEmit 2>&1\")"
+    ]
+  }
+}
