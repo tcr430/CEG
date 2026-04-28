@@ -14,7 +14,7 @@ shadcn/ui primitives. Read this before touching JSX in `apps/web`.
 | 4     | Confirmation dialogs on destructive actions                           | Pending  |
 | 5     | Tab the prospect detail page                                          | Pending  |
 | 6     | Per-page content migration (one PR per page)                          | Done     |
-| 7     | Cleanup, dark mode, polish                                            | Pending  |
+| 7     | Cleanup, dark mode, polish                                            | Done     |
 
 ## Token model
 
