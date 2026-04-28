@@ -13,7 +13,7 @@ shadcn/ui primitives. Read this before touching JSX in `apps/web`.
 | 3     | Server actions return results; forms use toasts + inline errors       | Pending  |
 | 4     | Confirmation dialogs on destructive actions                           | Pending  |
 | 5     | Tab the prospect detail page                                          | Pending  |
-| 6     | Per-page content migration (one PR per page)                          | Pending  |
+| 6     | Per-page content migration (one PR per page)                          | Done     |
 | 7     | Cleanup, dark mode, polish                                            | Pending  |
 
 ## Token model
