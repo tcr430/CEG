@@ -9,10 +9,10 @@ shadcn/ui primitives. Read this before touching JSX in `apps/web`.
 | ----- | --------------------------------------------------------------------- | -------- |
 | 0     | Install Tailwind v4 + shadcn foundation, no visual change             | Done     |
 | 1     | Install shadcn primitives, mount `<Toaster />`, write this guide      | Done     |
-| 2     | Migrate authenticated app shell (header, sidebar, workspace selector) | Pending  |
-| 3     | Server actions return results; forms use toasts + inline errors       | Pending  |
-| 4     | Confirmation dialogs on destructive actions                           | Pending  |
-| 5     | Tab the prospect detail page                                          | Pending  |
+| 2     | Migrate authenticated app shell (header, sidebar, workspace selector) | Partial  |
+| 3     | Server actions return results; forms use toasts + inline errors       | Done     |
+| 4     | Confirmation dialogs on destructive actions                           | Done     |
+| 5     | Tab the prospect detail page                                          | Done     |
 | 6     | Per-page content migration (one PR per page)                          | Done     |
 | 7     | Cleanup, dark mode, polish                                            | Done     |
 
