@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 import { PerformanceSummaryCard } from "../../components/performance-summary-card";
 import { UpgradePromptCard } from "../../components/upgrade-prompt-card";
 import { WorkflowStageStrip } from "../../components/workflow-stage-strip";
@@ -91,29 +95,23 @@ export default async function DashboardPage({
         </div>
 
         <div className="inlineActions">
-          <Link href="/app/workspaces" className="buttonSecondary">
-            Switch workspace
-          </Link>
-          <Link
-            href={`/app/onboarding?workspace=${workspace.workspaceId}`}
-            className="buttonSecondary"
-          >
-            {onboarding.isComplete
-              ? "Review onboarding"
-              : onboarding.isSkipped
-                ? "Resume onboarding"
-                : "Continue onboarding"}
-          </Link>
-          <Link
-            href={`/app/settings?workspace=${workspace.workspaceId}`}
-            className="buttonSecondary"
-          >
-            Settings
-          </Link>
+          <Button asChild variant="secondary">
+            <Link href="/app/workspaces">Switch workspace</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href={`/app/onboarding?workspace=${workspace.workspaceId}`}>
+              {onboarding.isComplete
+                ? "Review onboarding"
+                : onboarding.isSkipped
+                  ? "Resume onboarding"
+                  : "Continue onboarding"}
+            </Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href={`/app/settings?workspace=${workspace.workspaceId}`}>Settings</Link>
+          </Button>
           <form action="/auth/sign-out" method="post">
-            <button type="submit" className="buttonGhost">
-              Sign out
-            </button>
+            <Button type="submit" variant="ghost">Sign out</Button>
           </form>
         </div>
       </aside>
@@ -129,24 +127,24 @@ export default async function DashboardPage({
           nextActionNote={workflowNextAction?.note}
         />
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Operator access</p>
           <h2>{context.user.email ?? "Signed-in user"}</h2>
           <p>
             Workspace access is resolved on the server from local user and membership
             records, with Supabase metadata used only as a bootstrap fallback.
           </p>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Active workspace</p>
           <h2>{workspace.workspaceSlug ?? workspace.workspaceId}</h2>
           <p>
             Operating mode: {getUserTypeLabel(onboarding.selectedUserType)}. Plan: {onboarding.billing.planLabel}.
           </p>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Core setup</p>
           <h2>
             {onboarding.isComplete
@@ -160,14 +158,14 @@ export default async function DashboardPage({
           </p>
           <div className="pillRow">
             {onboarding.steps.map((step) => (
-              <span key={step.id} className="pill">
+              <Badge key={step.id} variant="secondary">
                 {step.label}: {step.status}
-              </span>
+              </Badge>
             ))}
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Workflow path</p>
           <h2>Move the next client workflow forward</h2>
           <p>
@@ -177,40 +175,48 @@ export default async function DashboardPage({
           <div className="launchPathGrid">
             <Link
               href={`/app/sender-profiles?workspace=${workspace.workspaceId}`}
-              className="profileCard"
+              className="block"
             >
-              <p className="cardLabel">Setup</p>
-              <h3>Capture sender context</h3>
-              <p>Set the reusable positioning, proof points, and tone the workflow will carry forward into campaigns and drafts.</p>
+              <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                <p className="cardLabel">Setup</p>
+                <h3>Capture sender context</h3>
+                <p>Set the reusable positioning, proof points, and tone the workflow will carry forward into campaigns and drafts.</p>
+              </Card>
             </Link>
             <Link
               href={`/app/campaigns/new?workspace=${workspace.workspaceId}`}
-              className="profileCard"
+              className="block"
             >
-              <p className="cardLabel">Brief</p>
-              <h3>Create campaign brief</h3>
-              <p>Define the client offer, ICP, framework, and sender linkage before prospects move into research and drafting.</p>
+              <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                <p className="cardLabel">Brief</p>
+                <h3>Create campaign brief</h3>
+                <p>Define the client offer, ICP, framework, and sender linkage before prospects move into research and drafting.</p>
+              </Card>
             </Link>
             <Link
               href={`/app/campaigns?workspace=${workspace.workspaceId}`}
-              className="profileCard"
+              className="block"
             >
-              <p className="cardLabel">Queue and research</p>
-              <h3>Add prospects and move into live work</h3>
-              <p>Bring real target accounts into the workflow so research, sequence drafts, review, and reply handling all start from stored context.</p>
+              <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                <p className="cardLabel">Queue and research</p>
+                <h3>Add prospects and move into live work</h3>
+                <p>Bring real target accounts into the workflow so research, sequence drafts, review, and reply handling all start from stored context.</p>
+              </Card>
             </Link>
             <Link
               href={`/app/settings?workspace=${workspace.workspaceId}`}
-              className="profileCard"
+              className="block"
             >
-              <p className="cardLabel">Headroom</p>
-              <h3>Check workflow headroom</h3>
-              <p>Review limits before the workflow moves into heavier research, drafting, reply handling, and iteration.</p>
+              <Card className="p-5 cursor-pointer transition-shadow hover:shadow-md">
+                <p className="cardLabel">Headroom</p>
+                <h3>Check workflow headroom</h3>
+                <p>Review limits before the workflow moves into heavier research, drafting, reply handling, and iteration.</p>
+              </Card>
             </Link>
           </div>
-        </div>
+        </Card>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Performance signals</p>
           <h2>{performance.outboundMessages} outbound message(s)</h2>
           <p>Replies: {performance.replies}. Positive replies: {performance.positiveReplies}.</p>
@@ -221,7 +227,7 @@ export default async function DashboardPage({
             Reply rate: {performance.replyRate === null ? "No outbound volume yet" : `${Math.round(performance.replyRate * 100)}%`}.
             Positive reply rate: {performance.positiveReplyRate === null ? "No outbound volume yet" : `${Math.round(performance.positiveReplyRate * 100)}%`}.
           </p>
-        </div>
+        </Card>
 
         <PerformanceSummaryCard summary={shareablePerformanceSummary} />
 
@@ -233,32 +239,35 @@ export default async function DashboardPage({
         ) : null}
 
         <div className="campaignPortfolioGrid">
-          <div className="dashboardCard nestedCard">
+          <Card className="p-5 nestedCard">
             <p className="cardLabel">Campaign portfolio</p>
             <h3>{campaignOverview.campaignCount} campaign(s)</h3>
             <p>{campaignOverview.activeCount} active. {campaignOverview.senderAwareCount} sender-aware. {campaignOverview.basicModeCount} basic mode.</p>
-          </div>
-          <div className="dashboardCard nestedCard">
+          </Card>
+          <Card className="p-5 nestedCard">
             <p className="cardLabel">Quick switching</p>
             <h3>Move between client campaigns faster</h3>
             {campaignOverview.quickSwitchCampaigns.length > 0 ? (
               <div className="inlineActions compactInlineActions">
                 {campaignOverview.quickSwitchCampaigns.map((item) => (
-                  <Link
+                  <Button
                     key={item.campaign.id}
-                    href={`/app/campaigns/${item.campaign.id}?workspace=${workspace.workspaceId}`}
-                    className="buttonSecondary quickSwitchLink"
+                    asChild
+                    variant="secondary"
+                    className="quickSwitchLink"
                   >
-                    {item.campaign.name}
-                    <small>{item.campaign.status}</small>
-                  </Link>
+                    <Link href={`/app/campaigns/${item.campaign.id}?workspace=${workspace.workspaceId}`}>
+                      {item.campaign.name}
+                      <small>{item.campaign.status}</small>
+                    </Link>
+                  </Button>
                 ))}
               </div>
             ) : (
               <p>Create the first campaign to get quick switching here.</p>
             )}
-          </div>
-          <div className="dashboardCard nestedCard">
+          </Card>
+          <Card className="p-5 nestedCard">
             <p className="cardLabel">Top performing campaigns</p>
             <h3>
               {campaignOverview.topPerformers.length > 0
@@ -279,10 +288,10 @@ export default async function DashboardPage({
             ) : (
               <p>Once live campaigns start landing replies, the strongest client motions will surface here and give the team a conservative read on what has started working.</p>
             )}
-          </div>
+          </Card>
         </div>
 
-        <div className="dashboardCard">
+        <Card className="p-5">
           <p className="cardLabel">Stored context</p>
           <h2>{onboarding.senderProfileCount} sender profile(s)</h2>
           <p>
@@ -296,7 +305,7 @@ export default async function DashboardPage({
           <p>
             The workspace becomes more useful as it accumulates sender context, campaign briefs, target accounts, stored reply history, and outcome signals that later workflows can reference. That foundation is what makes the product performance-aware rather than purely generative.
           </p>
-        </div>
+        </Card>
       </section>
     </main>
   );
