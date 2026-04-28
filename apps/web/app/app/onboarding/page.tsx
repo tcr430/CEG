@@ -134,7 +134,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
       </Card>
 
       {!summary.isComplete ? (
-        <Card className="p-6">
+        <Card className="p-6 grid gap-6">
           <div className="threadTimelineHeader">
             <div>
               <p className="cardLabel">Guided setup</p>
@@ -163,7 +163,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
       ) : null}
 
       {summary.isComplete ? (
-        <Card className="p-6">
+        <Card className="p-6 grid gap-6">
           <div>
             <p className="cardLabel">Ready to go</p>
             <h2>Workflow foundation is in place</h2>

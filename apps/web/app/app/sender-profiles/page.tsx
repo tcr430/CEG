@@ -72,7 +72,7 @@ export default async function SenderProfilesPage({
         </Button>
       </div>
 
-      <Card className="p-6" aria-labelledby="sender-profiles-title">
+      <Card className="p-6 grid gap-6" aria-labelledby="sender-profiles-title">
         <div>
           <h2 id="sender-profiles-title">Reusable sender profiles</h2>
           <p>

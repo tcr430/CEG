@@ -36,6 +36,7 @@
   --radius-md: calc(var(--ui-radius) - 4px);
   --radius-lg: var(--ui-radius);
   --radius-xl: calc(var(--ui-radius) + 4px);
+  --shadow-card: var(--ui-shadow);
 }
 
 /*
@@ -71,14 +72,15 @@
   --border: rgba(17, 24, 39, 0.1);
   --shadow: 0 22px 60px rgba(30, 41, 59, 0.11);
 
-  /* shadcn/ui token values (Phase 0). See @theme block above for how these
+  /* shadcn/ui token values. See @theme block above for how these
      are exposed to Tailwind utilities like bg-primary, text-muted-foreground,
-     rounded-lg, etc. Nothing on the page uses these yet. */
+     rounded-lg, etc. */
   --ui-background: var(--background);
   --ui-foreground: var(--foreground);
-  --ui-card: #ffffff;
+  --ui-card: var(--panel);
   --ui-card-foreground: var(--foreground);
   --ui-popover: #ffffff;
+  --ui-shadow: var(--shadow);
   --ui-popover-foreground: var(--foreground);
   --ui-primary: var(--accent);
   --ui-primary-foreground: #ffffff;
@@ -148,8 +150,7 @@ small {
   padding: 32px;
 }
 
-.hero,
-.panel {
+.hero {
   width: min(860px, 100%);
 }
 
@@ -197,10 +198,7 @@ h2 {
 }
 
 .lede,
-.panel p,
-.sidebarText,
-.dashboardCard p,
-.profileCard p {
+.sidebarText {
   line-height: 1.7;
   color: var(--muted);
 }
@@ -210,21 +208,12 @@ h2 {
   font-size: 1.08rem;
 }
 
-.panel,
-.dashboardCard,
-.sidebar,
-.profileCard {
+.sidebar {
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
-}
-
-.panel {
-  display: grid;
-  gap: 24px;
-  padding: 28px;
 }
 
 .milestoneList {
@@ -243,9 +232,6 @@ h2 {
   align-items: center;
 }
 
-.buttonPrimary,
-.buttonSecondary,
-.buttonGhost,
 .workspaceOption {
   display: inline-flex;
   align-items: center;
@@ -257,34 +243,7 @@ h2 {
   transition: transform 120ms ease, border-color 120ms ease;
 }
 
-.buttonPrimary,
-.buttonSecondary,
-.buttonGhost {
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.buttonPrimary {
-  background: var(--foreground);
-  color: #ffffff;
-}
-
-.buttonSecondary {
-  border-color: var(--border);
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.buttonGhost {
-  border-color: transparent;
-  background: transparent;
-  color: var(--muted);
-}
-
-.buttonPrimary:hover,
-.buttonSecondary:hover,
-.buttonGhost:hover,
-.workspaceOption:hover,
-.profileCard:hover {
+.workspaceOption:hover {
   transform: translateY(-1px);
 }
 
@@ -297,12 +256,6 @@ h2 {
   gap: 16px;
 }
 
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-.field span,
 .cardLabel {
   font-size: 0.82rem;
   font-weight: 700;
@@ -311,26 +264,8 @@ h2 {
   color: var(--accent);
 }
 
-.field input,
-.field select,
-.field textarea {
-  width: 100%;
-  min-height: 48px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.74);
-}
-
-.statusMessage {
-  margin: 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: var(--accent-soft);
-  color: var(--foreground);
-}
-
 .authPanel {
+  display: grid;
   gap: 20px;
 }
 
@@ -364,29 +299,18 @@ h2 {
 }
 
 .workspaceBadge strong,
-.workspaceOption strong,
-.pill {
+.workspaceOption strong {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.8rem;
   color: var(--accent);
 }
 
-.dashboardCard {
-  padding: 22px;
-}
-
-.workspaceOption,
-.profileCard {
+.workspaceOption {
   justify-content: space-between;
   padding: 18px 20px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.56);
-}
-
-.profileCard {
-  display: grid;
-  gap: 10px;
 }
 
 .profileCardHeader,
@@ -420,14 +344,6 @@ h2 {
   width: min(1080px, 100%);
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-}
 
 @media (max-width: 900px) {
   .appShell,
@@ -442,7 +358,6 @@ h2 {
     padding: 20px;
   }
 
-  .panel,
   .sidebar,
   .dashboardPanel,
   .senderProfileForm {
@@ -454,9 +369,6 @@ h2 {
     align-items: stretch;
   }
 
-  .buttonPrimary,
-  .buttonSecondary,
-  .buttonGhost,
   .workspaceOption {
     width: 100%;
   }
@@ -562,10 +474,6 @@ h2 {
   gap: 8px;
 }
 
-.compactStatusMessage {
-  padding: 12px 14px;
-}
-
 .compactPanel {
   width: 100%;
   margin-top: 8px;
@@ -648,15 +556,9 @@ h2 {
   border-color: rgba(40, 88, 145, 0.24);
 }
 
-.buttonPrimary:disabled,
-.buttonSecondary:disabled,
-.buttonGhost:disabled {
-  cursor: wait;
-  opacity: 0.72;
-  transform: none;
-}
-
 .loadingPanel {
+  display: grid;
+  gap: 14px;
   width: min(860px, 100%);
 }
 
@@ -713,8 +615,13 @@ h2 {
   flex-wrap: wrap;
 }
 
-.onboardingHero,
+.onboardingHero {
+  width: min(1080px, 100%);
+}
+
 .onboardingProgressPanel {
+  display: grid;
+  gap: 24px;
   width: min(1080px, 100%);
 }
 
@@ -1024,13 +931,8 @@ h2 {
     align-items: stretch;
   }
 
-  .landingHeroActions .buttonPrimary,
-  .landingHeroActions .buttonSecondary,
-  .landingCtaPanel .buttonPrimary,
-  .landingCtaPanel .buttonSecondary {
-    width: 100%;
-  }
 }
+
 
 .pricingPageShell {
   gap: 0;
@@ -1206,12 +1108,6 @@ h2 {
   gap: 10px;
 }
 
-.billingSupportStrip .buttonGhost {
-  border: 1px solid rgba(17, 24, 39, 0.1);
-  background: rgba(255, 255, 255, 0.45);
-  color: #4a5565;
-}
-
 .billingSupportHint {
   margin: 0;
   font-size: 0.92rem;
@@ -1230,6 +1126,8 @@ h2 {
 }
 
 .pricingComparisonPanel {
+  display: grid;
+  gap: 24px;
   width: min(1080px, 100%);
 }
 

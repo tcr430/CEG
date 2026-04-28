@@ -15,7 +15,7 @@ export default function RootError({ reset }: { error: Error & { digest?: string 
         </p>
       </section>
 
-      <Card className="p-6">
+      <Card className="p-6 grid gap-6">
         <p className="text-sm text-muted-foreground">
           Try the action again. If it keeps failing, refresh the page or return to the previous screen.
         </p>

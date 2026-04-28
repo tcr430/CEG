@@ -79,7 +79,7 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
         </Button>
       </div>
 
-      <Card className="p-6" aria-labelledby="campaigns-title">
+      <Card className="p-6 grid gap-6" aria-labelledby="campaigns-title">
         <WorkflowStageStrip
           label="Workflow moat"
           title="Campaigns should make the operating flow visible"
